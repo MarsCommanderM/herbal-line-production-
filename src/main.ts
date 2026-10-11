@@ -161,7 +161,6 @@ async function boot(): Promise<() => void> {
   }
 
   const stationMaterial = new THREE.MeshStandardMaterial({ color: '#33465c', roughness: 0.45, metalness: 0.35 });
-  const accentMaterial = new THREE.MeshStandardMaterial({ color: '#3c8f83', roughness: 0.48, metalness: 0.08 });
   for (let row = 0; row < 3; row += 1) {
     for (let column = 0; column < 4; column += 1) {
       const x = -7.5 + column * 5;
@@ -174,7 +173,7 @@ async function boot(): Promise<() => void> {
 
       // Fictional in-game cannabis silhouettes. They are decorative game assets, not cultivation guidance.
       for (let pod = 0; pod < 3; pod += 1) {
-        const plant = createCannabisPlant(x - 0.7 + pod * 0.7, z, row * 4 + column * 3 + pod);
+        const plant = createCannabisPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
         plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
         station.add(plant);
       }
