@@ -131,6 +131,26 @@ describe('botanical operations vertical slice', () => {
     if (result.ok) throw new Error('Release should have been blocked.');
     expect(result.error.code).toBe('QUALITY_GATE_FAILED');
     expect(result.state.inventoryLots).toHaveLength(0);
+    state = applyOk(state, 'BATCH/REJECT', { batchId: entity('batch-low-quality'), reasonCode: 'QUALITY_GATE_NOT_ACCEPTED' });
+    expect(state.batches[0]?.status).toBe('rejected');
+    expect(state.batches[0]?.holdReason).toBe('QUALITY_GATE_NOT_ACCEPTED');
+    expect(state.inventoryLots).toHaveLength(0);
+    const repeatedReject = dispatch(state, 'BATCH/REJECT', { batchId: entity('batch-low-quality'), reasonCode: 'DUPLICATE_REJECT' });
+    expect(repeatedReject.ok).toBe(false);
+    if (repeatedReject.ok) throw new Error('Terminal batch rejection must not be repeated.');
+    expect(repeatedReject.error.code).toBe('INVALID_TRANSITION');
+  });
+
+  it('rejects a batch with an invalid reason without changing state', () => {
+    let state = createInitialGameState();
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', { batchId: entity('batch-invalid-reason'), plantIds: [entity('plant-001')], profileId: 'fictional-profile' });
+    const result = dispatch(state, 'BATCH/REJECT', { batchId: entity('batch-invalid-reason'), reasonCode: '  ' });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Empty rejection reason must be blocked.');
+    expect(result.error.code).toBe('INVALID_PAYLOAD');
+    expect(result.state.batches[0]?.status).toBe('created');
   });
 
   it('keeps inventory and order unchanged when allocation is insufficient', () => {

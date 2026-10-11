@@ -1,3 +1,6 @@
+import type { Score0To100 } from '../../contracts/domain';
+import { createInitialGameState } from '../../src/domain/initial-state';
+import { createSaveEnvelope } from '../../src/persistence/save-codec';
 import { expect, test } from '@playwright/test';
 
 test('campaign controls run a step and restore a saved state', async ({ page }) => {
@@ -77,4 +80,41 @@ test('exported saves can be imported after a later campaign change', async ({ pa
   await expect(page.locator('#game-feedback')).toContainText('Spielstand importiert');
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toHaveCount(0);
+});
+
+test('a non-passing QC result has a terminal rejection path and never creates inventory', async ({ page }) => {
+  const initial = createInitialGameState();
+  const reviewState = {
+    ...initial,
+    plants: initial.plants.map((plant) => ({ ...plant, qualityPotential: 62 as Score0To100 })),
+  };
+  const envelope = await createSaveEnvelope(reviewState);
+  const fileBuffer = Buffer.from(JSON.stringify(envelope));
+
+  await page.goto('/');
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Spielstand importieren' }).click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles({ name: 'qc-review-save.json', mimeType: 'application/json', buffer: fileBuffer });
+  await expect(page.locator('#game-feedback')).toContainText('Spielstand importiert');
+
+  const runAndWaitForAutosave = async (label: string, revision: number): Promise<void> => {
+    await page.getByRole('button', { name: label }).click();
+    await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision ' + revision);
+  };
+
+  await runAndWaitForAutosave('Simulationsschritt ausführen', 1);
+  await runAndWaitForAutosave('Einheit in Batch überführen', 2);
+  await runAndWaitForAutosave('Batch erstellen', 3);
+  await runAndWaitForAutosave('Verarbeitung einplanen', 4);
+  await runAndWaitForAutosave('Spielprozess starten', 5);
+  await runAndWaitForAutosave('Qualitätsprüfung ausführen', 6);
+
+  await expect(page.getByRole('button', { name: 'Batch ablehnen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Batch freigeben' })).toHaveCount(0);
+  await runAndWaitForAutosave('Batch ablehnen', 7);
+  await expect(page.locator('#game-metrics')).toContainText('rejected');
+  await expect(page.locator('#game-actions')).toContainText('Kampagne beendet');
+  await expect(page.getByRole('button', { name: 'Abnehmerauftrag annehmen' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Batch freigeben' })).toHaveCount(0);
 });
