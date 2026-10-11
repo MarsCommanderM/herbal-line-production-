@@ -1,8 +1,8 @@
 # Contract Reconciliation — 2026-10-12
 
-## Authority
+## Authority and scope
 
-The supplied Herbal Line Master Pack is the reference for product requirements, domain concepts, schemas and production gates. The implementation branch currently keeps the playable simulation fictional and generic: abstract botanical units, QC/inventory/compliance states and generic customer orders. No real-world controlled-substance production or distribution instructions are implemented.
+The supplied Herbal Line Master Pack remains the product and contract reference. The implementation uses fictional, abstract game values only; it does not provide real-world cultivation, processing, medicine manufacturing or distribution instructions.
 
 ## Decisions recorded
 
@@ -14,42 +14,48 @@ The supplied Herbal Line Master Pack is the reference for product requirements, 
 | Economy | Parallel balance and summary totals duplicated the ledger. | Finance selectors derive balances and totals from opening balance plus ledger. |
 | Persistence | UI state was mixed into the save payload. | Persisted payload omits transient UI; UI is reconstructed on restore. |
 | Commands | Domain, UI and persistence commands shared one undifferentiated union. | Separate command categories and retain a composed public union. |
+| QC rejection | QC review/fail had no terminal path in the initial UI vertical slice. | Added `BATCH/REJECT`; terminal batches cannot be released; room/machine occupancy is released; order acceptance is gated on released inventory. |
 
-## Verified implementation and test evidence
+## Verification evidence
 
-Latest verified revision: `bce2a0bd0edda036032be03e8dfea3033057ea52`.
+Current verified code revision: `24a0f650d9a118fa32e13a2d0abe36229f0f0036`.
 
-[GitHub Actions run 38182289439](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182289439) passed all steps on that exact commit:
+[GitHub Actions run 38182607944](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182607944) passed all gates on that revision:
 
-- `npm ci --no-audit --no-fund`
-- Source policy lint: 11 TypeScript files checked
-- Format check: 28 source/config files checked
-- Strict TypeScript typecheck
-- Unit tests: 26 passed across 5 test files
-- Production build
-- Chromium E2E: 3 passed
-- Production preview smoke: HTML, JS bundle, save controls and CSS served successfully
-- Master-pack validation: 39 required paths and 6 JSON documents checked
-- `git diff --check`
+- Locked dependency install.
+- Source policy lint (11 TypeScript files) and format check (28 source/config files).
+- Strict TypeScript typecheck.
+- 27 unit tests across 5 files.
+- Production build.
+- 4 Chromium E2E tests, including autosave/reload, corrupt-primary backup recovery, export/import round-trip and QC rejection.
+- Production preview smoke.
+- Master-pack validator and `git diff --check`.
 
-## Persistence behavior now implemented
+## Persistence behavior implemented
 
 - Canonical JSON serialization and SHA-256 integrity check.
 - Version-1 save envelope with UI excluded.
-- IndexedDB save repository with validation before writes and reads.
+- IndexedDB repository validates envelopes before persistence and restore.
 - Manual save/load plus autosave after successful domain commands.
-- Last-known-good backup written before replacing a valid primary save.
+- Last-known-good backup before replacing a valid primary save.
 - Fallback to backup if the primary save fails validation.
 - JSON export and validated import.
-- Browser E2E coverage for reload persistence, corrupt-primary recovery and export/import round-trip.
 
-## Remaining blockers
+## Master Pack parity — measured, not assumed
 
-1. **Exact Master Pack parity remains unverified.** The ZIP SHA-256 is `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`; it contains 42 files. The historical pack-shaped recovery snapshot had 42 matching paths but 36 blob-content mismatches. The current implementation branch must not be called a 1:1 mirror until a reproducible per-path comparison proves it.
-2. Save schema migration beyond v1, quota exhaustion, and interrupted-write recovery need explicit tests before release acceptance.
-3. Chromium is the only automated browser target so far.
-4. Full game-loop UX, comprehensive accessibility, final licensed assets, visual/performance QA, security review and release acceptance remain open.
+- Archive: `Herbal-Line-Production-Master-Pack.zip`
+- SHA-256: `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`
+- Expected files: 42.
+- At revision `24a0f650d9a118fa32e13a2d0abe36229f0f0036`: 42/42 paths present, 4/42 exact Git blob matches, 38/42 content mismatches, 33 extra implementation/tooling paths.
+- Expected blob hashes are recorded in `docs/audits/MASTERPACK_EXPECTED_BLOBS.json`; `python scripts/verify_masterpack_parity.py` prints every mismatch and exits non-zero until exact parity is achieved.
 
-## Decision rule
+This means the implementation branch is **not** a 1:1 mirror of the ZIP. The next P0 task is to establish a dedicated exact-pack baseline, then reapply only reviewed implementation deltas in separate commits.
 
-Do not rewrite canonical documents to fit the current implementation silently. Record any intentional deviation, explain why it is needed, add a migration or compatibility plan where applicable, and verify the resulting contract and implementation on the same commit.
+## Remaining release blockers
+
+1. Exact Master Pack synchronization.
+2. Explicit migration chain beyond v1, quota exhaustion and interrupted-write recovery tests.
+3. Cross-browser E2E beyond Chromium.
+4. Broader negative-path coverage, dashboard UX/accessibility, final licensed assets, visual/performance QA, security review and release acceptance.
+
+No release-ready claim is made.
