@@ -35,6 +35,10 @@ class FakeObjectStore {
 
   put(value: FakeStoredRecord): IDBRequest<IDBValidKey> {
     return this.request(() => {
+      if (this.database.failNextPut) {
+        this.database.failNextPut = false;
+        throw new DOMException('Simulated storage quota exhaustion.', 'QuotaExceededError');
+      }
       this.database.records.set(value.slotId, clone(value));
       return value.slotId;
     }) as unknown as IDBRequest<IDBValidKey>;
@@ -74,6 +78,7 @@ class FakeTransaction {
 }
 
 class FakeDatabase {
+  failNextPut = false;
   readonly records = new Map<string, FakeStoredRecord>();
   readonly stores = new Set<string>();
   readonly objectStoreNames = {
@@ -172,6 +177,21 @@ describe('IndexedDbSaveRepository', () => {
     database?.records.set('campaign-01', record);
 
     await expect(repository.load('campaign-01')).rejects.toThrow('CHECKSUM_MISMATCH');
+  });
+
+  it('preserves the last committed save when a storage write fails', async () => {
+    const { repository, factory } = createRepository();
+    const initial = createInitialGameState();
+    const goodEnvelope = await createSaveEnvelope(initial, '2026-10-12T12:00:00.000Z');
+    await repository.save('campaign-01', goodEnvelope);
+
+    const newerEnvelope = await createSaveEnvelope({ ...initial, revision: 1 }, '2026-10-12T12:01:00.000Z');
+    const database = factory.databases.get('herbal-line-test');
+    if (!database) throw new Error('Test database was not created.');
+    database.failNextPut = true;
+
+    await expect(repository.save('campaign-01', newerEnvelope)).rejects.toThrow();
+    expect(await repository.load('campaign-01')).toEqual(goodEnvelope);
   });
 
   it('validates slot IDs and reports missing exports', async () => {
