@@ -1,16 +1,14 @@
-# Rights and Third-Party Asset Policy
+# Rights Notice
 
-Herbal Line is a working project name. Project-specific authorship and ownership notices should be finalized by the rights holder before public release.
+**Projekt:** Herbal Line  
+**Vom Projektauftrag benannter Projektverantwortlicher:** Michael Braunschweig  
+**Vorgesehener Vermerk:** Copyright © 2026 Michael Braunschweig. All rights reserved, subject to applicable law and documented third-party licenses.
 
-## Contributions
-- Do not copy third-party code, art, text, audio, datasets, or documentation without a compatible license and required attribution.
-- Record asset source, author, license, and any restrictions in an asset manifest.
-- Do not commit API keys, access tokens, credentials, private user data, or secrets.
-- Keep third-party notices and license files when required.
-- Confirm ownership and license terms before using generated or externally sourced assets in a commercial release.
+Diese Metadaten sind Projektvorgaben, keine unabhängige rechtliche Prüfung und kein Nachweis, dass sämtliche späteren Mitarbeiter-, Agenten- oder Drittbeiträge exklusiv übertragen wurden.
 
-## Simulation content
-All gameplay values and example production records are fictional abstractions. They must not be presented as validated real-world cultivation, processing, medical, or regulatory instructions.
-
-## Trademark and medical claims
-Do not imply endorsement by regulators, healthcare providers, pharmacies, or cannabis brands. Medical and legal statements require source review before publication.
+## Regeln
+- Keine fremden Assets, Texte, Fonts, Musik, Daten oder Code ohne dokumentierte kompatible Lizenz verwenden.
+- Quelle, Urheber, Lizenz und Einschränkungen für alle externen Assets in `rights/LICENSE_REGISTER.md` erfassen.
+- Keine Tokens, Passwörter, API-Keys oder privaten Daten committen.
+- Ungeklärte Rechte blockieren öffentliche kommerzielle Veröffentlichung.
+- Keine Markenfreigabe oder regulatorische Anerkennung behaupten, die nicht nachgewiesen wurde.
