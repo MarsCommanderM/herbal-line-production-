@@ -154,7 +154,7 @@ async function boot(): Promise<() => void> {
   ];
   for (const wall of walls) {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(wall.size[0], wall.size[1], wall.size[2]), wallMaterial);
-    mesh.position.set(...wall.pos);
+    mesh.position.set(wall.pos[0], wall.pos[1], wall.pos[2]);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add(mesh);
