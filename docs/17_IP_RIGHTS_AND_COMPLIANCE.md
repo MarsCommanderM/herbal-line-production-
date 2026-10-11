@@ -32,9 +32,9 @@ Nach deutschem Urheberrechtsgesetz ist Urheber grundsätzlich der Schöpfer eine
 
 Vor jeder Release-Freigabe genaue Lockfile-Versionen und Paketlizenzen prüfen. Für Libraries wird ein Software Bill of Materials (SBOM) exportiert; Lizenztexte und Attributionen liegen im Third-Party-Notices-File. Lizenzstatus darf nicht allein aus dem Namen einer Bibliothek oder aus einer alten Recherche abgeleitet werden.
 
-## 6. Medizin-/Arzneimittel-Compliance als Spielinhalt
+## 6. Fiktive Produkt- und Compliance-Regeln
 
-Das Spiel stellt eine fiktive, regulierte Produktionskette dar. Es ist keine reale Betriebssoftware, keine arzneimittelrechtliche Standard Operating Procedure und keine pharmazeutische Herstellungsanweisung. QC-/Lizenzschwellen sind Spielwerte und dürfen nicht als reale GMP-, Arzneibuch-, Labor- oder Apothekenstandards dargestellt werden. Reale Behauptungen über medizinische Wirkung, konkrete Produktionsverfahren oder aktuelle Zulassungsvorgaben gehören nicht in die Spielregeln ohne fachlich geprüfte Quellen und Rechtsreview.
+Das Spiel stellt eine fiktive, regulierte botanische Betriebsanlage dar. Alle Compliance-Werte sind reine Spielabstraktionen und ersetzen keine reale Rechts-, Produktions- oder Arzneimittelberatung. Der Quellumfang enthält keine realen Herstellungs- oder Distributionsanleitungen.ette dar. Es ist keine reale Betriebssoftware, keine arzneimittelrechtliche Standard Operating Procedure und keine pharmazeutische Herstellungsanweisung. QC-/Lizenzschwellen sind Spielwerte und dürfen nicht als reale GMP-, Arzneibuch-, Labor- oder Apothekenstandards dargestellt werden. Reale Behauptungen über medizinische Wirkung, konkrete Produktionsverfahren oder aktuelle Zulassungsvorgaben gehören nicht in die Spielregeln ohne fachlich geprüfte Quellen und Rechtsreview.
 
 ## 7. Release-Gate und Entscheidung
 
