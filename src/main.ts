@@ -15,6 +15,10 @@ const fatalError = document.querySelector<HTMLDivElement>('#fatal-error');
 const resetCameraButton = document.querySelector<HTMLButtonElement>('#reset-camera');
 const saveGameButton = document.querySelector<HTMLButtonElement>('#save-game');
 const loadGameButton = document.querySelector<HTMLButtonElement>('#load-game');
+const exportGameButton = document.querySelector<HTMLButtonElement>('#export-game');
+const importGameButton = document.querySelector<HTMLButtonElement>('#import-game');
+const importSaveInput = document.querySelector<HTMLInputElement>('#import-save-file');
+const saveStatus = document.querySelector<HTMLParagraphElement>('#save-status');
 const gameFeedback = document.querySelector<HTMLParagraphElement>('#game-feedback');
 
 let gameState = createInitialGameState();
@@ -51,6 +55,7 @@ function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<stri
   }
   renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
+  void autosaveCampaign();
 }
 
 function setFeedback(level: 'success' | 'error', message: string): void {
@@ -59,47 +64,162 @@ function setFeedback(level: 'success' | 'error', message: string): void {
   gameFeedback.textContent = message;
 }
 
+function setSaveStatus(level: 'success' | 'error' | 'info', message: string): void {
+  if (!saveStatus) return;
+  saveStatus.dataset.level = level;
+  saveStatus.textContent = message;
+}
+
+function setPersistenceControlsDisabled(disabled: boolean): void {
+  for (const control of [saveGameButton, loadGameButton, exportGameButton, importGameButton]) {
+    if (control) control.disabled = disabled;
+  }
+}
+
+async function writePrimarySave(envelope: Awaited<ReturnType<typeof createSaveEnvelope>>): Promise<void> {
+  try {
+    const previous = await saveRepository.load('campaign-01');
+    if (previous) await saveRepository.save('campaign-01-backup', previous);
+  } catch {
+    // A corrupt primary save must never overwrite the last known-good backup.
+  }
+  await saveRepository.save('campaign-01', envelope);
+}
+
+async function readBestAvailableSave(): Promise<{ envelope: NonNullable<Awaited<ReturnType<typeof saveRepository.load>>>; recoveredFromBackup: boolean } | null> {
+  let primaryError: unknown;
+  try {
+    const primary = await saveRepository.load('campaign-01');
+    if (primary) return { envelope: primary, recoveredFromBackup: false };
+  } catch (error) {
+    primaryError = error;
+  }
+
+  const backup = await saveRepository.load('campaign-01-backup');
+  if (backup) return { envelope: backup, recoveredFromBackup: true };
+  if (primaryError) throw primaryError;
+  return null;
+}
+
+async function autosaveCampaign(): Promise<void> {
+  if (persistenceBusy) return;
+  persistenceBusy = true;
+  setPersistenceControlsDisabled(true);
+  const revision = gameState.revision;
+  try {
+    const envelope = await createSaveEnvelope(gameState);
+    await writePrimarySave(envelope);
+    if (gameState.revision === revision) setSaveStatus('success', 'Autosave gespeichert · Revision ' + revision + '.');
+  } catch (error) {
+    if (gameState.revision === revision) setSaveStatus('error', 'Autosave fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
+  } finally {
+    persistenceBusy = false;
+    setPersistenceControlsDisabled(false);
+  }
+}
+
 async function saveCampaign(): Promise<void> {
   if (persistenceBusy) return;
   persistenceBusy = true;
-  if (saveGameButton) saveGameButton.disabled = true;
-  if (loadGameButton) loadGameButton.disabled = true;
+  setPersistenceControlsDisabled(true);
   try {
     const envelope = await createSaveEnvelope(gameState);
-    const metadata = await saveRepository.save('campaign-01', envelope);
+    const metadata = await writePrimarySave(envelope).then(async () => saveRepository.load('campaign-01')).then((saved) => {
+      if (!saved) throw new Error('Gespeicherter Datensatz ist nach dem Schreiben nicht lesbar.');
+      return { revision: saved.revision, byteLength: JSON.stringify(saved).length };
+    });
     setFeedback('success', 'Spielstand gespeichert · Revision ' + metadata.revision + ' · ' + metadata.byteLength + ' Byte.');
+    setSaveStatus('success', 'Manueller Spielstand gespeichert · Revision ' + metadata.revision + '.');
   } catch (error) {
     setFeedback('error', 'Speichern fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
+    setSaveStatus('error', 'Speichern fehlgeschlagen.');
   } finally {
     persistenceBusy = false;
-    if (saveGameButton) saveGameButton.disabled = false;
-    if (loadGameButton) loadGameButton.disabled = false;
+    setPersistenceControlsDisabled(false);
+  }
+}
+
+async function applyLoadedSave(): Promise<void> {
+  const result = await readBestAvailableSave();
+  if (!result) {
+    setFeedback('error', 'Es ist noch kein gespeicherter Spielstand vorhanden.');
+    setSaveStatus('info', 'Kein Spielstand gespeichert.');
+    return;
+  }
+  gameState = restoreGameState(result.envelope);
+  commandSequence = gameState.revision;
+  renderManagementUI(gameState, runGameCommand);
+  onGameStateChanged();
+  if (result.recoveredFromBackup) {
+    setFeedback('success', 'Wiederherstellung aus Backup · Revision ' + gameState.revision + '.');
+    setSaveStatus('error', 'Primärer Spielstand ungültig; letztes gültiges Backup wurde geladen.');
+  } else {
+    setFeedback('success', 'Spielstand geladen · Revision ' + gameState.revision + '.');
+    setSaveStatus('success', 'Spielstand geladen · Revision ' + gameState.revision + '.');
   }
 }
 
 async function loadCampaign(): Promise<void> {
   if (persistenceBusy) return;
   persistenceBusy = true;
-  if (saveGameButton) saveGameButton.disabled = true;
-  if (loadGameButton) loadGameButton.disabled = true;
+  setPersistenceControlsDisabled(true);
   try {
-    const envelope = await saveRepository.load('campaign-01');
-    if (!envelope) {
-      setFeedback('error', 'Es ist noch kein gespeicherter Spielstand vorhanden.');
-      return;
-    }
-    gameState = restoreGameState(envelope);
-    renderManagementUI(gameState, runGameCommand);
-    onGameStateChanged();
-    setFeedback('success', 'Spielstand geladen · Revision ' + gameState.revision + '.');
+    await applyLoadedSave();
   } catch (error) {
     setFeedback('error', 'Laden fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
+    setSaveStatus('error', 'Laden fehlgeschlagen; vorhandene Save-Dateien wurden nicht verändert.');
   } finally {
     persistenceBusy = false;
-    if (saveGameButton) saveGameButton.disabled = false;
-    if (loadGameButton) loadGameButton.disabled = false;
+    setPersistenceControlsDisabled(false);
   }
 }
+
+async function exportCampaign(): Promise<void> {
+  try {
+    const blob = await saveRepository.exportSlot('campaign-01');
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'herbal-line-campaign-01.json';
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setSaveStatus('success', 'Spielstandexport gestartet.');
+  } catch (error) {
+    setSaveStatus('error', 'Export fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
+  }
+}
+
+async function importCampaign(file: File): Promise<void> {
+  if (persistenceBusy) return;
+  persistenceBusy = true;
+  setPersistenceControlsDisabled(true);
+  try {
+    const current = await saveRepository.load('campaign-01').catch(() => null);
+    if (current) await saveRepository.save('campaign-01-backup', current);
+    const metadata = await saveRepository.importSlot('campaign-01', file);
+    const imported = await saveRepository.load('campaign-01');
+    if (!imported) throw new Error('Import wurde nicht dauerhaft gespeichert.');
+    gameState = restoreGameState(imported);
+    commandSequence = gameState.revision;
+    renderManagementUI(gameState, runGameCommand);
+    onGameStateChanged();
+    setFeedback('success', 'Spielstand importiert · Revision ' + metadata.revision + '.');
+    setSaveStatus('success', 'Import validiert, gespeichert und geladen.');
+  } catch (error) {
+    setFeedback('error', 'Import abgelehnt: ' + (error instanceof Error ? error.message : String(error)));
+    setSaveStatus('error', 'Import fehlgeschlagen; vorheriger gültiger Spielstand bleibt erhalten.');
+  } finally {
+    persistenceBusy = false;
+    setPersistenceControlsDisabled(false);
+    if (importSaveInput) importSaveInput.value = '';
+  }
+}
+
+const handleImportClick = (): void => { importSaveInput?.click(); };
+const handleImportChange = (): void => {
+  const file = importSaveInput?.files?.[0];
+  if (file) void importCampaign(file);
+};
 
 function showFatalError(error: unknown): void {
   if (!fatalError) return;
@@ -270,10 +390,27 @@ async function boot(): Promise<() => void> {
     stateLine.text = 'TAG ' + gameState.time.day + '  /  REV ' + gameState.revision + '  /  ' + gameState.compliance.licenseStatus.toUpperCase();
     layout();
   };
+  try {
+    const restored = await readBestAvailableSave();
+    if (restored) {
+      gameState = restoreGameState(restored.envelope);
+      commandSequence = gameState.revision;
+      setSaveStatus(restored.recoveredFromBackup ? 'error' : 'success', restored.recoveredFromBackup
+        ? 'Autosave beschädigt; letztes gültiges Backup wiederhergestellt.'
+        : 'Autosave wiederhergestellt · Revision ' + gameState.revision + '.');
+    } else {
+      setSaveStatus('info', 'Neue Kampagne · Autosave nach jeder erfolgreichen Aktion.');
+    }
+  } catch (error) {
+    setSaveStatus('error', 'Spielstand konnte nicht automatisch geladen werden: ' + (error instanceof Error ? error.message : String(error)));
+  }
   renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
   saveGameButton?.addEventListener('click', saveCampaign);
   loadGameButton?.addEventListener('click', loadCampaign);
+  exportGameButton?.addEventListener('click', exportCampaign);
+  importGameButton?.addEventListener('click', handleImportClick);
+  importSaveInput?.addEventListener('change', handleImportChange);
   window.addEventListener('resize', layout);
 
   const resize = (): void => {
@@ -297,6 +434,9 @@ async function boot(): Promise<() => void> {
     resetCameraButton?.removeEventListener('click', resetCamera);
     saveGameButton?.removeEventListener('click', saveCampaign);
     loadGameButton?.removeEventListener('click', loadCampaign);
+    exportGameButton?.removeEventListener('click', exportCampaign);
+    importGameButton?.removeEventListener('click', handleImportClick);
+    importSaveInput?.removeEventListener('change', handleImportChange);
     controls.dispose();
     ui.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
     renderer.dispose();
