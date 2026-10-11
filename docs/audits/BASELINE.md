@@ -75,8 +75,20 @@ The first verified application baseline was merged to `main` via PR [#4](https:/
 ### Remaining blockers
 
 - Exact byte-for-byte parity with the supplied 42-file Master Pack remains unverified.
-- IndexedDB save/load, schema migration and recovery are not yet implemented.
+- Versioned save codec, checksum verification, IndexedDB repository and manual save/load controls are implemented. Real-browser IndexedDB verification, a forward migration chain and quota/interrupted-write recovery remain open.
 - Browser E2E, accessibility automation, and cross-browser verification have not been run.
 - Asset provenance/licensing review and release-candidate acceptance remain open.
 
 **Updated baseline status: ENGINEERING FOUNDATION GREEN; PRODUCT NOT RELEASE-READY.**
+
+
+## Persistence milestone — 2026-10-12
+
+The initial save/load implementation was merged via [PR #5](https://github.com/MarsCommanderM/herbal-line-production-/pull/5).
+
+- Current main commit: `2f1d21587d4b7802d4bfa021b30fc22ddfbbf479`
+- Application CI: **PASS** — [run 38181929805](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181929805)
+- Master Pack validation workflow: **PASS** — [run 38181929917](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181929917)
+- Added: stable JSON serialization, SHA-256 save checksums, envelope validation, IndexedDB save/load/list/delete/export/import, transient UI reconstruction, manual save/load controls, and tests for checksum corruption and repository lifecycle.
+
+**Remaining persistence acceptance:** real-browser IndexedDB round-trip, schema migration beyond v1, quota exhaustion, interrupted transaction recovery, and browser E2E.
