@@ -39,6 +39,8 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
+      - name: Serve production build and smoke-test assets
+        run: npm run smoke:preview
       - name: Validate master-pack documents and JSON
         run: npm run validate:masterpack
       - name: Check whitespace
