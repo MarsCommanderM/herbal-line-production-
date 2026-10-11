@@ -53,4 +53,8 @@ Der Master-Pack-Inhalt wurde in dieses Repository expandiert. Der Repository-Sta
 
 ## Current engineering status
 
-The repository currently contains the production specification and contracts. The target repository does not yet have an observed `package.json`, dependency lockfile, `tsconfig.json`, `index.html`, app entry point, or validation workflow. See [the evidence-based baseline audit](docs/audits/BASELINE.md). The new workflow validates the master-pack artifacts only; it is not a game build.
+The repository now contains a pinned Vite/TypeScript toolchain and lockfile, a Three.js facility view, a PixiJS management interface, deterministic initial campaign state, typed domain commands, an abstract botanical operations flow, ledger-derived finance, QC/traceability gates, and vertical-slice tests.
+
+GitHub Actions has verified one earlier revision with source lint, format check, strict TypeScript typecheck, unit tests, production build, master-pack validation, and whitespace checks. The current branch has since been updated to keep user-facing gameplay in a generic botanical scope; the latest revision must pass the same workflow before it can be called green. Browser E2E, durable save/load and migration, asset licensing inventory, accessibility review, and release acceptance remain open.
+
+The supplied master pack is not yet proven byte-for-byte identical to the GitHub repository. See [the baseline audit](docs/audits/BASELINE.md) and [contract reconciliation](docs/audits/CONTRACT_RECONCILIATION.md).
