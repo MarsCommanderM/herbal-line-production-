@@ -7,6 +7,7 @@ export type DomainEvent =
   | (EventBase & { type: 'batch.created' | 'batch.queued' | 'batch.processing_started' | 'batch.awaiting_qc' | 'batch.released' | 'batch.rejected' | 'batch.quarantined'; batchId: EntityId; reasonCode?: string })
   | (EventBase & { type: 'quality.assessed'; batchId: EntityId; assessmentId: EntityId; score: Score0To100; decision: 'pass' | 'fail' | 'review' })
   | (EventBase & { type: 'order.accepted' | 'order.allocated' | 'order.blocked' | 'order.expired'; orderId: EntityId; reasonCode?: string })
+  | (EventBase & { type: 'delivery.created'; deliveryId: EntityId; orderId: EntityId })
   | (EventBase & { type: 'delivery.dispatched' | 'delivery.delivered' | 'delivery.exception'; deliveryId: EntityId; orderId: EntityId; reasonCode?: string })
   | (EventBase & { type: 'compliance.violation_recorded' | 'compliance.license_changed' | 'compliance.audit_completed'; code: string; status?: string })
   | (EventBase & { type: 'finance.ledger_posted'; ledgerEntryId: EntityId; amountCents: number; account: string })

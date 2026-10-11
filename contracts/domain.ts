@@ -68,7 +68,7 @@ export interface OrderState {
   allocatedLotIds: EntityId[]; deliveryId: EntityId | null;
 }
 export interface CustomerState {
-  id: EntityId; name: string; kind: 'pharmacy' | 'clinic' | 'licensed_buyer';
+  id: EntityId; name: string; kind: 'licensed_buyer' | 'institutional_buyer' | 'botanical_retailer';
   reliabilityScore: Score0To100; minimumReputation: Reputation0To1000; preferredQuality: Score0To100;
   paymentDelayDays: number; unlocked: boolean;
 }
@@ -105,9 +105,7 @@ export interface LedgerEntry {
   id: EntityId; simulationMinute: SimulationMinute; account: 'revenue' | 'expense' | 'penalty' | 'investment' | 'refund';
   amountCents: MoneyCents; referenceId: EntityId | null; reasonCode: string; idempotencyKey: string;
 }
-export interface EconomyState {
-  openingBalanceCents: MoneyCents; ledger: LedgerEntry[];
-}
+export interface EconomyState { openingBalanceCents: MoneyCents; ledger: LedgerEntry[]; }
 export interface UpgradeState { id: string; unlocked: boolean; purchasedAt: SimulationMinute | null; }
 export interface NotificationState {
   id: EntityId; code: string; level: 'info' | 'success' | 'warning' | 'danger';
@@ -122,7 +120,7 @@ export interface GameState {
   schemaVersion: 1; gameVersion: string; revision: number; rngState: number; time: TimeState;
   player: PlayerState; reputation: Reputation0To1000;
   rooms: RoomState[]; sourceLots: SourceLotState[]; plants: PlantState[]; batches: BatchState[];
-  inventoryLots: InventoryLotState[]; orders: OrderState[]; customers: CustomerState[];
+  inventoryLots: InventoryLotState[]; qualityAssessments: QualityAssessment[]; orders: OrderState[]; customers: CustomerState[];
   deliveries: DeliveryState[]; staff: StaffState[]; assignments: WorkAssignmentState[]; machines: MachineState[];
   upgrades: UpgradeState[]; compliance: ComplianceState; economy: EconomyState;
   logs: GameLogEntry[]; ui: UIState;

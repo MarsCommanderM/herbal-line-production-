@@ -2,17 +2,83 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
+import type { CommandId } from '../contracts/domain';
+import { createInitialGameState } from './domain/initial-state';
+import { applyVerticalSliceCommand, type VerticalSliceCommand } from './domain/vertical-slice';
+import { renderManagementUI } from './ui/management';
 
 const worldRoot = document.querySelector<HTMLDivElement>('#world-root');
 const uiRoot = document.querySelector<HTMLDivElement>('#ui-root');
 const fatalError = document.querySelector<HTMLDivElement>('#fatal-error');
 const resetCameraButton = document.querySelector<HTMLButtonElement>('#reset-camera');
+const gameFeedback = document.querySelector<HTMLParagraphElement>('#game-feedback');
+
+let gameState = createInitialGameState();
+let commandSequence = 0;
+let onGameStateChanged: () => void = () => {};
+
+function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<string, unknown>): void {
+  commandSequence += 1;
+  const command = {
+    commandId: ('ui-command-' + commandSequence) as CommandId,
+    actorId: gameState.player.id,
+    expectedRevision: gameState.revision,
+    type,
+    ...payload,
+  } as VerticalSliceCommand;
+  const result = applyVerticalSliceCommand(gameState, command);
+  if (!result.ok) {
+    if (gameFeedback) {
+      gameFeedback.dataset.level = 'error';
+      gameFeedback.textContent = result.error.message;
+    }
+    return;
+  }
+  gameState = result.state;
+  if (gameFeedback) {
+    gameFeedback.dataset.level = 'success';
+    gameFeedback.textContent = gameState.logs[gameState.logs.length - 1]?.message ?? 'Aktion ausgeführt.';
+  }
+  renderManagementUI(gameState, runGameCommand);
+  onGameStateChanged();
+}
 
 function showFatalError(error: unknown): void {
   if (!fatalError) return;
   const detail = error instanceof Error ? error.message : String(error);
   fatalError.hidden = false;
-  fatalError.textContent = `The facility view could not start. Reload the page or inspect the developer console.\n${detail}`;
+  fatalError.textContent = `Die Anlagenansicht konnte nicht gestartet werden. Lade die Seite neu oder prüfe die Entwicklerkonsole.\n${detail}`;
+}
+
+
+function createBotanicalPlant(x: number, z: number, variant: number): THREE.Group {
+  const plant = new THREE.Group();
+  const stemMaterial = new THREE.MeshStandardMaterial({ color: '#527c63', roughness: 0.82 });
+  const leafMaterial = new THREE.MeshStandardMaterial({
+    color: variant % 2 === 0 ? '#4f9470' : '#6ca77b',
+    roughness: 0.78,
+    side: THREE.DoubleSide,
+  });
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.075, 1.45, 8), stemMaterial);
+  stem.position.y = 0.78;
+  stem.castShadow = true;
+  plant.add(stem);
+  for (let level = 0; level < 4; level += 1) {
+    for (const side of [-1, 1]) {
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), leafMaterial);
+      leaf.scale.set(0.72, 0.22, 0.42);
+      leaf.position.set(side * (0.16 + level * 0.035), 0.38 + level * 0.28, 0);
+      leaf.rotation.z = side * 0.38;
+      leaf.rotation.y = (variant % 3) * 0.22;
+      leaf.castShadow = true;
+      plant.add(leaf);
+    }
+  }
+  const crown = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), leafMaterial);
+  crown.position.y = 1.55;
+  plant.add(crown);
+  plant.position.set(x, 0, z);
+  return plant;
 }
 
 async function boot(): Promise<() => void> {
@@ -68,15 +134,14 @@ async function boot(): Promise<() => void> {
     { size: [0.25, 4, 18] as const, pos: [12, 2, 0] as const },
   ];
   for (const wall of walls) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...wall.size), wallMaterial);
-    mesh.position.set(...wall.pos);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(wall.size[0], wall.size[1], wall.size[2]), wallMaterial);
+    mesh.position.set(wall.pos[0], wall.pos[1], wall.pos[2]);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add(mesh);
   }
 
   const stationMaterial = new THREE.MeshStandardMaterial({ color: '#33465c', roughness: 0.45, metalness: 0.35 });
-  const accentMaterial = new THREE.MeshStandardMaterial({ color: '#3c8f83', roughness: 0.48, metalness: 0.08 });
   for (let row = 0; row < 3; row += 1) {
     for (let column = 0; column < 4; column += 1) {
       const x = -7.5 + column * 5;
@@ -87,22 +152,11 @@ async function boot(): Promise<() => void> {
       station.receiveShadow = true;
       scene.add(station);
 
-      // Abstract visual tokens only; these shapes encode no real-world growing parameters.
+      // Fictional generic botanical silhouettes. They are decorative game assets, not real-world plant guidance.
       for (let pod = 0; pod < 3; pod += 1) {
-        const stem = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.06, 0.09, 0.9, 8),
-          accentMaterial,
-        );
-        stem.position.set(x - 0.7 + pod * 0.7, 0.95, z);
-        stem.castShadow = true;
-        scene.add(stem);
-        const crown = new THREE.Mesh(
-          new THREE.SphereGeometry(0.3, 10, 8),
-          new THREE.MeshStandardMaterial({ color: pod % 2 === 0 ? '#72b49a' : '#4f957f', roughness: 0.8 }),
-        );
-        crown.position.set(x - 0.7 + pod * 0.7, 1.45, z);
-        crown.castShadow = true;
-        scene.add(crown);
+        const plant = createBotanicalPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
+        plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
+        station.add(plant);
       }
     }
   }
@@ -131,7 +185,7 @@ async function boot(): Promise<() => void> {
     style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#8fa8c6', letterSpacing: 1.4 },
   });
   const stateLine = new Text({
-    text: 'ENGINE FOUNDATION  •  DOMAIN TESTS DEFINED  •  GAME LOOP NOT YET COMPLETE',
+    text: 'FOUNDATION BUILD  •  FICTIONAL GAME VALUES  •  VERTICAL SLICE IN PROGRESS',
     style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#d8c89b', wordWrap: true, wordWrapWidth: 380 },
   });
   hud.addChild(panel, title, subtitle, stateLine);
@@ -154,6 +208,12 @@ async function boot(): Promise<() => void> {
     if (resetCameraButton) resetCameraButton.style.left = '37px';
   };
   layout();
+  onGameStateChanged = () => {
+    stateLine.text = 'TAG ' + gameState.time.day + '  /  REV ' + gameState.revision + '  /  ' + gameState.compliance.licenseStatus.toUpperCase();
+    layout();
+  };
+  renderManagementUI(gameState, runGameCommand);
+  onGameStateChanged();
   window.addEventListener('resize', layout);
 
   const resize = (): void => {

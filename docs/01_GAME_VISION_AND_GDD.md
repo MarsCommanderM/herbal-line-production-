@@ -2,7 +2,7 @@
 
 ## High Concept
 
-Ein strategisches Management-/Tycoon-Spiel über den Aufbau einer streng regulierten fiktiven botanischen Produktionsanlage. Der Spieler leitet einen kleinen Betrieb und entwickelt ihn zu einem zuverlässigen, dokumentationsstarken Lieferanten für fiktive Apothekenkunden.
+Ein strategisches Management-/Tycoon-Spiel über den Betrieb einer streng regulierten botanischen Anlage. Der Spieler leitet einen kleinen Betrieb und entwickelt ihn zu einem zuverlässigen, dokumentationsstarken Anbieter für fiktive institutionelle Kunden.
 
 ## Genre, Plattform, Perspektive
 
@@ -36,7 +36,7 @@ Die erste Kampagne startet mit einem kleinen Betriebsbereich, begrenzter Kapazit
 
 ## Production-quality Vertical Slice
 
-Ein kompletter, auf finaler Architektur und finaler visueller Richtung beruhender Spielablauf: Produktionsraum, Lagerbereich, QC, ein fiktiver Apothekenkunde, eine Charge mit vollständigen Statusübergängen, QC-Ergebnis, Bestellung, Reservierung, Lieferung, Auszahlung, Compliance-Protokoll, Save/Load und Tagesauswertung. Kein Blockout, keine Attrappen.
+Ein kompletter, auf finaler Architektur und finaler visueller Richtung beruhender Spielablauf: Produktionsraum, Lagerbereich, QC, ein fiktiver institutioneller Kunde, eine Charge mit vollständigen Statusübergängen, QC-Ergebnis, Bestellung, Reservierung, Lieferung, Auszahlung, Compliance-Protokoll, Save/Load und Tagesauswertung. Kein Blockout, keine Attrappen.
 
 ## Release-Inhalt
 
@@ -55,7 +55,7 @@ Ein kompletter, auf finaler Architektur und finaler visueller Richtung beruhende
 
 ## Nicht-Ziele
 
-- keine realen Kultivierungs-, Arzneimittelherstellungs- oder Vertriebsanleitungen;
+- keine reale Cannabis-Kultivierungs-, -Verarbeitungs-, Arzneimittelherstellungs- oder Vertriebsanleitung;
 - keine realen Rezepturen, Klimasetpoints, Produktionskalender oder Herstellungsprotokolle;
 - keine Patientenakten, medizinische Beratung oder Arzneimitteldosierung;
 - keine echten Bestellungen, Lieferungen, Zahlungen oder regulatorischen Meldungen;

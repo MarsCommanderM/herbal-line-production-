@@ -10,7 +10,7 @@ Das Produkt wird als browserbasiertes TypeScript-Spiel mit einem lokalen, geschi
 
 1. **App/Runtime:** Bootstrap, Fehlergrenzen, Runtime-Lifecycle, feste Simulationsschritte, Screen-/Scene-Lifecycle.
 2. **Domain/Simulation:** deterministische, überwiegend reine TypeScript-Funktionen. Keine DOM-, Renderer-, Netzwerk- oder Storage-Imports.
-3. **State:** eine Quelle der Wahrheit; Commands/Reducer bzw. Domain-Service liefern validierte Folgezustände. Keine zweite Kopie von Geld, Bestand, Lizenz oder Auftragsstatus in UI-Objekten. Geldsaldo und Umsatz-/Kosten-Summen werden aus dem Ledger abgeleitet.
+3. **State:** eine Quelle der Wahrheit; Commands/Reducer bzw. Domain-Service liefern validierte Folgezustände. Keine zweite Kopie von Geld, Bestand, Lizenz oder Auftragsstatus in UI-Objekten.
 4. **Engine:** Three.js, Kamera, Input, Scene graph, Assets, Audio und Rapier. Engine-Objekte sind abgeleitete Laufzeitrepräsentationen.
 5. **UI:** PixiJS liest State über Selectors und sendet Commands. Sie entscheidet nicht über QC, Bestände, Preise, Lizenz oder Produktion.
 6. **Persistence:** IndexedDB-Repository mit Schema, Snapshot, Migration, Validierung, Backup/Recovery und Fehlerzuständen.

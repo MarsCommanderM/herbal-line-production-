@@ -1,21 +1,27 @@
 # Next Task — Authoritative Queue
 
 ## Current status
-- **P0-001:** Audit report recorded at `docs/audits/BASELINE.md`. Repository metadata and key paths were checked; local master-pack validation and ZIP integrity passed. Target-repository build/test remains unrun because no executable clone was available in the audit environment.
-- **P0-002:** Source-level contract reconciliation recorded at `docs/audits/CONTRACT_RECONCILIATION.md`. Conflicting money state, transient UI persistence, QC result duplication, inventory reservation status, license recovery state and command channels were reconciled. TypeScript compile proof is deferred to P0-003.
+P0-001 repository truth audit is recorded in `docs/audits/BASELINE.md`. The GitHub-connected audit confirmed the project documentation and contract paths, and recorded the missing executable-app/toolchain baseline. The target repository was not cloned into an executable checkout here; no app build or game tests have been claimed. Master-pack validation and ZIP integrity were tested on the local extracted pack.
 
-## P0-003 — Reproducible Engineering Baseline (CURRENT)
-- **Goal:** Establish a runnable Vite/TypeScript web shell, pinned direct dependencies, a committed lockfile, strict compiler settings, domain tests and CI.
-- **Outputs:** `package.json`, `package-lock.json`, `tsconfig.json`, `index.html`, `src/`, `vitest.config.ts`, CI workflow and evidence report.
-- **Acceptance:** Clean checkout installs through `npm ci`; strict typecheck, unit tests and production build run on the same commit; lockfile is committed; CI results are linked and recorded. Master-pack validation is a separate gate and must not be described as a game build.
-- **Dependencies:** P0-001 and source-level P0-002 reconciliation.
-- **Status:** In progress.
+## P0-002 — Reconcile Project Truth (SOURCE-LEVEL COMPLETE; REVIEW OPEN)
+- **Goal:** Compare product scope, canonical contracts, schemas, simulation rules, and persistence ownership; resolve contradictions before application scaffolding.
+- **Outputs:** `docs/audits/CONTRACT_RECONCILIATION.md`, explicit decision log, corrected domain/save contracts only where justified.
+- **Acceptance:** one consistent source of truth for entities, transitions, time, RNG, money, batch release, inventory reservation, order/delivery idempotency and save migration.
+- **Dependencies:** P0-001.
+- **Status:** Source-level reconciliation recorded; exact archive parity and final review remain open.
+
+## P0-003 — Reproducible Engineering Baseline
+- **Goal:** Establish a runnable Vite/TypeScript app, strict compiler settings, pinned dependencies and committed lockfile, lint, unit tests, production build and CI.
+- **Outputs:** app shell, dependency manifest/lockfile, scripts, CI gates, smoke tests and reproducible instructions.
+- **Acceptance:** clean checkout can install via frozen lockfile and run typecheck, lint, tests and build; each result is observed on the same commit and recorded.
+- **Dependencies:** P0-002.
+- **Status:** Implemented on the recovery branch; latest revision CI must pass before acceptance.
 
 ## P1-001 — Vertical Slice Domain
-- **Goal:** Implement the first complete, generic botanical operations management loop: intake → fictional state progression → QC hold/release → inventory → customer dispatch.
-- **Acceptance:** Illegal transitions rejected; held/rejected batches cannot dispatch; stock movement and delivery are traceable; deterministic tests cover positive and negative paths.
+- **Goal:** Implement the first fully traceable management loop: intake → abstract botanical stages → QC hold/release → inventory → generic customer dispatch.
+- **Acceptance:** illegal transitions rejected; held/rejected batches cannot dispatch; stock movement and delivery are traceable; deterministic tests cover positive and negative paths.
 - **Dependencies:** P0-003.
-- **Status:** Pending.
+- **Status:** End-to-end domain flow and management controls implemented; CI/browser E2E and save/load remain open.
 
 ## Operating rule
 Do not mark a task complete without implementation evidence, relevant tests, reviewed diff and updated documentation. Continue to the next unblocked task after acceptance. Paid or irreversible external actions require existing explicit authorization.

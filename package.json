@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A fictional, regulated botanical operations management game.",
+  "description": "Herbal Line — a fictional botanical operations management game.",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
+    "lint": "node scripts/lint-source.mjs",
+    "format:check": "node scripts/check-format.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:masterpack": "python scripts/validate_masterpack.py"

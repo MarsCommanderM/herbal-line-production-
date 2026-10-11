@@ -18,7 +18,7 @@ function assertNonNegativeSafeInteger(value: number, field: string): void {
 /** Derives the current balance from the opening balance and immutable ledger entries. */
 export function getBalanceCents(economy: EconomyState): MoneyCents {
   assertNonNegativeSafeInteger(economy.openingBalanceCents, 'openingBalanceCents');
-  let balance = economy.openingBalanceCents;
+  let balance: number = economy.openingBalanceCents;
   for (const entry of economy.ledger) {
     assertNonNegativeSafeInteger(entry.amountCents, 'ledger.amountCents');
     switch (entry.account) {
