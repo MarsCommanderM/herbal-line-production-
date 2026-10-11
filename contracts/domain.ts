@@ -120,7 +120,7 @@ export interface GameState {
   schemaVersion: 1; gameVersion: string; revision: number; rngState: number; time: TimeState;
   player: PlayerState; reputation: Reputation0To1000;
   rooms: RoomState[]; sourceLots: SourceLotState[]; plants: PlantState[]; batches: BatchState[];
-  inventoryLots: InventoryLotState[]; orders: OrderState[]; customers: CustomerState[];
+  inventoryLots: InventoryLotState[]; qualityAssessments: QualityAssessment[]; orders: OrderState[]; customers: CustomerState[];
   deliveries: DeliveryState[]; staff: StaffState[]; assignments: WorkAssignmentState[]; machines: MachineState[];
   upgrades: UpgradeState[]; compliance: ComplianceState; economy: EconomyState;
   logs: GameLogEntry[]; ui: UIState;
