@@ -6,6 +6,7 @@ import './styles.css';
 const worldRoot = document.querySelector<HTMLDivElement>('#world-root');
 const uiRoot = document.querySelector<HTMLDivElement>('#ui-root');
 const fatalError = document.querySelector<HTMLDivElement>('#fatal-error');
+const resetCameraButton = document.querySelector<HTMLButtonElement>('#reset-camera');
 
 function showFatalError(error: unknown): void {
   if (!fatalError) return;
@@ -133,20 +134,13 @@ async function boot(): Promise<() => void> {
     text: 'ENGINE FOUNDATION  •  DOMAIN TESTS DEFINED  •  GAME LOOP NOT YET COMPLETE',
     style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#d8c89b', wordWrap: true, wordWrapWidth: 380 },
   });
-  const resetButton = new Container();
-  const resetBg = new Graphics().roundRect(0, 0, 142, 34, 7).fill({ color: 0x263a52, alpha: 0.98 }).stroke({ color: 0x59718f, width: 1 });
-  const resetLabel = new Text({ text: 'RESET CAMERA', style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fontWeight: 'bold', fill: '#f0f5ff', letterSpacing: 1 } });
-  resetLabel.anchor.set(0.5);
-  resetLabel.position.set(71, 17);
-  resetButton.addChild(resetBg, resetLabel);
-  resetButton.eventMode = 'static';
-  resetButton.cursor = 'pointer';
-  resetButton.on('pointertap', () => {
+  hud.addChild(panel, title, subtitle, stateLine);
+  const resetCamera = (): void => {
     camera.position.set(15, 13, 18);
     controls.target.set(0, 0, 0);
     controls.update();
-  });
-  hud.addChild(panel, title, subtitle, stateLine, resetButton);
+  };
+  resetCameraButton?.addEventListener('click', resetCamera);
 
   const layout = (): void => {
     const width = ui.screen.width;
@@ -157,10 +151,10 @@ async function boot(): Promise<() => void> {
     subtitle.position.set(37, 60);
     stateLine.style.wordWrapWidth = Math.min(390, width - 76);
     stateLine.position.set(37, 84);
-    resetButton.position.set(37, 116);
+    if (resetCameraButton) resetCameraButton.style.left = '37px';
   };
   layout();
-  ui.renderer.on('resize', layout);
+  window.addEventListener('resize', layout);
 
   const resize = (): void => {
     const width = Math.max(1, worldRoot.clientWidth);
@@ -179,8 +173,10 @@ async function boot(): Promise<() => void> {
   return () => {
     renderer.setAnimationLoop(null);
     window.removeEventListener('resize', resize);
+    window.removeEventListener('resize', layout);
+    resetCameraButton?.removeEventListener('click', resetCamera);
     controls.dispose();
-    ui.destroy(true);
+    ui.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
     renderer.dispose();
     renderer.domElement.remove();
   };
