@@ -53,8 +53,10 @@ Der Master-Pack-Inhalt wurde in dieses Repository expandiert. Der Repository-Sta
 
 ## Current engineering status
 
-The repository now contains a pinned Vite/TypeScript toolchain and lockfile, a Three.js facility view, a PixiJS management interface, deterministic initial campaign state, typed domain commands, an abstract botanical operations flow, ledger-derived finance, QC/traceability gates, and vertical-slice tests.
+The current integration branch contains a pinned Vite/TypeScript toolchain and lockfile, a Three.js facility view, a PixiJS management interface, deterministic domain state, typed commands, a fictional botanical operations vertical slice, ledger-derived finance, QC/traceability gates, and a versioned IndexedDB save system.
 
-GitHub Actions has verified one earlier revision with source lint, format check, strict TypeScript typecheck, unit tests, production build, master-pack validation, and whitespace checks. The current branch has since been updated to keep user-facing gameplay in a generic botanical scope; the latest revision must pass the same workflow before it can be called green. Browser E2E, durable save/load and migration, asset licensing inventory, accessibility review, and release acceptance remain open.
+The latest verified revision is `bce2a0bd0edda036032be03e8dfea3033057ea52`. [GitHub Actions run 38182289439](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182289439) passed install, source lint, format, strict typecheck, 26 unit tests, production build, three Chromium E2E tests, production preview smoke, master-pack validation and whitespace checks.
 
-The supplied master pack is not yet proven byte-for-byte identical to the GitHub repository. See [the baseline audit](docs/audits/BASELINE.md) and [contract reconciliation](docs/audits/CONTRACT_RECONCILIATION.md).
+Persistence currently supports manual save/load, autosave after successful actions, last-known-good backup recovery, JSON export/import, and SHA-256 validation. Schema migration beyond v1, quota/interrupted-write recovery, cross-browser testing, accessibility review, final asset/license review and release acceptance remain open.
+
+The supplied master pack is **not yet proven byte-for-byte identical** to the GitHub implementation tree. The 42-file archive is identified by SHA-256 `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`. Exact per-path parity remains a P0 task; see [the baseline audit](docs/audits/BASELINE.md), [contract reconciliation](docs/audits/CONTRACT_RECONCILIATION.md), and [implementation status](docs/audits/IMPLEMENTATION_STATUS.md).
