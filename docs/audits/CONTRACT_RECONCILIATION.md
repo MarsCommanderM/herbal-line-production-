@@ -2,30 +2,54 @@
 
 ## Authority
 
-The source of truth is the supplied Herbal Line Master Pack: `AGENTS.md`, `PROJECT_MANIFEST.json`, `docs/00_MASTER_PRODUCTION_DOCUMENT.md`, `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md`, `docs/05_TECH_ARCHITECTURE.md`, `docs/06_CANONICAL_CONTRACTS.md`, `contracts/*.ts`, and `schemas/*.schema.json`. The implementation branch uses the safe generic botanical-operations scope: fictional plants, abstract QC/inventory/compliance, and generic customer orders. No real-world production or controlled-substance distribution guidance is implemented.
+The supplied Herbal Line Master Pack is the reference for product requirements, domain concepts, schemas and production gates. The implementation branch currently keeps the playable simulation fictional and generic: abstract botanical units, QC/inventory/compliance states and generic customer orders. No real-world controlled-substance production or distribution instructions are implemented.
 
-## Conflicts found and reconciled on this branch
+## Decisions recorded
 
 | Contract | Conflict | Resolution |
 |---|---|---|
-| Compliance state | The domain union omitted `recovery_review`, while the canonical state machine explicitly requires it. | Added `recovery_review` to `LicenseStatus`. |
-| Quality assessment | `QualityAssessment` stored both `passed: boolean` and `decision: pass/fail/review`; the event contract stored only `passed`. These can disagree. | The assessment and `quality.assessed` event use the single canonical decision union. |
-| Inventory reservation | `quantityReserved` and a `reserved` disposition could encode overlapping state; the pure reservation function preserves lot disposition. | Removed `reserved` from the lot disposition union; reservation remains quantity-based and atomic. |
-| Economy | `GameState.moneyCents` duplicated a balance derivable from `EconomyState.openingBalanceCents + ledger`; mutable daily/lifetime summary totals duplicated ledger-derived data. | Removed the parallel balance and summary fields. Finance selectors derive balance and totals from the ledger. |
-| Persistence | The save payload included transient UI state, contrary to the canonical distinction between game state and UI state. | Save payload type is `Omit<GameState, 'ui'>`; the v1 JSON schema no longer requires `ui` or `moneyCents`. |
-| Commands | One union mixed domain mutations, UI navigation/selection, and persistence requests. | Split into `DomainCommand`, `UICommand`, and `PersistenceCommand`, with `GameCommand` as the aggregate union. |
+| Compliance state | Domain status union omitted `recovery_review`. | Added `recovery_review` to the compliance state union. |
+| Quality assessment | `passed: boolean` duplicated `decision: pass/fail/review`. | Use the decision union as the canonical assessment outcome. |
+| Inventory reservation | Quantity reservation and a `reserved` disposition duplicated state. | Reservation is represented by reserved quantity; lot disposition remains independent. |
+| Economy | Parallel balance and summary totals duplicated the ledger. | Finance selectors derive balances and totals from opening balance plus ledger. |
+| Persistence | UI state was mixed into the save payload. | Persisted payload omits transient UI; UI is reconstructed on restore. |
+| Commands | Domain, UI and persistence commands shared one undifferentiated union. | Separate command categories and retain a composed public union. |
 
-## Validation evidence
+## Verified implementation and test evidence
 
-- The supplied archive validator ran locally and passed: 20 required paths checked, exit status 0.
-- All 6 JSON files in the archive parsed successfully, exit status 0.
-- ZIP integrity check passed with no archive errors.
-- GitHub Actions initially executed typecheck on the recovery branch and found two defects in the carried-over app foundation: branded money arithmetic inferred an overly narrow type, and a Three.js geometry spread failed strict TypeScript. Both were corrected in commits on this branch.
-- A subsequent CI run is required to establish whether typecheck, source lint, format check, tests, build, and master-pack validation pass together. No all-green claim is made yet.
+Latest verified revision: `bce2a0bd0edda036032be03e8dfea3033057ea52`.
+
+[GitHub Actions run 38182289439](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182289439) passed all steps on that exact commit:
+
+- `npm ci --no-audit --no-fund`
+- Source policy lint: 11 TypeScript files checked
+- Format check: 28 source/config files checked
+- Strict TypeScript typecheck
+- Unit tests: 26 passed across 5 test files
+- Production build
+- Chromium E2E: 3 passed
+- Production preview smoke: HTML, JS bundle, save controls and CSS served successfully
+- Master-pack validation: 39 required paths and 6 JSON documents checked
+- `git diff --check`
+
+## Persistence behavior now implemented
+
+- Canonical JSON serialization and SHA-256 integrity check.
+- Version-1 save envelope with UI excluded.
+- IndexedDB save repository with validation before writes and reads.
+- Manual save/load plus autosave after successful domain commands.
+- Last-known-good backup written before replacing a valid primary save.
+- Fallback to backup if the primary save fails validation.
+- JSON export and validated import.
+- Browser E2E coverage for reload persistence, corrupt-primary recovery and export/import round-trip.
 
 ## Remaining blockers
 
-1. Exact byte-for-byte synchronization with the supplied archive is still not verified. The historical 42-path snapshot used as the recovery base has content differences in some files; this must be reconciled before calling the repository a 1:1 copy.
-2. Save/load storage, migration, and recovery are not implemented.
-3. The full intake → fictional production stages → QA → inventory → pharmacy order → dispatch loop is not implemented.
-4. CI must pass on the current head before P0-003 can be accepted.
+1. **Exact Master Pack parity remains unverified.** The ZIP SHA-256 is `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`; it contains 42 files. The historical pack-shaped recovery snapshot had 42 matching paths but 36 blob-content mismatches. The current implementation branch must not be called a 1:1 mirror until a reproducible per-path comparison proves it.
+2. Save schema migration beyond v1, quota exhaustion, and interrupted-write recovery need explicit tests before release acceptance.
+3. Chromium is the only automated browser target so far.
+4. Full game-loop UX, comprehensive accessibility, final licensed assets, visual/performance QA, security review and release acceptance remain open.
+
+## Decision rule
+
+Do not rewrite canonical documents to fit the current implementation silently. Record any intentional deviation, explain why it is needed, add a migration or compatibility plan where applicable, and verify the resulting contract and implementation on the same commit.

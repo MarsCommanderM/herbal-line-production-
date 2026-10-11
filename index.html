@@ -22,7 +22,11 @@
         <div class="save-controls" aria-label="Spielstand">
           <button id="save-game" type="button">Spielstand speichern</button>
           <button id="load-game" type="button">Spielstand laden</button>
+          <button id="export-game" type="button">Spielstand exportieren</button>
+          <button id="import-game" type="button">Spielstand importieren</button>
+          <input id="import-save-file" type="file" accept="application/json,.json" hidden />
         </div>
+        <p id="save-status" role="status" aria-live="polite">Autosave wird vorbereitet.</p>
         <p id="game-feedback" role="status" aria-live="polite">Kampagne bereit.</p>
         <section class="panel-section">
           <h2>Nächster Schritt</h2>
