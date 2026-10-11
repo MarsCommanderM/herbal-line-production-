@@ -153,7 +153,7 @@ async function boot(): Promise<() => void> {
     { size: [0.25, 4, 18] as const, pos: [12, 2, 0] as const },
   ];
   for (const wall of walls) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...wall.size), wallMaterial);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(wall.size[0], wall.size[1], wall.size[2]), wallMaterial);
     mesh.position.set(...wall.pos);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
