@@ -1,7 +1,7 @@
 import type { CommandId, EntityId, GameState, Score0To100 } from './domain';
 
 export interface CommandBase { commandId: CommandId; actorId: EntityId; expectedRevision: number; }
-export type GameCommand =
+export type DomainCommand =
   | (CommandBase & { type: 'TIME/SET_PAUSED'; paused: boolean })
   | (CommandBase & { type: 'TIME/SET_SPEED'; speed: 0 | 1 | 2 | 4 })
   | (CommandBase & { type: 'SOURCE/RECEIVE'; sourceLotId: EntityId; sourceRef: string; quantity: number })
@@ -22,10 +22,14 @@ export type GameCommand =
   | (CommandBase & { type: 'ROOM/PURCHASE'; roomId: EntityId; definitionId: string })
   | (CommandBase & { type: 'STAFF/ASSIGN'; assignmentId: EntityId; staffId: EntityId; taskCode: string; entityId: EntityId | null })
   | (CommandBase & { type: 'UPGRADE/PURCHASE'; upgradeId: string })
-  | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId })
+  | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId });
+
+export type UICommand =
   | (CommandBase & { type: 'UI/SELECT'; entityId: EntityId | null })
-  | (CommandBase & { type: 'UI/SET_SCREEN'; screen: string })
-  | (CommandBase & { type: 'SAVE/REQUEST'; slotId: string });
+  | (CommandBase & { type: 'UI/SET_SCREEN'; screen: string });
+
+export type PersistenceCommand = CommandBase & { type: 'SAVE/REQUEST'; slotId: string };
+export type GameCommand = DomainCommand | UICommand | PersistenceCommand;
 
 export type CommandFailureCode =
   | 'INVALID_PAYLOAD' | 'STALE_REVISION' | 'NOT_FOUND' | 'INVALID_TRANSITION'
