@@ -65,6 +65,7 @@ A separate working branch, `production/herbal-line-baseline-20261012`, was creat
 ## Integration branch status
 
 - Clean integration branch: `production/herbal-line-clean-baseline-20261012`.
-- Integration tree commit: `bbac611ddd3588112f2001b817a20bfc720ae2d5`, based directly on the observed `main` head.
+- Initial integration tree commit: `bbac611ddd3588112f2001b817a20bfc720ae2d5`, based directly on the observed `main` head.
+- CI-verified integration code commit: `9ae1426a23ca3cf3b453e4991a3c40b3794f5eee`; [run 38181308979](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181308979) passed all configured checks.
 - It restores the 42 paths from the historical pack-shaped snapshot, carries the reconciled contracts and the application foundation, and removes the unneeded `validate-masterpack.yml` workflow.
 - It does **not** restore the archive's exact file contents. Exact 1:1 synchronization remains blocking. The original `main` branch was not changed by this work.
