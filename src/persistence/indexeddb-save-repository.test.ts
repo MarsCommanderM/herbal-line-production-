@@ -37,18 +37,18 @@ class FakeObjectStore {
     return this.request(() => {
       this.database.records.set(value.slotId, clone(value));
       return value.slotId;
-    });
+    }) as unknown as IDBRequest<IDBValidKey>;
   }
 
   get(key: IDBValidKey): IDBRequest<unknown> {
     return this.request(() => {
       const record = this.database.records.get(String(key));
       return record ? clone(record) : undefined;
-    });
+    }) as unknown as IDBRequest<unknown>;
   }
 
   getAll(): IDBRequest<unknown[]> {
-    return this.request(() => [...this.database.records.values()].map(clone));
+    return this.request(() => [...this.database.records.values()].map(clone)) as unknown as IDBRequest<unknown[]>;
   }
 
   delete(key: IDBValidKey): IDBRequest<undefined> {
@@ -168,7 +168,7 @@ describe('IndexedDbSaveRepository', () => {
     const database = factory.databases.get('herbal-line-test');
     const record = database?.records.get('campaign-01');
     if (!record) throw new Error('Test save record was not stored.');
-    record.envelope.payload.reputation = 999;
+    Reflect.set(record.envelope.payload, 'reputation', 999);
     database?.records.set('campaign-01', record);
 
     await expect(repository.load('campaign-01')).rejects.toThrow('CHECKSUM_MISMATCH');
