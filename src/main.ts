@@ -6,18 +6,28 @@ import type { CommandId } from '../contracts/domain';
 import { createInitialGameState } from './domain/initial-state';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from './domain/vertical-slice';
 import { renderManagementUI } from './ui/management';
+import { IndexedDbSaveRepository } from './persistence/indexeddb-save-repository';
+import { createSaveEnvelope, restoreGameState } from './persistence/save-codec';
 
 const worldRoot = document.querySelector<HTMLDivElement>('#world-root');
 const uiRoot = document.querySelector<HTMLDivElement>('#ui-root');
 const fatalError = document.querySelector<HTMLDivElement>('#fatal-error');
 const resetCameraButton = document.querySelector<HTMLButtonElement>('#reset-camera');
+const saveGameButton = document.querySelector<HTMLButtonElement>('#save-game');
+const loadGameButton = document.querySelector<HTMLButtonElement>('#load-game');
 const gameFeedback = document.querySelector<HTMLParagraphElement>('#game-feedback');
 
 let gameState = createInitialGameState();
 let commandSequence = 0;
+let persistenceBusy = false;
+const saveRepository = new IndexedDbSaveRepository();
 let onGameStateChanged: () => void = () => {};
 
 function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<string, unknown>): void {
+  if (persistenceBusy) {
+    if (gameFeedback) gameFeedback.textContent = 'Bitte warte, bis der Speichervorgang abgeschlossen ist.';
+    return;
+  }
   commandSequence += 1;
   const command = {
     commandId: ('ui-command-' + commandSequence) as CommandId,
@@ -41,6 +51,54 @@ function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<stri
   }
   renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
+}
+
+function setFeedback(level: 'success' | 'error', message: string): void {
+  if (!gameFeedback) return;
+  gameFeedback.dataset.level = level;
+  gameFeedback.textContent = message;
+}
+
+async function saveCampaign(): Promise<void> {
+  if (persistenceBusy) return;
+  persistenceBusy = true;
+  if (saveGameButton) saveGameButton.disabled = true;
+  if (loadGameButton) loadGameButton.disabled = true;
+  try {
+    const envelope = await createSaveEnvelope(gameState);
+    const metadata = await saveRepository.save('campaign-01', envelope);
+    setFeedback('success', 'Spielstand gespeichert · Revision ' + metadata.revision + ' · ' + metadata.byteLength + ' Byte.');
+  } catch (error) {
+    setFeedback('error', 'Speichern fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
+  } finally {
+    persistenceBusy = false;
+    if (saveGameButton) saveGameButton.disabled = false;
+    if (loadGameButton) loadGameButton.disabled = false;
+  }
+}
+
+async function loadCampaign(): Promise<void> {
+  if (persistenceBusy) return;
+  persistenceBusy = true;
+  if (saveGameButton) saveGameButton.disabled = true;
+  if (loadGameButton) loadGameButton.disabled = true;
+  try {
+    const envelope = await saveRepository.load('campaign-01');
+    if (!envelope) {
+      setFeedback('error', 'Es ist noch kein gespeicherter Spielstand vorhanden.');
+      return;
+    }
+    gameState = restoreGameState(envelope);
+    renderManagementUI(gameState, runGameCommand);
+    onGameStateChanged();
+    setFeedback('success', 'Spielstand geladen · Revision ' + gameState.revision + '.');
+  } catch (error) {
+    setFeedback('error', 'Laden fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
+  } finally {
+    persistenceBusy = false;
+    if (saveGameButton) saveGameButton.disabled = false;
+    if (loadGameButton) loadGameButton.disabled = false;
+  }
 }
 
 function showFatalError(error: unknown): void {
@@ -214,6 +272,8 @@ async function boot(): Promise<() => void> {
   };
   renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
+  saveGameButton?.addEventListener('click', saveCampaign);
+  loadGameButton?.addEventListener('click', loadCampaign);
   window.addEventListener('resize', layout);
 
   const resize = (): void => {
@@ -235,6 +295,8 @@ async function boot(): Promise<() => void> {
     window.removeEventListener('resize', resize);
     window.removeEventListener('resize', layout);
     resetCameraButton?.removeEventListener('click', resetCamera);
+    saveGameButton?.removeEventListener('click', saveCampaign);
+    loadGameButton?.removeEventListener('click', loadCampaign);
     controls.dispose();
     ui.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
     renderer.dispose();
