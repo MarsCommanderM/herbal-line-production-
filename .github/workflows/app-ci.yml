@@ -39,6 +39,10 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Browser end-to-end acceptance
+        run: npm run test:e2e
       - name: Validate master-pack documents and JSON
         run: npm run validate:masterpack
       - name: Check whitespace
