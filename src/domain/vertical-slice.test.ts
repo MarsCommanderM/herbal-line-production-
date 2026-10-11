@@ -42,7 +42,7 @@ function progressToReleasedInventory() {
   state = applyOk(state, 'BATCH/CREATE', {
     batchId: entity('batch-001'),
     plantIds: [entity('plant-001')],
-    profileId: 'fictional-medical-cannabis-batch',
+    profileId: 'fictional-botanical-batch',
   });
   state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-001'), roomId: entity('room-processing-01') });
   state = applyOk(state, 'BATCH/START_PROCESSING', { batchId: entity('batch-001'), machineId: entity('machine-processing-001') });
@@ -51,17 +51,17 @@ function progressToReleasedInventory() {
   return state;
 }
 
-describe('medical cannabis campaign vertical slice', () => {
-  it('completes fictional stage, batch, QC, stock, pharmacy order, and delivery flow', () => {
+describe('botanical operations vertical slice', () => {
+  it('completes fictional stage, batch, QC, stock, buyer order, and delivery flow', () => {
     let state = progressToReleasedInventory();
     expect(state.batches[0]?.status).toBe('released');
     expect(state.qualityAssessments[0]?.decision).toBe('pass');
     expect(state.inventoryLots[0]?.quantityAvailable).toBe(6);
     expect(state.inventoryLots[0]?.status).toBe('released');
 
-    state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-pharmacy-001') });
+    state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-buyer-001') });
     state = applyOk(state, 'ORDER/ALLOCATE', {
-      orderId: entity('order-pharmacy-001'),
+      orderId: entity('order-buyer-001'),
       lotIds: [entity('inventory-batch-001')],
     });
     expect(state.inventoryLots[0]?.quantityReserved).toBe(6);
