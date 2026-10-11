@@ -67,7 +67,7 @@ describe('botanical operations vertical slice', () => {
     expect(state.inventoryLots[0]?.quantityReserved).toBe(6);
     state = applyOk(state, 'DELIVERY/CREATE', {
       deliveryId: entity('delivery-001'),
-      orderId: entity('order-pharmacy-001'),
+      orderId: entity('order-buyer-001'),
       routeId: 'fictional-route-local-01',
     });
     state = applyOk(state, 'DELIVERY/DISPATCH', { deliveryId: entity('delivery-001') });
@@ -87,9 +87,9 @@ describe('botanical operations vertical slice', () => {
 
   it('does not post revenue twice when delivery confirmation is repeated', () => {
     let state = progressToReleasedInventory();
-    state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-pharmacy-001') });
-    state = applyOk(state, 'ORDER/ALLOCATE', { orderId: entity('order-pharmacy-001'), lotIds: [entity('inventory-batch-001')] });
-    state = applyOk(state, 'DELIVERY/CREATE', { deliveryId: entity('delivery-001'), orderId: entity('order-pharmacy-001'), routeId: 'route-01' });
+    state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-buyer-001') });
+    state = applyOk(state, 'ORDER/ALLOCATE', { orderId: entity('order-buyer-001'), lotIds: [entity('inventory-batch-001')] });
+    state = applyOk(state, 'DELIVERY/CREATE', { deliveryId: entity('delivery-001'), orderId: entity('order-buyer-001'), routeId: 'route-01' });
     state = applyOk(state, 'DELIVERY/DISPATCH', { deliveryId: entity('delivery-001') });
     state = applyOk(state, 'DELIVERY/CONFIRM', { deliveryId: entity('delivery-001'), proofCode: 'RX-ACK-001' });
     const revision = state.revision;
@@ -135,12 +135,12 @@ describe('botanical operations vertical slice', () => {
 
   it('keeps inventory and order unchanged when allocation is insufficient', () => {
     let state = progressToReleasedInventory();
-    state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-pharmacy-001') });
+    state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-buyer-001') });
     state = {
       ...state,
       orders: state.orders.map((order) => ({ ...order, requestedQuantity: 99 })),
     };
-    const result = dispatch(state, 'ORDER/ALLOCATE', { orderId: entity('order-pharmacy-001'), lotIds: [entity('inventory-batch-001')] });
+    const result = dispatch(state, 'ORDER/ALLOCATE', { orderId: entity('order-buyer-001'), lotIds: [entity('inventory-batch-001')] });
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error('Allocation should have failed.');
     expect(result.error.code).toBe('INSUFFICIENT_STOCK');
