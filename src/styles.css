@@ -66,3 +66,36 @@ body { min-width: 320px; min-height: 480px; }
   .panel-header h1 { font-size: 18px; }
   #reset-camera { top: 14px; left: 14px; }
 }
+
+.save-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 12px 0 4px;
+}
+.save-controls button {
+  min-width: 0;
+  padding: 9px 8px;
+  border: 1px solid #40566f;
+  border-radius: 7px;
+  background: #16263a;
+  color: #dce9f7;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+.save-controls button:hover { border-color: #7ea7c9; background: #203850; }
+.save-controls button:focus-visible { outline: 2px solid #9ecbff; outline-offset: 2px; }
+#save-status {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  color: #9fb1c8;
+  font-size: 10px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+#save-status[data-level="success"] { color: #9ce0bd; }
+#save-status[data-level="error"] { color: #ffb8bf; }
