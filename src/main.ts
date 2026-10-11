@@ -4,7 +4,8 @@ import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
 import type { CommandId, EntityId } from '../contracts/domain';
 import { createInitialGameState } from './domain/initial-state';
-import { applyVerticalSliceCommand, getCampaignBalance, type VerticalSliceCommand } from './domain/vertical-slice';
+import { applyVerticalSliceCommand, type VerticalSliceCommand } from './domain/vertical-slice';
+import { renderManagementUI } from './ui/management';
 
 const worldRoot = document.querySelector<HTMLDivElement>('#world-root');
 const uiRoot = document.querySelector<HTMLDivElement>('#ui-root');
@@ -18,6 +19,32 @@ const gameLog = document.querySelector<HTMLDivElement>('#game-log');
 let gameState = createInitialGameState();
 let commandSequence = 0;
 let onGameStateChanged: () => void = () => {};
+
+function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<string, unknown>): void {
+  commandSequence += 1;
+  const command = {
+    commandId: ('ui-command-' + commandSequence) as CommandId,
+    actorId: gameState.player.id,
+    expectedRevision: gameState.revision,
+    type,
+    ...payload,
+  } as VerticalSliceCommand;
+  const result = applyVerticalSliceCommand(gameState, command);
+  if (!result.ok) {
+    if (gameFeedback) {
+      gameFeedback.dataset.level = 'error';
+      gameFeedback.textContent = result.error.message;
+    }
+    return;
+  }
+  gameState = result.state;
+  if (gameFeedback) {
+    gameFeedback.dataset.level = 'success';
+    gameFeedback.textContent = gameState.logs[gameState.logs.length - 1]?.message ?? 'Aktion ausgeführt.';
+  }
+  renderManagementUI(gameState, runGameCommand);
+  onGameStateChanged();
+}
 
 function showFatalError(error: unknown): void {
   if (!fatalError) return;
@@ -238,6 +265,12 @@ async function boot(): Promise<() => void> {
     if (resetCameraButton) resetCameraButton.style.left = '37px';
   };
   layout();
+  onGameStateChanged = () => {
+    stateLine.text = 'TAG ' + gameState.time.day + '  /  REV ' + gameState.revision + '  /  ' + gameState.compliance.licenseStatus.toUpperCase();
+    layout();
+  };
+  renderManagementUI(gameState, runGameCommand);
+  onGameStateChanged();
   window.addEventListener('resize', layout);
 
   const resize = (): void => {
