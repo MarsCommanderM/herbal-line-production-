@@ -50,3 +50,7 @@ Bei Konflikten gilt: (1) bestätigte Benutzerentscheidung, (2) `AGENTS.md` für 
 - [Offline-Paketvalidator](scripts/validate_masterpack.py)
 
 Der Master-Pack-Inhalt wurde in dieses Repository expandiert. Der Repository-Stand ist weiterhin eine Produktionsspezifikation; ein ausführbarer Spiel-Build und erfolgreiche Projekt-CI sind noch nicht nachgewiesen.
+
+## Current engineering status
+
+The repository currently contains the production specification and contracts. The target repository does not yet have an observed `package.json`, dependency lockfile, `tsconfig.json`, `index.html`, app entry point, or validation workflow. See [the evidence-based baseline audit](docs/audits/BASELINE.md). The new workflow validates the master-pack artifacts only; it is not a game build.
