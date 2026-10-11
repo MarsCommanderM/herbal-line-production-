@@ -50,6 +50,7 @@ function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<stri
   }
   renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
+  void saveCurrentState(false);
 }
 
 
@@ -106,19 +107,24 @@ async function importCampaign(file: File): Promise<void> {
   setSaveStatus('Import geprüft und geladen · Revision ' + metadata.revision, 'success');
 }
 
-saveButton?.addEventListener('click', () => { void saveCurrentState(true); });
-loadButton?.addEventListener('click', () => {
+const handleManualSave = (): void => { void saveCurrentState(true); };
+const handleLoad = (): void => {
   void loadCampaign().catch((error: unknown) => setSaveStatus('Laden fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)), 'error'));
-});
-exportButton?.addEventListener('click', () => {
+};
+const handleExport = (): void => {
   void exportCampaign().catch((error: unknown) => setSaveStatus('Export fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)), 'error'));
-});
-importButton?.addEventListener('click', () => importFileInput?.click());
-importFileInput?.addEventListener('change', () => {
-  const file = importFileInput.files?.[0];
+};
+const handleImportClick = (): void => { importFileInput?.click(); };
+const handleImportFileChange = (): void => {
+  const file = importFileInput?.files?.[0];
   if (file) void importCampaign(file).catch((error: unknown) => setSaveStatus('Import abgelehnt: ' + (error instanceof Error ? error.message : String(error)), 'error'));
-  importFileInput.value = '';
-});
+  if (importFileInput) importFileInput.value = '';
+};
+saveButton?.addEventListener('click', handleManualSave);
+loadButton?.addEventListener('click', handleLoad);
+exportButton?.addEventListener('click', handleExport);
+importButton?.addEventListener('click', handleImportClick);
+importFileInput?.addEventListener('change', handleImportFileChange);
 
 function showFatalError(error: unknown): void {
   if (!fatalError) return;
@@ -324,10 +330,11 @@ async function boot(): Promise<() => void> {
     window.removeEventListener('resize', resize);
     window.removeEventListener('resize', layout);
     resetCameraButton?.removeEventListener('click', resetCamera);
-    saveButton?.removeEventListener('click', () => { void saveCurrentState(true); });
-    loadButton?.removeEventListener('click', () => { void loadCampaign(); });
-    exportButton?.removeEventListener('click', () => { void exportCampaign(); });
-    importButton?.removeEventListener('click', () => importFileInput?.click());
+    saveButton?.removeEventListener('click', handleManualSave);
+    loadButton?.removeEventListener('click', handleLoad);
+    exportButton?.removeEventListener('click', handleExport);
+    importButton?.removeEventListener('click', handleImportClick);
+    importFileInput?.removeEventListener('change', handleImportFileChange);
     controls.dispose();
     ui.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
     renderer.dispose();
