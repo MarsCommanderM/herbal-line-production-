@@ -6,12 +6,21 @@ import type { CommandId } from '../contracts/domain';
 import { createInitialGameState } from './domain/initial-state';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from './domain/vertical-slice';
 import { renderManagementUI } from './ui/management';
+import { buildSaveEnvelope, DEFAULT_SAVE_SLOT, IndexedDbSaveRepository, restoreGameState } from './persistence/save-system';
 
 const worldRoot = document.querySelector<HTMLDivElement>('#world-root');
 const uiRoot = document.querySelector<HTMLDivElement>('#ui-root');
 const fatalError = document.querySelector<HTMLDivElement>('#fatal-error');
 const resetCameraButton = document.querySelector<HTMLButtonElement>('#reset-camera');
 const gameFeedback = document.querySelector<HTMLParagraphElement>('#game-feedback');
+const saveStatus = document.querySelector<HTMLParagraphElement>('#save-status');
+const saveButton = document.querySelector<HTMLButtonElement>('#save-campaign');
+const loadButton = document.querySelector<HTMLButtonElement>('#load-campaign');
+const exportButton = document.querySelector<HTMLButtonElement>('#export-campaign');
+const importButton = document.querySelector<HTMLButtonElement>('#import-campaign');
+const importFileInput = document.querySelector<HTMLInputElement>('#import-save-file');
+const saveRepository = new IndexedDbSaveRepository();
+let pendingSave: Promise<void> = Promise.resolve();
 
 let gameState = createInitialGameState();
 let commandSequence = 0;
@@ -42,6 +51,74 @@ function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<stri
   renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
 }
+
+
+function setSaveStatus(message: string, level: 'info' | 'success' | 'error' = 'info'): void {
+  if (!saveStatus) return;
+  saveStatus.dataset.level = level;
+  saveStatus.textContent = message;
+}
+
+function saveCurrentState(manual: boolean): Promise<void> {
+  const envelope = buildSaveEnvelope(gameState);
+  pendingSave = pendingSave.then(async () => {
+    await saveRepository.save(DEFAULT_SAVE_SLOT, envelope);
+    if (envelope.revision === gameState.revision) {
+      setSaveStatus((manual ? 'Spielstand gespeichert' : 'Autosave gespeichert') + ' · Revision ' + envelope.revision, 'success');
+    }
+  }).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    if (envelope.revision === gameState.revision) setSaveStatus('Speichern fehlgeschlagen: ' + message, 'error');
+  });
+  return pendingSave;
+}
+
+async function loadCampaign(): Promise<void> {
+  await pendingSave;
+  const envelope = await saveRepository.load(DEFAULT_SAVE_SLOT);
+  if (!envelope) {
+    setSaveStatus('Noch kein gespeicherter Spielstand vorhanden.', 'info');
+    return;
+  }
+  const freshUi = createInitialGameState().ui;
+  gameState = restoreGameState(envelope, freshUi);
+  commandSequence = gameState.revision;
+  renderManagementUI(gameState, runGameCommand);
+  onGameStateChanged();
+  setSaveStatus('Spielstand geladen · Revision ' + gameState.revision, 'success');
+}
+
+async function exportCampaign(): Promise<void> {
+  const blob = await saveRepository.exportSlot(DEFAULT_SAVE_SLOT);
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = 'herbal-line-' + DEFAULT_SAVE_SLOT + '.json';
+  anchor.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setSaveStatus('Spielstandexport gestartet.', 'success');
+}
+
+async function importCampaign(file: File): Promise<void> {
+  await pendingSave;
+  const metadata = await saveRepository.importSlot(DEFAULT_SAVE_SLOT, file);
+  await loadCampaign();
+  setSaveStatus('Import geprüft und geladen · Revision ' + metadata.revision, 'success');
+}
+
+saveButton?.addEventListener('click', () => { void saveCurrentState(true); });
+loadButton?.addEventListener('click', () => {
+  void loadCampaign().catch((error: unknown) => setSaveStatus('Laden fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)), 'error'));
+});
+exportButton?.addEventListener('click', () => {
+  void exportCampaign().catch((error: unknown) => setSaveStatus('Export fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)), 'error'));
+});
+importButton?.addEventListener('click', () => importFileInput?.click());
+importFileInput?.addEventListener('change', () => {
+  const file = importFileInput.files?.[0];
+  if (file) void importCampaign(file).catch((error: unknown) => setSaveStatus('Import abgelehnt: ' + (error instanceof Error ? error.message : String(error)), 'error'));
+  importFileInput.value = '';
+});
 
 function showFatalError(error: unknown): void {
   if (!fatalError) return;
@@ -212,6 +289,18 @@ async function boot(): Promise<() => void> {
     stateLine.text = 'TAG ' + gameState.time.day + '  /  REV ' + gameState.revision + '  /  ' + gameState.compliance.licenseStatus.toUpperCase();
     layout();
   };
+  try {
+    const saved = await saveRepository.load(DEFAULT_SAVE_SLOT);
+    if (saved) {
+      gameState = restoreGameState(saved, createInitialGameState().ui);
+      commandSequence = gameState.revision;
+      setSaveStatus('Autosave wiederhergestellt · Revision ' + gameState.revision, 'success');
+    } else {
+      setSaveStatus('Neue Kampagne · Autosave wird nach Aktionen erstellt.', 'info');
+    }
+  } catch (error) {
+    setSaveStatus('Vorhandener Spielstand konnte nicht geladen werden: ' + (error instanceof Error ? error.message : String(error)), 'error');
+  }
   renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
   window.addEventListener('resize', layout);
@@ -235,6 +324,10 @@ async function boot(): Promise<() => void> {
     window.removeEventListener('resize', resize);
     window.removeEventListener('resize', layout);
     resetCameraButton?.removeEventListener('click', resetCamera);
+    saveButton?.removeEventListener('click', () => { void saveCurrentState(true); });
+    loadButton?.removeEventListener('click', () => { void loadCampaign(); });
+    exportButton?.removeEventListener('click', () => { void exportCampaign(); });
+    importButton?.removeEventListener('click', () => importFileInput?.click());
     controls.dispose();
     ui.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
     renderer.dispose();
