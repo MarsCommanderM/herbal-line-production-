@@ -88,6 +88,8 @@ Fehlerpfade: `available → expired`, `accepted|allocated|ready_to_ship → canc
 
 `valid ↔ warning → suspended → recovery_review → valid|warning`
 
+`recovery_review` ist ein expliziter `LicenseStatus`-Wert. Kritische Operationen bleiben gesperrt, bis ein erfolgreicher Audit-/Freigabe-Command den Status zurücksetzt.
+
 Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte Spieldaten konfiguriert. Baseline für die erste Balance-Datei: Risiko 0–100; `warning` ab 40, `suspended` ab 80. Suspendierung blockiert alle fachlich als kritisch markierten Transaktionen. Es gibt keinen UI-Bypass.
 
 ### 3.6 Save-Sitzung
@@ -107,7 +109,9 @@ Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte S
 - Kein Auftrag wird doppelt erfüllt oder doppelt abgerechnet.
 - Kein suspendierter Betrieb führt kritische Freigaben/Versand durch.
 - Jeder terminale Übergang hat Ursache, Actor, Simulationszeit und auditrelevanten Logeintrag.
-- Der UI-Zustand ist nicht spielentscheidend und wird bei Migration getrennt behandelt.
+- Der UI-Zustand ist nicht spielentscheidend und wird nicht im Save-Payload gespeichert; beim Laden wird er aus sicheren UI-Defaults neu aufgebaut.
+- Geldbestand und Summen werden aus dem Ledger abgeleitet; es gibt keine separat mutierbare `moneyCents`-Quelle.
+- Reservierungen sind Mengenwerte, kein eigener Bestandsdispositionsstatus.
 
 ## 5. Abnahme
 
