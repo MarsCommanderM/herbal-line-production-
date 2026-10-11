@@ -24,7 +24,7 @@ All plant and process values are fictional management abstractions. The project 
 
 The repository now contains a strict TypeScript/Vite app shell, a Three.js facility view, a PixiJS HUD, pure domain helpers for ledger-derived finance, batch transition gates, inventory reservation checks, and Vitest unit tests.
 
-**Reproducibility is not yet proven.** The direct dependencies are pinned in `package.json`; `package-lock.json` was not yet visible at the last repository check. The Application CI workflow attempts to generate and commit the initial lockfile on a trusted push, then runs `npm ci`, typecheck, tests, build and master-pack validation. The CI result must be checked before reporting the engineering baseline as green.
+**Dependency resolution is pinned, but full reproducibility is not yet proven.** The direct dependencies are exact-pinned in `package.json`, and the generated `package-lock.json` is committed at [`db8683c`](https://github.com/MarsCommanderM/herbal-line-production-/commit/db8683c83ec883334a4125a3768d12a51a6d077e). All seven direct dependency versions match the lockfile root. The Application CI workflow is configured to run `npm ci`, typecheck, tests, build and master-pack validation. The available GitHub connector did not expose workflow-run/check results, so typecheck, tests and build remain **NOT VERIFIED**.
 
 ## Local commands after the lockfile exists
 
