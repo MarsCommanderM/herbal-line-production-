@@ -39,7 +39,7 @@ export function stableStringify(value: unknown): string {
     try {
       if (Array.isArray(item)) return item.map(normalize);
       const record = item as Record<string, unknown>;
-      const result: Record<string, unknown> = {};
+      const result = Object.create(null) as Record<string, unknown>;
       for (const key of Object.keys(record).sort()) {
         const child = record[key];
         if (child === undefined) throw new TypeError('Save data contains an undefined property.');
