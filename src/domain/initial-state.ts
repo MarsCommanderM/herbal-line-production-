@@ -53,6 +53,7 @@ export function createInitialGameState(): GameState {
     ],
     batches: [],
     inventoryLots: [],
+    qualityAssessments: [],
     orders: [
       { id: entityId('order-pharmacy-001'), customerId: pharmacyId, itemDefinitionId: 'HL-MED-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
     ],
