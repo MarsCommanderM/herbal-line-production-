@@ -7,7 +7,7 @@
 
 ## Product boundary
 
-All plant and process values are fictional management abstractions. The project does not model real-world cultivation parameters, pharmaceutical manufacturing procedures, or real distribution processes. The gameplay focuses on planning, quality status, traceability, capacity, compliance, staffing, inventory and economy.
+All plant and process values are fictional management abstractions. The project does not model real-world cultivation parameters, pharmaceutical manufacturing procedures, or real distribution processes. The gameplay focuses on planning, quality status, traceability, quality, capacity, Plant care (cut, water, control, etc.)compliance, staffing, inventory and economy.
 
 ## Canonical project files
 
