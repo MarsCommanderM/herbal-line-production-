@@ -15,7 +15,10 @@ body { min-width: 320px; min-height: 480px; }
 #world-root { z-index: 0; }
 #world-root canvas { display: block; width: 100%; height: 100%; outline: none; }
 #ui-root { z-index: 1; pointer-events: none; }
-#ui-root canvas { display: block; width: 100%; height: 100%; }
+#ui-root canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
+#reset-camera { position: absolute; z-index: 3; top: 134px; left: 37px; pointer-events: auto; padding: 9px 13px; border: 1px solid #59718f; border-radius: 7px; background: rgba(38, 58, 82, 0.98); color: #f0f5ff; font: 700 10px/1.2 Arial, sans-serif; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+#reset-camera:hover { background: #354d6a; }
+#reset-camera:focus-visible { outline: 2px solid #9ecbff; outline-offset: 3px; }
 #fatal-error { position: absolute; z-index: 10; inset: auto 16px 16px; padding: 14px 16px; border: 1px solid #f87171; border-radius: 10px; background: #35151b; color: #fee2e2; font-size: 14px; white-space: pre-wrap; }
 @media (max-width: 600px) {
   body { min-height: 420px; }
