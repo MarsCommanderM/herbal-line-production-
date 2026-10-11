@@ -20,6 +20,14 @@
         </header>
         <section id="game-metrics" aria-label="Betriebskennzahlen"></section>
         <p id="game-feedback" role="status" aria-live="polite">Kampagne bereit.</p>
+        <section class="save-controls" aria-label="Spielstandverwaltung">
+          <button id="save-campaign" type="button">Jetzt speichern</button>
+          <button id="load-campaign" type="button">Spielstand laden</button>
+          <button id="export-campaign" type="button">Spielstand exportieren</button>
+          <button id="import-campaign" type="button">Spielstand importieren</button>
+          <input id="import-save-file" type="file" accept="application/json,.json" hidden />
+          <p id="save-status" role="status" aria-live="polite">Autospeicherung nach erfolgreichen Aktionen.</p>
+        </section>
         <section class="panel-section">
           <h2>Nächster Schritt</h2>
           <div id="game-actions"></div>
