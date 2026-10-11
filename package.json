@@ -9,6 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
+    "lint": "node scripts/lint-source.mjs",
+    "format:check": "node scripts/check-format.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:masterpack": "python scripts/validate_masterpack.py"
