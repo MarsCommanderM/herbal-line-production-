@@ -4,7 +4,6 @@ import {
   buildSaveEnvelope,
   checksumPayload,
   IndexedDbSaveRepository,
-  SaveSystemError,
   restoreGameState,
   stableStringify,
   validateAndMigrateSave,
