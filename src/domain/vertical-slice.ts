@@ -111,12 +111,14 @@ function isBlocked(state: GameState, operationCode: string): boolean {
 }
 
 function nextTime(state: GameState): GameState['time'] {
+  // totalMinutes is elapsed simulation time from the campaign start; the campaign starts at 08:00.
   const total = Number(state.time.totalMinutes) + 60;
+  const absoluteMinuteOfDay = (480 + total) % 1440;
   return {
     ...state.time,
     totalMinutes: minute(total),
-    day: Math.floor(total / 1440) + 1,
-    minuteOfDay: total % 1440,
+    day: Math.floor((480 + total) / 1440) + 1,
+    minuteOfDay: absoluteMinuteOfDay,
   };
 }
 
