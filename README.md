@@ -38,3 +38,15 @@ Bei Konflikten gilt: (1) bestätigte Benutzerentscheidung, (2) `AGENTS.md` für 
 ## Qualitätsaussage
 
 „Produktionsqualität“ ist eine Abnahmebedingung, kein Etikett. Ein System gilt erst dann als fertig, wenn es implementiert, integriert, automatisiert geprüft, nachvollziehbar dokumentiert und durch reproduzierbare Evidenz abgenommen wurde. Dieses Paket garantiert nicht, dass ein noch nicht gebautes Spiel bereits releasefähig ist.
+
+
+## Schnellzugriff auf die verbindlichen Pläne
+
+- [Master Production Document](docs/00_MASTER_PRODUCTION_DOCUMENT.md)
+- [Vollständiger Phasenplan — Phase 0 bis 19](docs/13_PRODUCTION_PHASE_PLAN.md)
+- [Priorisiertes Studio-Backlog](docs/14_BACKLOG.md)
+- [Nächste autoritative Task](.tasks/NEXT.md)
+- [Kanonische Domain-Verträge](contracts/domain.ts)
+- [Offline-Paketvalidator](scripts/validate_masterpack.py)
+
+Der Master-Pack-Inhalt wurde in dieses Repository expandiert. Der Repository-Stand ist weiterhin eine Produktionsspezifikation; ein ausführbarer Spiel-Build und erfolgreiche Projekt-CI sind noch nicht nachgewiesen.
