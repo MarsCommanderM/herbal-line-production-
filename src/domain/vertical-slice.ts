@@ -26,6 +26,7 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'BATCH/START_PROCESSING'
     | 'BATCH/SUBMIT_QC'
     | 'BATCH/RELEASE'
+    | 'BATCH/REJECT'
     | 'ORDER/ACCEPT'
     | 'ORDER/ALLOCATE'
     | 'DELIVERY/CREATE'
@@ -295,6 +296,21 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         inventoryLots: [...state.inventoryLots, lot],
         rooms: state.rooms.map((room) => room.id === storageRoom.id ? { ...room, occupied: room.occupied + batch.quantity } : room.id === batch.currentRoomId ? { ...room, occupied: Math.max(0, room.occupied - 1) } : room),
       }, [event], 'BATCH_RELEASED', 'Batch freigegeben und Bestand gebucht.', [batch.id, lotId]);
+    }
+    case 'BATCH/REJECT': {
+      const batch = state.batches.find((item) => item.id === command.batchId);
+      if (!batch) return failure(state, 'NOT_FOUND', 'Batch nicht gefunden.');
+      if (!['created', 'queued', 'processing', 'awaiting_qc', 'held'].includes(batch.status)) return failure(state, 'INVALID_TRANSITION', 'Dieser Batch kann nicht mehr abgelehnt werden.');
+      const reasonCode = command.reasonCode.trim();
+      if (reasonCode.length < 3) return failure(state, 'INVALID_PAYLOAD', 'Ein dokumentierter Ablehnungsgrund ist erforderlich.');
+      const event: DomainEvent = { ...eventBase(state, command, batch.id), type: 'batch.rejected', batchId: batch.id, reasonCode };
+      const updated = withTrace({ ...batch, status: 'rejected', holdReason: reasonCode, currentRoomId: null, updatedAt: state.time.totalMinutes }, event, command.actorId, 'BATCH_REJECTED', []);
+      const occupiedRoomId = batch.currentRoomId;
+      return commit(state, command, {
+        batches: state.batches.map((item) => item.id === batch.id ? updated : item),
+        rooms: state.rooms.map((room) => room.id === occupiedRoomId ? { ...room, occupied: Math.max(0, room.occupied - 1) } : room),
+        machines: state.machines.map((machine) => machine.activeJobId === batch.id ? { ...machine, status: 'idle', activeJobId: null } : machine),
+      }, [event], 'BATCH_REJECTED', 'Batch abgelehnt und aus der aktiven Queue entfernt.', [batch.id]);
     }
     case 'ORDER/ACCEPT': {
       const order = state.orders.find((item) => item.id === command.orderId);
