@@ -1,5 +1,5 @@
 import type { EntityId, GameState } from '../../contracts/domain';
-import type { VerticalSliceCommand } from '../domain/vertical-slice';
+import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
 
 type Action = {
   label: string;
@@ -79,12 +79,7 @@ export function renderManagementUI(
   const plant = state.plants[0];
   const batch = state.batches[state.batches.length - 1];
   const order = state.orders[0];
-  const balance = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(
-    state.economy.openingBalanceCents / 100 + state.economy.ledger.reduce((total, entry) => {
-      const amount = entry.amountCents / 100;
-      return total + (entry.account === 'revenue' || entry.account === 'refund' ? amount : -amount);
-    }, 0),
-  );
+  const balance = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(getCampaignBalance(state) / 100);
 
   metricsRoot.replaceChildren(
     metric('Spieltag', String(state.time.day)),
