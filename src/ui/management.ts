@@ -36,10 +36,12 @@ function availableActions(state: GameState): Action[] {
     const assessment = [...state.qualityAssessments].reverse().find((item) => item.batchId === batch.id);
     if (assessment && assessment.decision === 'pass') {
       actions.push({ label: 'Batch freigeben', detail: 'Nur bestandene Spiel-QA, vollständige Rückverfolgbarkeit und Compliance erlauben die Freigabe.', type: 'BATCH/RELEASE', payload: { batchId: batch.id } });
+    } else {
+      actions.push({ label: 'Batch ablehnen', detail: 'Die nicht bestandene oder ungeklärte Spiel-QA wird als terminale Entscheidung protokolliert.', type: 'BATCH/REJECT', payload: { batchId: batch.id, reasonCode: 'QUALITY_GATE_NOT_ACCEPTED' } });
     }
   }
 
-  if (order && order.status === 'available') {
+  if (order && order.status === 'available' && batch && batch.status === 'released') {
     actions.push({ label: 'Apothekenauftrag annehmen', detail: 'Kundenstatus, Reputation und Lizenzstatus prüfen.', type: 'ORDER/ACCEPT', payload: { orderId: order.id } });
   } else if (order && order.status === 'accepted') {
     const lots = state.inventoryLots.filter((item) => item.status === 'released' && item.quantityAvailable > item.quantityReserved && item.qualityScore >= order.minQuality);
@@ -97,6 +99,8 @@ export function renderManagementUI(
     const assessment = batch ? [...state.qualityAssessments].reverse().find((item) => item.batchId === batch.id) : undefined;
     if (batch && batch.status === 'awaiting_qc' && assessment && assessment.decision !== 'pass') {
       message.textContent = 'Batch bleibt gesperrt: Die Spiel-QA verlangt eine Prüfung. Eine Freigabe ist nicht verfügbar.';
+    } else if (batch && batch.status === 'rejected') {
+      message.textContent = 'Kampagne beendet: Der Batch wurde abgelehnt. Starte eine neue Kampagne, um erneut zu spielen.';
     } else if (order && order.status === 'delivered') {
       message.textContent = 'Kampagnenziel erreicht: Auftrag ausgeliefert und Umsatz verbucht.';
     } else {
