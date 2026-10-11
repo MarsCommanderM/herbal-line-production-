@@ -27,7 +27,7 @@ export function createInitialGameState(): GameState {
   const logisticsRoomId = entityId('room-logistics-01');
   const sourceLotId = entityId('source-lot-001');
   const plantId = entityId('plant-001');
-  const pharmacyId = entityId('customer-buyer-001');
+  const buyerId = entityId('customer-buyer-001');
   const sourceAcceptedEventId = eventId('event-seed-source-accepted-001');
 
   return {
@@ -55,10 +55,10 @@ export function createInitialGameState(): GameState {
     inventoryLots: [],
     qualityAssessments: [],
     orders: [
-      { id: entityId('order-buyer-001'), customerId: pharmacyId, itemDefinitionId: 'BOT-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
+      { id: entityId('order-buyer-001'), customerId: buyerId, itemDefinitionId: 'BOT-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
     ],
     customers: [
-      { id: pharmacyId, name: 'Botanischer Abnehmer Nord', kind: 'pharmacy', reliabilityScore: score(92), minimumReputation: reputation(100), preferredQuality: score(80), paymentDelayDays: 0, unlocked: true },
+      { id: buyerId, name: 'Botanischer Abnehmer Nord', kind: 'licensed_buyer', reliabilityScore: score(92), minimumReputation: reputation(100), preferredQuality: score(80), paymentDelayDays: 0, unlocked: true },
     ],
     deliveries: [],
     staff: [
