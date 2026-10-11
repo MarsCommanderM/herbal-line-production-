@@ -56,18 +56,95 @@ function validateSlotId(slotId: string): void {
   }
 }
 
+function isFiniteInteger(value: unknown, minimum = 0, maximum = Number.MAX_SAFE_INTEGER): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= minimum && value <= maximum;
+}
+
+function hasString(record: Record<string, unknown>, key: string): boolean {
+  return typeof record[key] === 'string' && record[key].length > 0;
+}
+
+function recordsWithFields(value: unknown, fields: string[]): value is Record<string, unknown>[] {
+  return Array.isArray(value) && value.every((entry) => isRecord(entry) && fields.every((field) => Object.hasOwn(entry, field)));
+}
+
+function hasUniqueIds(records: Record<string, unknown>[]): boolean {
+  const ids = records.map((record) => record.id);
+  return ids.every((id) => typeof id === 'string' && id.length > 0) && new Set(ids).size === ids.length;
+}
+
 function isPersistedPayload(value: unknown): value is SaveEnvelopeV1['payload'] {
   if (!isRecord(value) || Object.hasOwn(value, 'ui')) return false;
-  const arrayKeys = [
-    'rooms', 'sourceLots', 'plants', 'batches', 'inventoryLots', 'qualityAssessments',
-    'orders', 'customers', 'deliveries', 'staff', 'assignments', 'machines', 'upgrades', 'logs',
+  if (value.schemaVersion !== CURRENT_SCHEMA_VERSION
+    || !hasString(value, 'gameVersion')
+    || !isFiniteInteger(value.revision)
+    || !isFiniteInteger(value.rngState)
+    || !isRecord(value.time)
+    || !isRecord(value.player)
+    || !isRecord(value.compliance)
+    || !isRecord(value.economy)) return false;
+
+  const time = value.time;
+  if (!isFiniteInteger(time.day, 1)
+    || !isFiniteInteger(time.minuteOfDay, 0, 1439)
+    || !isFiniteInteger(time.totalMinutes)
+    || ![0, 1, 2, 4].includes(Number(time.speed))
+    || typeof time.paused !== 'boolean') return false;
+
+  const player = value.player;
+  if (!hasString(player, 'id') || !hasString(player, 'callsign')
+    || !isFiniteInteger(player.level, 1) || !isFiniteInteger(player.experience)) return false;
+  if (!isFiniteInteger(value.reputation, 0, 1000)) return false;
+
+  const collectionRules: Array<[string, string[]]> = [
+    ['rooms', ['id', 'capacity', 'occupied', 'kind', 'unlocked']],
+    ['sourceLots', ['id', 'status', 'quantity', 'traceEventIds']],
+    ['plants', ['id', 'stage', 'progress', 'sourceLotId', 'roomId', 'batchId']],
+    ['batches', ['id', 'status', 'plantIds', 'sourceLotIds', 'quantity', 'trace']],
+    ['inventoryLots', ['id', 'status', 'quantityAvailable', 'quantityReserved', 'batchId']],
+    ['qualityAssessments', ['id', 'batchId', 'decision', 'score', 'traceComplete']],
+    ['orders', ['id', 'status', 'requestedQuantity', 'allocatedLotIds', 'deliveryId']],
+    ['customers', ['id', 'kind', 'unlocked']],
+    ['deliveries', ['id', 'status', 'orderId', 'lotIds', 'quantity']],
+    ['staff', ['id', 'role']],
+    ['assignments', ['id', 'status']],
+    ['machines', ['id', 'status']],
+    ['upgrades', ['id', 'unlocked']],
+    ['logs', ['id', 'code', 'message', 'at']],
   ];
-  return value.schemaVersion === CURRENT_SCHEMA_VERSION
-    && typeof value.gameVersion === 'string'
-    && Number.isSafeInteger(value.revision) && Number(value.revision) >= 0
-    && Number.isSafeInteger(value.rngState) && Number(value.rngState) >= 0
-    && isRecord(value.time) && isRecord(value.player) && isRecord(value.compliance) && isRecord(value.economy)
-    && arrayKeys.every((key) => Array.isArray(value[key]));
+  for (const [key, fields] of collectionRules) {
+    if (!recordsWithFields(value[key], fields)) return false;
+    if (key !== 'upgrades' && !hasUniqueIds(value[key] as Record<string, unknown>[])) return false;
+    if (key === 'upgrades' && new Set((value[key] as Record<string, unknown>[]).map((item) => item.id)).size !== (value[key] as Record<string, unknown>[]).length) return false;
+  }
+
+  const rooms = value.rooms as Record<string, unknown>[];
+  if (!rooms.every((room) => isFiniteInteger(room.capacity, 1) && isFiniteInteger(room.occupied) && Number(room.occupied) <= Number(room.capacity))) return false;
+  const plants = value.plants as Record<string, unknown>[];
+  if (!plants.every((plant) => isFiniteInteger(plant.progress, 0, 100) && hasString(plant, 'sourceLotId') && hasString(plant, 'roomId'))) return false;
+  const batches = value.batches as Record<string, unknown>[];
+  if (!batches.every((batch) => isFiniteInteger(batch.quantity) && Array.isArray(batch.plantIds) && Array.isArray(batch.sourceLotIds) && Array.isArray(batch.trace))) return false;
+  const inventoryLots = value.inventoryLots as Record<string, unknown>[];
+  if (!inventoryLots.every((lot) => isFiniteInteger(lot.quantityAvailable) && isFiniteInteger(lot.quantityReserved) && Number(lot.quantityReserved) <= Number(lot.quantityAvailable))) return false;
+  const orders = value.orders as Record<string, unknown>[];
+  if (!orders.every((order) => isFiniteInteger(order.requestedQuantity, 1) && Array.isArray(order.allocatedLotIds))) return false;
+  const deliveries = value.deliveries as Record<string, unknown>[];
+  if (!deliveries.every((delivery) => isFiniteInteger(delivery.quantity) && Array.isArray(delivery.lotIds))) return false;
+
+  const compliance = value.compliance;
+  if (!['valid', 'warning', 'suspended', 'recovery_review'].includes(String(compliance.licenseStatus))
+    || !Array.isArray(compliance.violations)
+    || !Array.isArray(compliance.blockedOperationCodes)) return false;
+  const economy = value.economy;
+  if (!isFiniteInteger(economy.openingBalanceCents)
+    || !Array.isArray(economy.ledger)
+    || !recordsWithFields(economy.ledger, ['id', 'account', 'amountCents', 'idempotencyKey'])
+    || !hasUniqueIds(economy.ledger as Record<string, unknown>[])
+    || !(economy.ledger as Record<string, unknown>[]).every((entry) =>
+      isFiniteInteger(entry.amountCents)
+      && hasString(entry, 'idempotencyKey')
+      && ['revenue', 'expense', 'penalty', 'investment', 'refund'].includes(String(entry.account)))) return false;
+  return true;
 }
 
 function isEnvelopeShape(value: unknown): value is SaveEnvelopeV1 {
