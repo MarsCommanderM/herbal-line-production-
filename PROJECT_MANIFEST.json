@@ -1,0 +1,18 @@
+{
+  "project": "Herbal Line",
+  "version": "1.0.0",
+  "document_date": "2026-10-11",
+  "project_owner_metadata": "Michael Braunschweig",
+  "platform": "web",
+  "status": "production specification; implementation not yet verified",
+  "authoritative_files": [
+    "AGENTS.md",
+    "docs/00_MASTER_PRODUCTION_DOCUMENT.md",
+    "contracts/",
+    "schemas/",
+    "docs/13_PRODUCTION_PHASE_PLAN.md",
+    ".tasks/NEXT.md"
+  ],
+  "required_validation": "python scripts/validate_masterpack.py",
+  "simulation_boundary": "All cannabis production values are fictional abstractions, not real-world cultivation or manufacturing instructions."
+}
