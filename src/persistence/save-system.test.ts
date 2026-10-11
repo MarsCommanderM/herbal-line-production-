@@ -35,7 +35,7 @@ describe('save envelope integrity', () => {
     const envelope = buildSaveEnvelope(createInitialGameState(), '2026-10-12T12:00:00.000Z');
     const tampered = {
       ...envelope,
-      payload: { ...envelope.payload, revision: envelope.payload.revision + 1 },
+      payload: { ...envelope.payload, reputation: (Number(envelope.payload.reputation) + 1) as typeof envelope.payload.reputation },
     };
     expect(validateAndMigrateSave(tampered)).toEqual({ ok: false, errorCode: 'CHECKSUM_MISMATCH' });
   });
