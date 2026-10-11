@@ -51,56 +51,7 @@ function showFatalError(error: unknown): void {
 }
 
 
-function createCannabisLeaf(material: THREE.Material): THREE.Group {
-  const group = new THREE.Group();
-  const leaflet = (length: number, width: number): THREE.Mesh => {
-    const shape = new THREE.Shape();
-    const steps = 8;
-    const left: [number, number][] = [];
-    const right: [number, number][] = [];
-    for (let i = 0; i <= steps; i += 1) {
-      const t = i / steps;
-      const taper = Math.sin(Math.PI * t) * width;
-      const serration = i === 0 || i === steps ? 0 : (i % 2 === 0 ? 0.035 : -0.02) * width;
-      left.push([-(taper + serration), t * length]);
-      right.push([taper + serration, t * length]);
-    }
-    shape.moveTo(0, 0);
-    for (const [x, y] of left) shape.lineTo(x, y);
-    for (const [x, y] of right.reverse()) shape.lineTo(x, y);
-    shape.closePath();
-    const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    return mesh;
-  };
-
-  const center = leaflet(0.72, 0.16);
-  group.add(center);
-  const sideLeaflets = [
-    { length: 0.47, angle: -0.95, y: 0.10 },
-    { length: 0.60, angle: -0.60, y: 0.04 },
-    { length: 0.57, angle: 0.60, y: 0.04 },
-    { length: 0.45, angle: 0.95, y: 0.10 },
-  ];
-  for (const item of sideLeaflets) {
-    const leaf = leaflet(item.length, 0.12);
-    leaf.position.y = item.y;
-    leaf.rotation.z = item.angle;
-    group.add(leaf);
-  }
-  const lowerLeft = leaflet(0.36, 0.10);
-  lowerLeft.position.set(-0.02, -0.02, 0.005);
-  lowerLeft.rotation.z = -1.28;
-  group.add(lowerLeft);
-  const lowerRight = leaflet(0.36, 0.10);
-  lowerRight.position.set(0.02, -0.02, 0.005);
-  lowerRight.rotation.z = 1.28;
-  group.add(lowerRight);
-  return group;
-}
-
-function createCannabisPlant(x: number, z: number, variant: number): THREE.Group {
+function createBotanicalPlant(x: number, z: number, variant: number): THREE.Group {
   const plant = new THREE.Group();
   const stemMaterial = new THREE.MeshStandardMaterial({ color: '#527c63', roughness: 0.82 });
   const leafMaterial = new THREE.MeshStandardMaterial({
@@ -108,28 +59,23 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
     roughness: 0.78,
     side: THREE.DoubleSide,
   });
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.075, 1.65, 8), stemMaterial);
-  stem.position.y = 0.88;
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.075, 1.45, 8), stemMaterial);
+  stem.position.y = 0.78;
   stem.castShadow = true;
   plant.add(stem);
-
   for (let level = 0; level < 4; level += 1) {
-    const leaf = createCannabisLeaf(leafMaterial);
-    leaf.position.set(0, 0.43 + level * 0.31, 0);
-    leaf.rotation.y = (level % 2) * Math.PI / 3;
-    leaf.scale.setScalar(0.48 + level * 0.08);
-    plant.add(leaf);
-    const opposite = createCannabisLeaf(leafMaterial);
-    opposite.position.set(0, 0.43 + level * 0.31, 0);
-    opposite.rotation.y = Math.PI + (level % 2) * Math.PI / 3;
-    opposite.scale.setScalar(0.48 + level * 0.08);
-    plant.add(opposite);
+    for (const side of [-1, 1]) {
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), leafMaterial);
+      leaf.scale.set(0.72, 0.22, 0.42);
+      leaf.position.set(side * (0.16 + level * 0.035), 0.38 + level * 0.28, 0);
+      leaf.rotation.z = side * 0.38;
+      leaf.rotation.y = (variant % 3) * 0.22;
+      leaf.castShadow = true;
+      plant.add(leaf);
+    }
   }
-  const crown = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(0.16, 1),
-    new THREE.MeshStandardMaterial({ color: '#a9c28a', roughness: 0.9 }),
-  );
-  crown.position.y = 1.76;
+  const crown = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), leafMaterial);
+  crown.position.y = 1.55;
   plant.add(crown);
   plant.position.set(x, 0, z);
   return plant;
@@ -151,7 +97,7 @@ async function boot(): Promise<() => void> {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.domElement.setAttribute('aria-label', '3D medical cannabis production facility');
+  renderer.domElement.setAttribute('aria-label', '3D botanical operations facility');
   worldRoot.appendChild(renderer.domElement);
 
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -206,9 +152,9 @@ async function boot(): Promise<() => void> {
       station.receiveShadow = true;
       scene.add(station);
 
-      // Fictional in-game cannabis silhouettes. They are decorative game assets, not cultivation guidance.
+      // Fictional generic botanical silhouettes. They are decorative game assets, not real-world plant guidance.
       for (let pod = 0; pod < 3; pod += 1) {
-        const plant = createCannabisPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
+        const plant = createBotanicalPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
         plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
         station.add(plant);
       }
@@ -235,7 +181,7 @@ async function boot(): Promise<() => void> {
     style: { fontFamily: 'Arial, sans-serif', fontSize: 20, fontWeight: 'bold', fill: '#f0f5ff', letterSpacing: 2 },
   });
   const subtitle = new Text({
-    text: 'MEDICAL CANNABIS  /  FACILITY OPERATIONS',
+    text: 'BOTANICAL OPERATIONS  /  FACILITY VIEW',
     style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#8fa8c6', letterSpacing: 1.4 },
   });
   const stateLine = new Text({
