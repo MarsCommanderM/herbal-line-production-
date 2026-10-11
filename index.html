@@ -1,17 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b1020" />
-    <meta name="description" content="Herbal Line — a fictional botanical operations management game." />
-    <title>Herbal Line — Operations</title>
+    <meta name="description" content="Herbal Line — Managementspiel über eine streng regulierte medizinische Cannabisproduktion. Fiktive Spielmechaniken, keine realen Produktionsanleitungen." />
+    <title>Herbal Line — Medizinische Cannabisproduktion</title>
   </head>
   <body>
     <main id="app" aria-label="Herbal Line game">
-      <div id="world-root" aria-label="Interactive facility view"></div>
-      <div id="ui-root" aria-label="Management interface"></div>
-      <button id="reset-camera" type="button" aria-label="Reset facility camera">Reset camera</button>
+      <div id="world-root" aria-label="Interaktive 3D-Ansicht der medizinischen Cannabis-Anlage"></div>
+      <div id="ui-root" aria-label="Managementoberfläche"></div>
+      <button id="reset-camera" type="button" aria-label="Kamera zurücksetzen">Kamera zurücksetzen</button>
+      <aside id="game-panel" aria-label="Managementsteuerung">
+        <header class="panel-header">
+          <p class="eyebrow">HERBAL LINE / KAMPAGNE 01</p>
+          <h1>Medical Cannabis Operations</h1>
+          <p class="panel-subtitle">Regulierter Betrieb · Fiktive Spielsimulation</p>
+        </header>
+        <section id="game-metrics" aria-label="Betriebskennzahlen"></section>
+        <p id="game-feedback" role="status" aria-live="polite">Kampagne bereit.</p>
+        <section class="panel-section">
+          <h2>Nächster Schritt</h2>
+          <div id="game-actions"></div>
+        </section>
+        <section class="panel-section">
+          <h2>Betriebsprotokoll</h2>
+          <div id="game-log" aria-live="polite"></div>
+        </section>
+        <p class="disclaimer">Alle Werte, Prüfregeln und Prozesszeiten sind erfundene Spielmechaniken und keine realen Produktions- oder Arzneimittelanleitungen.</p>
+      </aside>
       <div id="fatal-error" role="alert" hidden></div>
     </main>
     <script type="module" src="/src/main.ts"></script>

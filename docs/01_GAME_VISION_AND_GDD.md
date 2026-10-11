@@ -2,7 +2,7 @@
 
 ## High Concept
 
-Ein strategisches Management-/Tycoon-Spiel über den Aufbau einer streng regulierten fiktiven botanischen Produktionsanlage. Der Spieler leitet einen kleinen Betrieb und entwickelt ihn zu einem zuverlässigen, dokumentationsstarken Lieferanten für fiktive Apothekenkunden.
+Ein strategisches Management-/Tycoon-Spiel über den Aufbau einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler leitet einen kleinen Betrieb und entwickelt ihn zu einem zuverlässigen, dokumentationsstarken Lieferanten für fiktive Apothekenkunden.
 
 ## Genre, Plattform, Perspektive
 
@@ -55,7 +55,7 @@ Ein kompletter, auf finaler Architektur und finaler visueller Richtung beruhende
 
 ## Nicht-Ziele
 
-- keine realen Kultivierungs-, Arzneimittelherstellungs- oder Vertriebsanleitungen;
+- keine reale Cannabis-Kultivierungs-, -Verarbeitungs-, Arzneimittelherstellungs- oder Vertriebsanleitung;
 - keine realen Rezepturen, Klimasetpoints, Produktionskalender oder Herstellungsprotokolle;
 - keine Patientenakten, medizinische Beratung oder Arzneimitteldosierung;
 - keine echten Bestellungen, Lieferungen, Zahlungen oder regulatorischen Meldungen;

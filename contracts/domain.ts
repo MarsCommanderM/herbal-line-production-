@@ -105,9 +105,7 @@ export interface LedgerEntry {
   id: EntityId; simulationMinute: SimulationMinute; account: 'revenue' | 'expense' | 'penalty' | 'investment' | 'refund';
   amountCents: MoneyCents; referenceId: EntityId | null; reasonCode: string; idempotencyKey: string;
 }
-export interface EconomyState {
-  openingBalanceCents: MoneyCents; ledger: LedgerEntry[];
-}
+export interface EconomyState { openingBalanceCents: MoneyCents; ledger: LedgerEntry[]; }
 export interface UpgradeState { id: string; unlocked: boolean; purchasedAt: SimulationMinute | null; }
 export interface NotificationState {
   id: EntityId; code: string; level: 'info' | 'success' | 'warning' | 'danger';
@@ -122,7 +120,7 @@ export interface GameState {
   schemaVersion: 1; gameVersion: string; revision: number; rngState: number; time: TimeState;
   player: PlayerState; reputation: Reputation0To1000;
   rooms: RoomState[]; sourceLots: SourceLotState[]; plants: PlantState[]; batches: BatchState[];
-  inventoryLots: InventoryLotState[]; orders: OrderState[]; customers: CustomerState[];
+  inventoryLots: InventoryLotState[]; qualityAssessments: QualityAssessment[]; orders: OrderState[]; customers: CustomerState[];
   deliveries: DeliveryState[]; staff: StaffState[]; assignments: WorkAssignmentState[]; machines: MachineState[];
   upgrades: UpgradeState[]; compliance: ComplianceState; economy: EconomyState;
   logs: GameLogEntry[]; ui: UIState;

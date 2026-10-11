@@ -1,43 +1,56 @@
-# Herbal Line — Production Master Pack
+# Herbal Line — Final Production Master Pack
 
-**Document status:** production specification plus an initial executable web-engine shell.  
-**Platform:** browser/web.  
-**Working title:** Herbal Line.  
-**Current concept:** A high-quality web management game about the construction and operation of a strictly regulated medical cannabis plant production. The player controls cultivation, maintenance, processing, quality assurance, warehouse, logistics and delivery to pharmacies.
+**Dokumentstand:** 11. Oktober 2026  
+**Projekt-/Spielname:** Herbal Line  
+**Vom Projektauftrag benannter Projektverantwortlicher:** Michael Braunschweig  
+**Plattform:** Browser/Web  
+**Status:** verbindliche Produktionsspezifikation und agentenfähiges Arbeitsbriefing — kein bereits fertig implementierter oder veröffentlichter Spiel-Build.
 
-## Product boundary
+## Produktdefinition
 
-All plant and process values are fictional management abstractions. The project does not model real-world cultivation parameters, pharmaceutical manufacturing procedures, or real distribution processes. The gameplay focuses on planning, quality status, traceability, quality, capacity, Plant care (cut, water, control, etc.)compliance, staffing, inventory and economy.
+Herbal Line ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert im Spiel Produktionsplanung, Pflanzenpflege, Verarbeitung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lagerverwaltung, Logistik und Auslieferung an Apotheken. Im Mittelpunkt stehen Planung, dokumentierte Qualität, Compliance, Zuverlässigkeit, Personal, Ressourcen und nachhaltige Expansion.
 
-## Canonical project files
+**Darstellungs- und Simulationsgrenze:** Cannabis darf in der fiktiven Spielwelt visuell eindeutig erkennbar sein. Die Spielsysteme sind abstrahierte, erfundene Managementmechaniken. Das Paket enthält keine realen Anbauparameter, Rezepturen, Extraktionsverfahren, Trocknungs-/Aushärtungsprotokolle, Optimierungsanleitungen oder operativen Vertriebsanweisungen. Spielwerte sind ausschließlich fiktive Balancewerte und dürfen nicht als reale Herstellungs- oder Arzneimittelanleitung interpretiert werden.
 
-- `AGENTS.md` — working rules for the lead agent and bounded subagent roles.
-- `docs/00_MASTER_PRODUCTION_DOCUMENT.md` — canonical product and release requirements.
-- `docs/13_PRODUCTION_PHASE_PLAN.md` — phase plan from 0 through 19.
-- `docs/14_BACKLOG.md` and `.tasks/NEXT.md` — prioritized tasks and current work.
-- `contracts/` — TypeScript state, commands, events and persistence contracts.
-- `schemas/` — JSON schemas for save envelopes and content.
-- `docs/audits/` — evidence-based repository baseline and contract reconciliation.
-- `scripts/validate_masterpack.py` — offline documentation/JSON validation only.
+## Inhalt
+
+- `AGENTS.md`: verbindliche Direktive für den autonomen Hauptagenten und sein internes Team aus 2–3 Subagenten.
+- `docs/`: konsolidiertes Masterdokument von Vision und GDD bis Architektur, Datenverträgen, Tests, Rechten, Risiko, Release und Live-Betrieb.
+- `contracts/`: kanonische TypeScript-Domänenverträge als gemeinsame Referenz.
+- `schemas/`: JSON-Schemas für Persistenz und datengetriebene Inhalte.
+- `.tasks/`: priorisiertes, versionierbares Task-Board.
+- `scripts/validate_masterpack.py`: Offline-Prüfung der Paketvollständigkeit und Konsistenz.
+- `rights/`: initiales Rechte-/Lizenzregister mit expliziten Prüfbedingungen.
+
+## Inbetriebnahme im Ziel-Repository
+
+1. ZIP entpacken.
+2. Den gesamten Inhalt in das bestehende Repository kopieren oder das Verzeichnis als neues Repository verwenden.
+3. Vor Änderungen den tatsächlichen Repository-Status prüfen: Root, Branch, Working Tree, vorhandene Dateien und aktuelle Projektwahrheit.
+4. `AGENTS.md` vollständig lesen; danach `docs/00_MASTER_PRODUCTION_DOCUMENT.md`, `docs/11_AUTONOMOUS_AGENT_PLAYBOOK.md` und `.tasks/NEXT.md` lesen.
+5. `python scripts/validate_masterpack.py` ausführen.
+6. Erst nach dem Repository-Audit die erste Task abarbeiten. Vorhandene wertvolle Arbeit wird niemals blind überschrieben.
+
+## Autoritative Quellenreihenfolge
+
+Bei Konflikten gilt: (1) bestätigte Benutzerentscheidung, (2) `AGENTS.md` für Arbeitsregeln, (3) `docs/00_MASTER_PRODUCTION_DOCUMENT.md` für Produktwahrheit, (4) `contracts/` und `schemas/` für technische Verträge, (5) jeweilige Systemspezifikation, (6) `.tasks/` für Status und Reihenfolge, (7) Implementierung. Der Agent protokolliert Konflikte und korrigiert veraltete Dokumente; er führt keine zweite, abweichende Wahrheit ein.
+
+## Qualitätsaussage
+
+„Produktionsqualität“ ist eine Abnahmebedingung, kein Etikett. Ein System gilt erst dann als fertig, wenn es implementiert, integriert, automatisiert geprüft, nachvollziehbar dokumentiert und durch reproduzierbare Evidenz abgenommen wurde. Dieses Paket garantiert nicht, dass ein noch nicht gebautes Spiel bereits releasefähig ist.
+
+
+## Schnellzugriff auf die verbindlichen Pläne
+
+- [Master Production Document](docs/00_MASTER_PRODUCTION_DOCUMENT.md)
+- [Vollständiger Phasenplan — Phase 0 bis 19](docs/13_PRODUCTION_PHASE_PLAN.md)
+- [Priorisiertes Studio-Backlog](docs/14_BACKLOG.md)
+- [Nächste autoritative Task](.tasks/NEXT.md)
+- [Kanonische Domain-Verträge](contracts/domain.ts)
+- [Offline-Paketvalidator](scripts/validate_masterpack.py)
+
+Der Master-Pack-Inhalt wurde in dieses Repository expandiert. Der Repository-Stand ist weiterhin eine Produktionsspezifikation; ein ausführbarer Spiel-Build und erfolgreiche Projekt-CI sind noch nicht nachgewiesen.
 
 ## Current engineering status
 
-The repository now contains a strict TypeScript/Vite app shell, a Three.js facility view, a PixiJS HUD, pure domain helpers for ledger-derived finance, batch transition gates, inventory reservation checks, and Vitest unit tests.
-
-**Dependency resolution is pinned, but full reproducibility is not yet proven.** The direct dependencies are exact-pinned in `package.json`, and the generated `package-lock.json` is committed at [`db8683c`](https://github.com/MarsCommanderM/herbal-line-production-/commit/db8683c83ec883334a4125a3768d12a51a6d077e). All seven direct dependency versions match the lockfile root. The Application CI workflow is configured to run `npm ci`, typecheck, tests, build and master-pack validation. The available GitHub connector did not expose workflow-run/check results, so typecheck, tests and build remain **NOT VERIFIED**.
-
-## Local commands after the lockfile exists
-
-```bash
-npm ci
-npm run typecheck
-npm test
-npm run build
-npm run validate:masterpack
-```
-
-The master-pack validator checks required files, manifest metadata, JSON syntax and the phase-plan boundaries. It does not prove game behavior or replace the TypeScript build/tests.
-
-## Copyright and rights
-
-The project-owner metadata is a project instruction, not independent proof of rights ownership. Review `RIGHTS_NOTICE.md`, `docs/17_IP_RIGHTS_AND_COMPLIANCE.md` and `rights/LICENSE_REGISTER.md` before public or commercial release.
+The repository currently contains the production specification and contracts. The target repository does not yet have an observed `package.json`, dependency lockfile, `tsconfig.json`, `index.html`, app entry point, or validation workflow. See [the evidence-based baseline audit](docs/audits/BASELINE.md). The new workflow validates the master-pack artifacts only; it is not a game build.

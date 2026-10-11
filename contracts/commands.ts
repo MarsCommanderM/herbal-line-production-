@@ -7,7 +7,9 @@ export type DomainCommand =
   | (CommandBase & { type: 'SOURCE/RECEIVE'; sourceLotId: EntityId; sourceRef: string; quantity: number })
   | (CommandBase & { type: 'SOURCE/INSPECT'; sourceLotId: EntityId; accepted: boolean; qualityScore: Score0To100; findingCodes: string[] })
   | (CommandBase & { type: 'PLANT/CREATE'; plantId: EntityId; profileId: string; sourceLotId: EntityId; roomId: EntityId })
+  | (CommandBase & { type: 'PLANT/ADVANCE_FICTIONAL_STEP'; plantId: EntityId })
   | (CommandBase & { type: 'PLANT/REJECT'; plantId: EntityId; reasonCode: string })
+  | (CommandBase & { type: 'PLANT/HARVEST'; plantId: EntityId })
   | (CommandBase & { type: 'BATCH/CREATE'; batchId: EntityId; plantIds: EntityId[]; profileId: string })
   | (CommandBase & { type: 'BATCH/QUEUE'; batchId: EntityId; roomId: EntityId })
   | (CommandBase & { type: 'BATCH/START_PROCESSING'; batchId: EntityId; machineId: EntityId })
@@ -22,7 +24,8 @@ export type DomainCommand =
   | (CommandBase & { type: 'ROOM/PURCHASE'; roomId: EntityId; definitionId: string })
   | (CommandBase & { type: 'STAFF/ASSIGN'; assignmentId: EntityId; staffId: EntityId; taskCode: string; entityId: EntityId | null })
   | (CommandBase & { type: 'UPGRADE/PURCHASE'; upgradeId: string })
-  | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId });
+  | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId })
+;
 
 export type UICommand =
   | (CommandBase & { type: 'UI/SELECT'; entityId: EntityId | null })

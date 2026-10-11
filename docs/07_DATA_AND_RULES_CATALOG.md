@@ -25,8 +25,8 @@ Inhalte sind datengetrieben. Definitionen (Content) sind unveränderliche Versio
 
 - `herb_alpha`: fiktives Pflanzenprofil; Spielzeitdauer 2.880 Game-Minuten; Basiswert 12.000 Cent; Qualitäts-Sensitivität 50; Modell-ID wird im Asset-Inventar hinterlegt.
 - Räume: `production_room_small` (Kapazität 6; Preis 200.000 Cent; Power 12 Spiel-Energieeinheiten je Spielstunde), `processing_room_small` (Kapazität 4; Preis 250.000 Cent; Power 8), `quality_lab_small` (Kapazität 3; Preis 300.000 Cent; Power 6), `storage_small` (Kapazität 12; Preis 150.000 Cent; Power 3), `logistics_desk` (Kapazität 4 Auftragsplätze; Preis 100.000 Cent; Power 1).
-- Kunden: `licensed_client_a` und `institutional_client_b`, mit nur abstrakten Zuverlässigkeits-/Qualitätsanforderungen und einer erforderlichen Reputation.
-- Upgrades: `sensor_pack_1` und `drying_rack_1` sind Spielverbesserungen mit in-game Effekten. Sie dürfen keine realen Anleitungen zu reale Pflanzenkultivierung oder pharmazeutische Herstellung enthalten.
+- Kunden: `pharmacy_a` und `clinic_b`, mit nur abstrakten Zuverlässigkeits-/Qualitätsanforderungen und einer erforderlichen Reputation.
+- Upgrades: `sensor_pack_1` und `drying_rack_1` sind Spielverbesserungen mit in-game Effekten. Sie dürfen keine realen Anleitungen zu Anbau, Arzneimittelverarbeitung oder Extraktion enthalten.
 
 ## 4. Wachstum/Qualität als abstraktes Simulationsmodell
 
