@@ -66,3 +66,9 @@ body { min-width: 320px; min-height: 480px; }
   .panel-header h1 { font-size: 18px; }
   #reset-camera { top: 14px; left: 14px; }
 }
+
+.save-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.save-controls button { min-width: 0; padding: 9px 8px; border: 1px solid #3b526b; border-radius: 7px; background: #17273a; color: #dce8f6; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.save-controls button:hover:not(:disabled) { border-color: #7ea9cb; background: #223a53; }
+.save-controls button:focus-visible { outline: 2px solid #9ecbff; outline-offset: 2px; }
+.save-controls button:disabled { cursor: wait; opacity: 0.55; }
