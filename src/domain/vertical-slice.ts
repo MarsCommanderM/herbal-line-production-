@@ -5,6 +5,8 @@ import type {
   EventId,
   GameState,
   GameLogEntry,
+  QualityAssessment,
+  PlantState,
   InventoryLotState,
   LedgerEntry,
   SimulationMinute,
@@ -140,7 +142,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       if (!plant) return failure(state, 'NOT_FOUND', 'Produktionseinheit nicht gefunden.');
       if (plant.stage !== 'active') return failure(state, 'INVALID_TRANSITION', 'Nur aktive Produktionseinheiten können im Spiel fortschreiten.');
       const progress = Math.min(100, plant.progress + 20);
-      const stage = progress === 100 ? 'ready_for_harvest' : 'active';
+      const stage: PlantState['stage'] = progress === 100 ? 'ready_for_harvest' : 'active';
       const updatedPlant = { ...plant, progress: progress as typeof plant.progress, stage, lastUpdatedAt: state.time.totalMinutes };
       const event: DomainEvent = {
         ...eventBase(state, command, plant.id),
@@ -238,10 +240,10 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       if (qualityRoom.occupied >= qualityRoom.capacity) return failure(state, 'CAPACITY_EXCEEDED', 'Die Qualitätssicherung hat keine freie Spielkapazität.');
       const scoreValue = qualityScoreFor(state, batch);
       const traceComplete = hasCompleteTrace(state, batch);
-      const decision = scoreValue >= 75 && traceComplete ? 'pass' : scoreValue >= 60 ? 'review' : 'fail';
+      const decision: QualityAssessment['decision'] = scoreValue >= 75 && traceComplete ? 'pass' : scoreValue >= 60 ? 'review' : 'fail';
       const assessmentId = command.assessmentId;
       if (state.batches.some((item) => item.assessmentIds.includes(assessmentId))) return failure(state, 'DUPLICATE_COMMAND', 'Diese Prüf-ID existiert bereits.');
-      const assessment = {
+      const assessment: QualityAssessment = {
         id: assessmentId,
         batchId: batch.id,
         ruleSetVersion: 'fictional-game-balance-v1',
