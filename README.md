@@ -8,9 +8,9 @@
 
 ## Produktdefinition
 
-Herbal Line ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert im Spiel Produktionsplanung, Pflanzenpflege, Verarbeitung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lagerverwaltung, Logistik und Auslieferung an Apotheken. Im Mittelpunkt stehen Planung, dokumentierte Qualität, Compliance, Zuverlässigkeit, Personal, Ressourcen und nachhaltige Expansion.
+Herbal Line ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer fiktiven, streng regulierten botanischen Produktionsanlage. Der Spieler steuert im Spiel Produktionsplanung, Pflanzenpflege, Verarbeitung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lagerverwaltung, Logistik und Auslieferung an Apotheken. Im Mittelpunkt stehen Planung, dokumentierte Qualität, Compliance, Zuverlässigkeit, Personal, Ressourcen und nachhaltige Expansion.
 
-**Darstellungs- und Simulationsgrenze:** Cannabis darf in der fiktiven Spielwelt visuell eindeutig erkennbar sein. Die Spielsysteme sind abstrahierte, erfundene Managementmechaniken. Das Paket enthält keine realen Anbauparameter, Rezepturen, Extraktionsverfahren, Trocknungs-/Aushärtungsprotokolle, Optimierungsanleitungen oder operativen Vertriebsanweisungen. Spielwerte sind ausschließlich fiktive Balancewerte und dürfen nicht als reale Herstellungs- oder Arzneimittelanleitung interpretiert werden.
+**Darstellungs- und Simulationsgrenze:** Pflanzenarten und Produkte bleiben generisch und fiktiv; reale psychoaktive oder pharmazeutische Produktdetails werden nicht modelliert. Die Spielsysteme sind abstrahierte, erfundene Managementmechaniken. Das Paket enthält keine realen Anbauparameter, Rezepturen, Extraktionsverfahren, Trocknungs-/Aushärtungsprotokolle, Optimierungsanleitungen oder operativen Vertriebsanweisungen. Spielwerte sind ausschließlich fiktive Balancewerte und dürfen nicht als reale Herstellungs- oder Arzneimittelanleitung interpretiert werden.
 
 ## Inhalt
 
