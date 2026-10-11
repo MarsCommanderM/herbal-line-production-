@@ -1,14 +1,14 @@
-name: Application CI
+name: Herbal Line CI
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: herbal-line-ci-${{ github.ref }}
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Typecheck, tests, build and package checks
+    name: Typecheck, tests, build, and master-pack validation
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -26,27 +26,13 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22.16.0"
-      - name: Create lockfile from exact direct dependency pins when absent
-        id: lock
-        shell: bash
-        run: |
-          if [ ! -f package-lock.json ]; then
-            npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-            echo "generated=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "generated=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Commit initial lockfile on trusted main push
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.lock.outputs.generated == 'true'
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          git commit -m "build: commit lockfile generated from pinned dependencies"
-          git push
-      - name: Install from lockfile
+          cache: npm
+      - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
+      - name: Source policy lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
       - name: Strict TypeScript typecheck
         run: npm run typecheck
       - name: Domain unit tests

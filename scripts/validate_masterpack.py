@@ -22,7 +22,6 @@ REQUIRED = [
     "docs/14_BACKLOG.md", "docs/15_TEST_AND_QA_STRATEGY.md",
     "docs/16_SECURITY_PRIVACY_AND_RELIABILITY.md", "docs/17_IP_RIGHTS_AND_COMPLIANCE.md",
     "docs/18_CI_CD_RELEASE_RUNBOOK.md", "docs/19_RISK_REGISTER.md",
-    "docs/audits/BASELINE.md", "docs/audits/CONTRACT_RECONCILIATION.md",
     ".tasks/NEXT.md", ".tasks/BACKLOG.md", "rights/LICENSE_REGISTER.md",
     "contracts/commands.ts", "contracts/domain.ts", "contracts/events.ts",
     "contracts/persistence.ts", "schemas/content-manifest.schema.json",

@@ -1,31 +1,39 @@
 # 06 — Kanonische Contracts
 
-Dieses Dokument und `contracts/*.ts` bilden die einzige kanonische TypeScript-Referenz. Bei Widerspruch gilt: Sicherheits-/Rechtsgrenzen → diese Contracts → Architektur → GDD → Tasks → alte Implementierung.
+Dieses Dokument und `contracts/*.ts` bilden den einzigen kanonischen TypeScript-Vertrag. Alte Chat-Snippets und frühere Skeletons sind nicht autoritativ. Bei Widerspruch gilt diese Reihenfolge: Rechts-/Sicherheitsgrenzen → diese Contracts → Architektur → GDD → Tasks → alte Implementierung.
 
 ## 1. ID- und Zahlenregeln
 
-IDs sind opake Strings, erzeugt an der App-Grenze. Simulationszeit sind nichtnegative ganzzahlige Simulationsminuten. Geld sind Integer-Cents. Score: 0–100; Risiko: 0–100; Reputation: 0–1000. TypeScript-Brands helfen zur Compile-Zeit; jede externe Eingabe benötigt Runtime-Validierung.
+IDs sind opake Strings mit Präfix und generiertem Suffix. IDs werden an der App-Grenze erzeugt und als Command-Payload übergeben, nie innerhalb reiner Reducer. Domain-Werte sind validierte, endliche Zahlen. Geld = ganzzahlige Cent. Zeit = nichtnegative ganzzahlige Simulationsminuten. Score = ganzzahlige Punkte 0–100. Risiko = 0–100. Reputation = 0–1000.
 
-## 2. Single Source of Truth
+## 2. GameState als Snapshot
 
-- `GameState` ist der serialisierbare Runtime-State, enthält aber den flüchtigen `ui`-Teil nur zur Laufzeit.
-- Geldbestand wird **nicht separat gespeichert**. Der Kontostand ist `openingBalanceCents` plus/minus Ledger-Einträge. Umsatz-/Kosten-Summen sind Selectors über das Ledger, keine parallel gepflegten Wahrheiten.
-- Reservierte Menge ist ein eigener Zähler. `InventoryLotState.status` beschreibt die Disposition (held/released/depleted/expired/rejected), nicht den Reservierungszustand.
-- Ein QC-Datensatz hat genau eine Entscheidung (`pass | fail | review`); ein zweites boolesches `passed` wird nicht geführt.
-- `LicenseStatus` enthält `recovery_review`; während dieser Phase bleiben kritische Vorgänge gesperrt, bis ein expliziter Audit-/Freigabe-Command den Status ändert.
+`GameState` muss vollständig serialisierbar sein: keine `Map`, `Set`, `Date`, Funktionen, DOM-/Three-/Pixi-/Rapier-Objekte oder Klasseninstanzen. Indexierung erfolgt intern über Dictionaries oder geordnete Arrays mit explizit dokumentierter deterministischer Iteration. UI-Fokus und Fensterposition können getrennt persistiert oder bewusst nicht persistiert werden.
 
-## 3. Commands
+## 3. Command-Vertrag
 
-`DomainCommand` ändert fachlichen Spielzustand. `UICommand` steuert nur Auswahl/Screen. `PersistenceCommand` startet Save-Aktionen. Alle können über eine typisierte App-Gateway-Fassade laufen, dürfen aber nicht denselben fachlichen Reducer ohne Dispatch-Grenze erreichen. Jeder Command enthält eindeutige `commandId`, `actorId` und erwartete Revision. Fehlerhafte Domain-Commands verändern weder State noch Ledger.
+Ein Command ist eine Absicht, kein beliebiger State-Patch. Jeder Command enthält eine eindeutige `commandId`, `actorId`, den erwarteten Save-/State-Revision-Kontext soweit erforderlich und einen typisierten Payload. Der Handler gibt entweder `{ ok: true, state, events }` oder `{ ok: false, error }` zurück. Ein ungültiger Command verändert keinerlei Zustand.
 
-## 4. Events
+## 4. Event-Vertrag
 
-Domain-Events werden nur nach erfolgreichem Commit publiziert und stabil sortiert. Sie enthalten Event-ID, Simulationszeit, Schema-Version, Typ und minimale typisierte Nutzdaten. QC-Events verwenden dieselbe `decision`-Union wie der Assessment-Datensatz.
+Domain-Events sind typisiert, nur nach erfolgreichem Commit publiziert und nach stabiler Ordnung verarbeitet. Jeder Event enthält `eventId`, `simulationMinute`, `schemaVersion`, `type`, `entityId` und minimale typisierte Nutzdaten. Events sind ein Integrations-/Audit-Mechanismus; sie ersetzen nicht den State.
 
 ## 5. Save-Vertrag
 
-SaveEnvelope enthält `format`, `schemaVersion`, `gameVersion`, `savedAtRealTime` als Metadatum, `revision`, `rngState`, `payload` und `checksum`. `payload` ist `Omit<GameState, 'ui'>`: UI-Auswahl und Notifications werden nicht persistiert und beim Laden aus sicheren Defaults neu erzeugt. Fachzustand und RNG werden vollständig gespeichert. Laden: Envelope validieren → Checksum prüfen → unterstützte Migration → vollständige semantische Prüfung aller IDs, Referenzen, Zahlen, Ledger- und Mengeninvarianten → atomare Übernahme. Fehlerhafte Saves überschreiben nie den letzten gültigen Slot.
+Envelope: `format`, `schemaVersion`, `gameVersion`, `savedAtRealTime` (nur Metadatum), `revision`, `rngState`, `payload`, `checksum`. Vor dem Laden: Envelope validieren → kompatible Migration anwenden → gesamten Domain-State validieren → nur bei Erfolg atomar als aktiven State übernehmen. Fehlerhafte Saves werden nicht stillschweigend mit Defaults überschrieben.
 
-## 6. Abnahme
+## 6. Öffentliche Schnittstellen
 
-Jede Contract-Änderung braucht Migrationsnotiz und Tests. Typecheck mit `strict` muss null Fehler melden. Tests müssen ungültige Payloads, illegale Übergänge, idempotente Wiederholungen und unveränderten State bei Fehlern beweisen. JSON-Syntax allein ist keine vollständige JSON-Schema-Validierung.
+Alle Systeme exportieren explizite Ein-/Ausgabetypen. Keine `any`, keine offenen `Record<string, any>`-Patches, keine UI-Strings als Domain-Zustände. Jede Contract-Änderung braucht Migrationsplan, Tests und Änderungseintrag im Decision Log. Das Erweitern einer Union ist ein Breaking Change, wenn es bestehende Save-Daten/Consumers ungültig machen kann.
+
+## 7. Pflichtdateien
+
+- `contracts/domain.ts` — State- und Entitätstypen.
+- `contracts/commands.ts` — erlaubte State-Änderungsabsichten.
+- `contracts/events.ts` — publizierte Domain-Events.
+- `contracts/persistence.ts` — Save-Envelope/Repository-Interfaces.
+- `schemas/*.schema.json` — maschinenlesbare Validierung statischer Daten/Saves.
+
+## 8. Abnahme
+
+Typecheck mit `strict` muss null Fehler melden. Contract-Test muss ungültige Payloads zurückweisen. Domain-Tests müssen beweisen, dass ungültige Commands Zustand und Ledger unverändert lassen. Ein Agent darf nicht ersatzweise einen schwächeren Paralleltyp definieren.
