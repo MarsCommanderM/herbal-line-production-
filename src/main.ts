@@ -2,11 +2,22 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
+import type { CommandId, EntityId } from '../contracts/domain';
+import { createInitialGameState } from './domain/initial-state';
+import { applyVerticalSliceCommand, getCampaignBalance, type VerticalSliceCommand } from './domain/vertical-slice';
 
 const worldRoot = document.querySelector<HTMLDivElement>('#world-root');
 const uiRoot = document.querySelector<HTMLDivElement>('#ui-root');
 const fatalError = document.querySelector<HTMLDivElement>('#fatal-error');
 const resetCameraButton = document.querySelector<HTMLButtonElement>('#reset-camera');
+const gameMetrics = document.querySelector<HTMLDivElement>('#game-metrics');
+const gameFeedback = document.querySelector<HTMLParagraphElement>('#game-feedback');
+const gameActions = document.querySelector<HTMLDivElement>('#game-actions');
+const gameLog = document.querySelector<HTMLDivElement>('#game-log');
+
+let gameState = createInitialGameState();
+let commandSequence = 0;
+let onGameStateChanged: () => void = () => {};
 
 function showFatalError(error: unknown): void {
   if (!fatalError) return;
