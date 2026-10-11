@@ -147,7 +147,7 @@ export class IndexedDbSaveRepository implements SaveRepository {
   private openDatabase(): Promise<IDBDatabase> {
     if (!this.factory) return Promise.reject(new SaveSystemError('IndexedDB ist in dieser Umgebung nicht verfügbar.', 'STORAGE_UNAVAILABLE'));
     if (this.databasePromise) return this.databasePromise;
-    this.databasePromise = new Promise((resolve, reject) => {
+    const opening = new Promise<IDBDatabase>((resolve, reject) => {
       const request = this.factory!.open(DATABASE_NAME, DATABASE_VERSION);
       request.onupgradeneeded = () => {
         const database = request.result;
@@ -160,7 +160,8 @@ export class IndexedDbSaveRepository implements SaveRepository {
       };
       request.onerror = () => reject(new SaveSystemError('Die lokale Save-Datenbank konnte nicht geöffnet werden.', 'STORAGE_FAILED'));
       request.onblocked = () => reject(new SaveSystemError('Die Save-Datenbank ist durch einen anderen Tab blockiert.', 'STORAGE_FAILED'));
-    }).catch((error: unknown) => {
+    });
+    this.databasePromise = opening.catch((error: unknown): IDBDatabase => {
       this.databasePromise = undefined;
       throw toError(error, 'Datenbank konnte nicht geöffnet werden.');
     });
