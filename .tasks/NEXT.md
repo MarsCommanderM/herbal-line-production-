@@ -18,7 +18,7 @@ P0-001 repository truth audit is recorded in `docs/audits/BASELINE.md`. The GitH
 - **Status:** Pending.
 
 ## P1-001 — Vertical Slice Domain
-- **Goal:** Implement the first fully traceable management loop: intake → abstract game stages → QC hold/release → inventory → pharmacy dispatch.
+- **Goal:** Implement the first fully traceable management loop: intake → abstract botanical stages → QC hold/release → inventory → generic customer dispatch.
 - **Acceptance:** illegal transitions rejected; held/rejected batches cannot dispatch; stock movement and delivery are traceable; deterministic tests cover positive and negative paths.
 - **Dependencies:** P0-003.
 - **Status:** Pending.
