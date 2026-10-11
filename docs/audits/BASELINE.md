@@ -60,3 +60,23 @@ A separate working branch, `production/herbal-line-baseline-20261012`, was creat
 ## Audit conclusion
 
 **Baseline status: PARTIAL / NOT GREEN.** Repository metadata and drift are documented. Exact archive synchronization, build/test verification, and implementation acceptance remain open.
+
+
+## Post-implementation verification — 2026-10-12
+
+The first verified application baseline was merged to `main` via PR [#4](https://github.com/MarsCommanderM/herbal-line-production-/pull/4).
+
+- Current main commit: `5b5f770f90956660c3860467ee02f4bbcf31ebd0`
+- Application CI: **PASS** — [run 38181538851](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181538851)
+- Master Pack validation workflow: **PASS** — [run 38181538905](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181538905)
+- Verified gates: `npm ci`, source lint, format check, strict TypeScript typecheck, unit tests, production build, master-pack validation, and `git diff --check`.
+- The merged implementation contains the first deterministic generic botanical operations loop, typed commands/events, abstract QC and traceability gates, inventory reservation, generic buyer order, delivery confirmation, ledger-derived revenue, and accessible management controls.
+
+### Remaining blockers
+
+- Exact byte-for-byte parity with the supplied 42-file Master Pack remains unverified.
+- IndexedDB save/load, schema migration and recovery are not yet implemented.
+- Browser E2E, accessibility automation, and cross-browser verification have not been run.
+- Asset provenance/licensing review and release-candidate acceptance remain open.
+
+**Updated baseline status: ENGINEERING FOUNDATION GREEN; PRODUCT NOT RELEASE-READY.**
