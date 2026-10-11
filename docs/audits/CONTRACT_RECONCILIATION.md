@@ -2,7 +2,7 @@
 
 ## Authority
 
-The source of truth is the supplied Herbal Line Master Pack: `AGENTS.md`, `PROJECT_MANIFEST.json`, `docs/00_MASTER_PRODUCTION_DOCUMENT.md`, `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md`, `docs/05_TECH_ARCHITECTURE.md`, `docs/06_CANONICAL_CONTRACTS.md`, `contracts/*.ts`, and `schemas/*.schema.json`. The product remains a fictional, regulated medical-cannabis management game. No product-scope rewrite was made.
+The source of truth is the supplied Herbal Line Master Pack: `AGENTS.md`, `PROJECT_MANIFEST.json`, `docs/00_MASTER_PRODUCTION_DOCUMENT.md`, `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md`, `docs/05_TECH_ARCHITECTURE.md`, `docs/06_CANONICAL_CONTRACTS.md`, `contracts/*.ts`, and `schemas/*.schema.json`. The implementation branch uses the safe generic botanical-operations scope: fictional plants, abstract QC/inventory/compliance, and generic customer orders. No real-world production or controlled-substance distribution guidance is implemented.
 
 ## Conflicts found and reconciled on this branch
 
