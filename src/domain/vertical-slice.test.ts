@@ -131,6 +131,9 @@ describe('medical cannabis campaign vertical slice', () => {
     if (result.ok) throw new Error('Release should have been blocked.');
     expect(result.error.code).toBe('QUALITY_GATE_FAILED');
     expect(result.state.inventoryLots).toHaveLength(0);
+    state = applyOk(state, 'BATCH/REJECT', { batchId: entity('batch-low-quality'), reasonCode: 'QUALITY_GATE_NOT_ACCEPTED' });
+    expect(state.batches[0]?.status).toBe('rejected');
+    expect(state.inventoryLots).toHaveLength(0);
   });
 
   it('keeps inventory and order unchanged when allocation is insufficient', () => {
