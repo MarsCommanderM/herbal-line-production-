@@ -284,7 +284,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       const lotId = entityId('inventory-' + batch.id);
       if (state.inventoryLots.some((lot) => lot.id === lotId)) return failure(state, 'DUPLICATE_COMMAND', 'Bestandslos existiert bereits.');
       const lot: InventoryLotState = {
-        id: lotId, batchId: batch.id, itemDefinitionId: 'HL-MED-01', quantityAvailable: batch.quantity, quantityReserved: 0,
+        id: lotId, batchId: batch.id, itemDefinitionId: 'BOT-01', quantityAvailable: batch.quantity, quantityReserved: 0,
         qualityScore: batch.qualityScore, status: 'released', createdAt: state.time.totalMinutes,
         expiresAt: minute(Number(state.time.totalMinutes) + 10080), storageRoomId: storageRoom.id,
       };
@@ -304,7 +304,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       if (!customer.unlocked || state.reputation < customer.minimumReputation) return failure(state, 'COMPLIANCE_BLOCKED', 'Kundenanforderungen sind nicht erfüllt.');
       if (isBlocked(state, 'ORDER/ACCEPT')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren die Auftragsannahme.');
       const event: DomainEvent = { ...eventBase(state, command, order.id), type: 'order.accepted', orderId: order.id };
-      return commit(state, command, { orders: state.orders.map((item) => item.id === order.id ? { ...item, status: 'accepted', acceptedAt: state.time.totalMinutes } : item) }, [event], 'ORDER_ACCEPTED', 'Apothekenauftrag angenommen.', [order.id, customer.id]);
+      return commit(state, command, { orders: state.orders.map((item) => item.id === order.id ? { ...item, status: 'accepted', acceptedAt: state.time.totalMinutes } : item) }, [event], 'ORDER_ACCEPTED', 'Kundenauftrag angenommen.', [order.id, customer.id]);
     }
     case 'ORDER/ALLOCATE': {
       const order = state.orders.find((item) => item.id === command.orderId);
@@ -423,7 +423,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         }),
         economy: { ...state.economy, ledger: [...state.economy.ledger, ledgerEntry] },
         reputation: Math.min(1000, Number(state.reputation) + 5) as GameState['reputation'],
-      }, [deliveryEvent, financeEvent], 'DELIVERY_CONFIRMED', 'Apothekenempfang bestätigt; Umsatz einmalig gebucht.', [delivery.id, order.id, ...delivery.lotIds]);
+      }, [deliveryEvent, financeEvent], 'DELIVERY_CONFIRMED', 'Wareneingang bestätigt; Umsatz einmalig gebucht.', [delivery.id, order.id, ...delivery.lotIds]);
     }
     default: {
       const unsupported: never = command;
