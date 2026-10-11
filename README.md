@@ -3,7 +3,7 @@
 **Document status:** production specification plus an initial executable web-engine shell.  
 **Platform:** browser/web.  
 **Working title:** Herbal Line.  
-**Current concept:** a fictional, regulated botanical operations management game with abstract plant-unit state, inventory, quality gates, auditability, staffing, finance and customer orders.
+**Current concept:** A high-quality web management game about the construction and operation of a strictly regulated medical cannabis plant production. The player controls cultivation, maintenance, processing, quality assurance, warehouse, logistics and delivery to pharmacies.
 
 ## Product boundary
 
