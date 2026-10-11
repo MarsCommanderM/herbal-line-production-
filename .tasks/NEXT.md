@@ -15,7 +15,7 @@ P0-001 repository truth audit is recorded in `docs/audits/BASELINE.md`. The GitH
 - **Outputs:** app shell, dependency manifest/lockfile, scripts, CI gates, smoke tests and reproducible instructions.
 - **Acceptance:** clean checkout can install via frozen lockfile and run typecheck, lint, tests and build; each result is observed on the same commit and recorded.
 - **Dependencies:** P0-002.
-- **Status:** Implemented on the recovery branch; latest revision CI must pass before acceptance.
+- **Status:** DONE on main at `5b5f770f90956660c3860467ee02f4bbcf31ebd0`; CI and master-pack validation passed.
 
 ## P1-001 — Vertical Slice Domain
 - **Goal:** Implement the first fully traceable management loop: intake → abstract botanical stages → QC hold/release → inventory → generic customer dispatch.
