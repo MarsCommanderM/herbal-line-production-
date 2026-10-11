@@ -23,7 +23,7 @@
 
 - Recovery branch run [38181116339](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181116339) passed on commit `7bb88fbf23dc30139f8fa49c384024b1a7191fdd`.
 - That run completed clean install, source lint, format check, strict typecheck, 16 tests, production build, master-pack validation, and `git diff --check`.
-- Clean integration branch: CI result pending at the time of this status entry.
+- Clean integration branch CI passed on commit `9ae1426a23ca3cf3b453e4991a3c40b3794f5eee`: [run 38181308979](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181308979).
 - Browser smoke/E2E: not run.
 - Save/load and migration/recovery: not implemented.
 
