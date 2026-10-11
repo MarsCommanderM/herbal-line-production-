@@ -1,36 +1,40 @@
-# Herbal Line
+# Herbal Line — Final Production Master Pack
 
-**Herbal Line** is a systems-driven web management game about the regulated medical-cannabis supply chain, following a fictional operation from seed intake and plant-care planning through harvest scheduling, quality assurance, batch documentation, inventory, and delivery to pharmacies.
+**Dokumentstand:** 11. Oktober 2026  
+**Projekt-/Spielname:** Herbal Line  
+**Vom Projektauftrag benannter Projektverantwortlicher:** Michael Braunschweig  
+**Plattform:** Browser/Web  
+**Status:** verbindliche Produktionsspezifikation und agentenfähiges Arbeitsbriefing — kein bereits fertig implementierter oder veröffentlichter Spiel-Build.
 
-The player manages the operation; what pharmacies subsequently do with dispensed products is outside the game's scope. The design focuses on work, care, traceability, staff, compliance, operational trade-offs, and the consequences of decisions—not intoxication or recreational consumption.
+## Produktdefinition
 
-## Product principles
+Herbal Line ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert im Spiel Produktionsplanung, Pflanzenpflege, Verarbeitung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lagerverwaltung, Logistik und Auslieferung an Apotheken. Im Mittelpunkt stehen Planung, dokumentierte Qualität, Compliance, Zuverlässigkeit, Personal, Ressourcen und nachhaltige Expansion.
 
-- **Cannabis remains the explicit subject.** The project is not a generic plant-management reskin.
-- **Systems depth over real-world recipes.** Production stages use fictional, normalized simulation values and abstract actions. The game does not provide actionable cultivation parameters, real schedules, nutrient recipes, extraction instructions, or procedures for producing or preparing cannabis.
-- **Regulation is gameplay.** Documentation, audits, quarantines, quality checks, incident handling, and traceability affect the player's outcomes.
-- **Medical context is presented responsibly.** Educational notices distinguish research, approved medical use, uncertainty, and individual clinical decisions. The game does not diagnose, prescribe, or make treatment recommendations.
-- **Evidence before claims.** CI status, tests, and release readiness must be demonstrated by actual runs; never infer success from configuration alone.
+**Darstellungs- und Simulationsgrenze:** Cannabis darf in der fiktiven Spielwelt visuell eindeutig erkennbar sein. Die Spielsysteme sind abstrahierte, erfundene Managementmechaniken. Das Paket enthält keine realen Anbauparameter, Rezepturen, Extraktionsverfahren, Trocknungs-/Aushärtungsprotokolle, Optimierungsanleitungen oder operativen Vertriebsanweisungen. Spielwerte sind ausschließlich fiktive Balancewerte und dürfen nicht als reale Herstellungs- oder Arzneimittelanleitung interpretiert werden.
 
-## Project status
+## Inhalt
 
-This repository is being initialized. Until implementation and CI runs are recorded, no build or test result should be considered verified.
+- `AGENTS.md`: verbindliche Direktive für den autonomen Hauptagenten und sein internes Team aus 2–3 Subagenten.
+- `docs/`: konsolidiertes Masterdokument von Vision und GDD bis Architektur, Datenverträgen, Tests, Rechten, Risiko, Release und Live-Betrieb.
+- `contracts/`: kanonische TypeScript-Domänenverträge als gemeinsame Referenz.
+- `schemas/`: JSON-Schemas für Persistenz und datengetriebene Inhalte.
+- `.tasks/`: priorisiertes, versionierbares Task-Board.
+- `scripts/validate_masterpack.py`: Offline-Prüfung der Paketvollständigkeit und Konsistenz.
+- `rights/`: initiales Rechte-/Lizenzregister mit expliziten Prüfbedingungen.
 
-## Planned stack
+## Inbetriebnahme im Ziel-Repository
 
-TypeScript, Vite, React, Vitest, and Playwright, with domain logic separated from UI and persistence. The initial MVP is a playable 2D management interface; 3D presentation is not a prerequisite for proving the management loop.
+1. ZIP entpacken.
+2. Den gesamten Inhalt in das bestehende Repository kopieren oder das Verzeichnis als neues Repository verwenden.
+3. Vor Änderungen den tatsächlichen Repository-Status prüfen: Root, Branch, Working Tree, vorhandene Dateien und aktuelle Projektwahrheit.
+4. `AGENTS.md` vollständig lesen; danach `docs/00_MASTER_PRODUCTION_DOCUMENT.md`, `docs/11_AUTONOMOUS_AGENT_PLAYBOOK.md` und `.tasks/NEXT.md` lesen.
+5. `python scripts/validate_masterpack.py` ausführen.
+6. Erst nach dem Repository-Audit die erste Task abarbeiten. Vorhandene wertvolle Arbeit wird niemals blind überschrieben.
 
-## Documentation
+## Autoritative Quellenreihenfolge
 
-- [Master production plan](docs/MASTER_PRODUCTION_PLAN.md)
-- [MVP roadmap](docs/ROADMAP.md)
-- [Content, age rating and health notices](docs/CONTENT_AND_HEALTH_NOTICES.md)
-- [Agent rules](AGENTS.md)
+Bei Konflikten gilt: (1) bestätigte Benutzerentscheidung, (2) `AGENTS.md` für Arbeitsregeln, (3) `docs/00_MASTER_PRODUCTION_DOCUMENT.md` für Produktwahrheit, (4) `contracts/` und `schemas/` für technische Verträge, (5) jeweilige Systemspezifikation, (6) `.tasks/` für Status und Reihenfolge, (7) Implementierung. Der Agent protokolliert Konflikte und korrigiert veraltete Dokumente; er führt keine zweite, abweichende Wahrheit ein.
 
-## Getting started
+## Qualitätsaussage
 
-Implementation setup commands will be added with the first application scaffold. Do not report the project as runnable until dependencies are installed and the defined validation commands have actually passed.
-
-## Rights and credits
-
-See [RIGHTS_NOTICE.md](RIGHTS_NOTICE.md). All fictional game data and simulation values are design abstractions, not real-world production guidance.
+„Produktionsqualität“ ist eine Abnahmebedingung, kein Etikett. Ein System gilt erst dann als fertig, wenn es implementiert, integriert, automatisiert geprüft, nachvollziehbar dokumentiert und durch reproduzierbare Evidenz abgenommen wurde. Dieses Paket garantiert nicht, dass ein noch nicht gebautes Spiel bereits releasefähig ist.
