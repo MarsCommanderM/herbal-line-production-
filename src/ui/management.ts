@@ -40,7 +40,7 @@ function availableActions(state: GameState): Action[] {
   }
 
   if (order && order.status === 'available') {
-    actions.push({ label: 'Apothekenauftrag annehmen', detail: 'Kundenstatus, Reputation und Lizenzstatus prüfen.', type: 'ORDER/ACCEPT', payload: { orderId: order.id } });
+    actions.push({ label: 'Abnehmerauftrag annehmen', detail: 'Kundenstatus, Reputation und Lizenzstatus prüfen.', type: 'ORDER/ACCEPT', payload: { orderId: order.id } });
   } else if (order && order.status === 'accepted') {
     const lots = state.inventoryLots.filter((item) => item.status === 'released' && item.quantityAvailable > item.quantityReserved && item.qualityScore >= order.minQuality);
     if (lots.length > 0) actions.push({ label: 'Freigegebenen Bestand reservieren', detail: 'Die angeforderte Menge atomar aus freigegebenen Lots reservieren.', type: 'ORDER/ALLOCATE', payload: { orderId: order.id, lotIds: lots.map((item) => item.id) } });
@@ -49,7 +49,7 @@ function availableActions(state: GameState): Action[] {
   } else if (order && order.status === 'ready_to_ship' && order.deliveryId) {
     actions.push({ label: 'Lieferung versenden', detail: 'Lizenzstatus und reservierten Bestand vor dem Versand erneut prüfen.', type: 'DELIVERY/DISPATCH', payload: { deliveryId: order.deliveryId } });
   } else if (order && order.status === 'shipped' && order.deliveryId) {
-    actions.push({ label: 'Apothekenempfang bestätigen', detail: 'Den Empfang idempotent bestätigen und den Umsatz einmalig verbuchen.', type: 'DELIVERY/CONFIRM', payload: { deliveryId: order.deliveryId, proofCode: 'RX-ACK-001' } });
+    actions.push({ label: 'Wareneingang bestätigen', detail: 'Den Empfang idempotent bestätigen und den Umsatz einmalig verbuchen.', type: 'DELIVERY/CONFIRM', payload: { deliveryId: order.deliveryId, proofCode: 'RX-ACK-001' } });
   }
   return actions;
 }
@@ -87,7 +87,7 @@ export function renderManagementUI(
     metric('Lizenzstatus', state.compliance.licenseStatus.replaceAll('_', ' ')),
     metric('Einheitenstatus', plant ? plant.stage.replaceAll('_', ' ') : '—'),
     metric('Batchstatus', batch ? batch.status.replaceAll('_', ' ') : 'Kein Batch'),
-    metric('Apothekenauftrag', order ? order.status.replaceAll('_', ' ') : 'Kein Auftrag'),
+    metric('Abnehmernauftrag', order ? order.status.replaceAll('_', ' ') : 'Kein Auftrag'),
   );
 
   actionsRoot.replaceChildren();
