@@ -97,8 +97,8 @@ export class IndexedDbSaveRepository implements SaveRepository {
     const database = await this.openDatabase();
     const transaction = database.transaction(STORE_NAME, 'readonly');
     const completed = transactionDone(transaction);
-    const record = await requestResult(transaction.objectStore(STORE_NAME).get(slotId)) as StoredSaveRecord | undefined;
-    await completed;
+    const recordRequest = requestResult(transaction.objectStore(STORE_NAME).get(slotId));
+    const [record] = await Promise.all([recordRequest, completed]) as [StoredSaveRecord | undefined, void];
     if (!record) return null;
 
     const verification = await verifySaveEnvelope(record.envelope);
@@ -112,8 +112,8 @@ export class IndexedDbSaveRepository implements SaveRepository {
     const database = await this.openDatabase();
     const transaction = database.transaction(STORE_NAME, 'readonly');
     const completed = transactionDone(transaction);
-    const records = await requestResult(transaction.objectStore(STORE_NAME).getAll()) as StoredSaveRecord[];
-    await completed;
+    const recordsRequest = requestResult(transaction.objectStore(STORE_NAME).getAll()) as Promise<StoredSaveRecord[]>;
+    const [records] = await Promise.all([recordsRequest, completed]) as [StoredSaveRecord[], void];
     return records.map((record) => record.metadata)
       .sort((left, right) => right.savedAtRealTime.localeCompare(left.savedAtRealTime));
   }
