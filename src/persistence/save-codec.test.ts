@@ -49,6 +49,14 @@ describe('versioned save codec', () => {
     expect(await verifySaveEnvelope({ format: 'herbal-line-save', schemaVersion: 1 })).toEqual({ ok: false, errorCode: 'INVALID_ENVELOPE' });
   });
 
+  it('preserves prototype-named JSON keys without mutating object prototypes', () => {
+    const input = JSON.parse('{"__proto__":{"polluted":true},"constructor":"data"}') as unknown;
+    const serialized = stableStringify(input);
+    expect(serialized).toContain('"__proto__"');
+    expect(serialized).toContain('"constructor"');
+    expect(({} as { polluted?: boolean }).polluted).toBeUndefined();
+  });
+
   it('rejects non-JSON values and circular references in stable serialization', () => {
     expect(() => stableStringify({ invalid: Number.NaN })).toThrow(TypeError);
     expect(() => stableStringify({ invalid: undefined })).toThrow(TypeError);
