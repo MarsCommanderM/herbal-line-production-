@@ -1,18 +1,18 @@
 import type {
   BatchState,
-  CommandBase,
-  DomainEvent,
+  Score0To100,
   EntityId,
   EventId,
   GameState,
   GameLogEntry,
   InventoryLotState,
   LedgerEntry,
-  MoneyCents,
+  QualityAssessment,
   SimulationMinute,
   TraceEntry,
 } from '../../contracts/domain';
-import type { DomainCommand, CommandResult } from '../../contracts/commands';
+import type { CommandBase, CommandFailureCode, DomainCommand, CommandResult } from '../../contracts/commands';
+import type { DomainEvent } from '../../contracts/events';
 import { getBalanceCents } from './finance';
 import { reserveInventory, transitionBatch } from './transitions';
 
@@ -37,13 +37,13 @@ const eventId = (value: string): EventId => value as EventId;
 const minute = (value: number): SimulationMinute => value as SimulationMinute;
 const cents = (value: number): MoneyCents => value as MoneyCents;
 
-function failure(state: GameState, code: Parameters<Extract<CommandResult, { ok: false }>['error']['code']>[0], message: string): CommandResult {
+function failure(state: GameState, code: CommandFailureCode, message: string): CommandResult {
   return { ok: false, state, error: { code, message } };
 }
 
 function eventBase(state: GameState, command: CommandBase, entity: EntityId, suffix = 1) {
   return {
-    eventId: eventId('event-' + (state.revision + 1) + '-' + suffix),
+    eventId: eventId('event-' + command.commandId + '-' + suffix),
     simulationMinute: state.time.totalMinutes,
     schemaVersion: 1 as const,
     entityId: entity,
@@ -246,13 +246,13 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         batchId: batch.id,
         ruleSetVersion: 'fictional-game-balance-v1',
         performedAt: state.time.totalMinutes,
-        score: scoreValue as BatchState['qualityScore'] & {},
+        score: scoreValue as Score0To100,
         findings: traceComplete ? (decision === 'pass' ? [] : ['FICTIONAL_SCORE_BELOW_RELEASE_THRESHOLD']) : ['TRACE_CHAIN_INCOMPLETE'],
         decision,
         assessorId: assessor.id,
         traceComplete,
       };
-      const qualityEvent: DomainEvent = { ...eventBase(state, command, batch.id, 1), type: 'quality.assessed', batchId: batch.id, assessmentId, score: scoreValue as never, decision };
+      const qualityEvent: DomainEvent = { ...eventBase(state, command, batch.id, 1), type: 'quality.assessed', batchId: batch.id, assessmentId, score: scoreValue as Score0To100, decision };
       const awaitingEvent: DomainEvent = { ...eventBase(state, command, batch.id, 2), type: 'batch.awaiting_qc', batchId: batch.id };
       const updated = withTrace({ ...batch, status: 'awaiting_qc', qualityScore: scoreValue as BatchState['qualityScore'], updatedAt: state.time.totalMinutes, currentRoomId: qualityRoom.id, assessmentIds: [...batch.assessmentIds, assessmentId] }, awaitingEvent, command.actorId, 'BATCH_AWAITING_QC', [assessmentId, qualityRoom.id]);
       return commit(state, command, {
@@ -260,18 +260,18 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         rooms: state.rooms.map((room) => room.id === processingRoom.id ? { ...room, occupied: Math.max(0, room.occupied - 1) } : room.id === qualityRoom.id ? { ...room, occupied: room.occupied + 1 } : room),
         machines: state.machines.map((machine) => machine.activeJobId === batch.id ? { ...machine, status: 'idle', activeJobId: null } : machine),
         ui: { ...state.ui, notifications: [...state.ui.notifications, { id: entityId('notification-qc-' + (state.revision + 1)), code: 'QC_COMPLETED', level: decision === 'pass' ? 'success' : 'warning', title: 'Qualitätssicherung', message: decision === 'pass' ? 'Spielinterne Qualitätsfreigabe möglich.' : 'Manuelle Prüfung erforderlich.', createdAt: state.time.totalMinutes, read: false }] },
-        ...({ qualityAssessments: undefined } as unknown as Partial<GameState>),
+        qualityAssessments: [...state.qualityAssessments, assessment],
       }, [qualityEvent, awaitingEvent], 'BATCH_QC_COMPLETED', 'Fiktive Qualitätsprüfung abgeschlossen: ' + decision + '.', [batch.id, assessmentId]);
     }
     case 'BATCH/RELEASE': {
       const batch = state.batches.find((item) => item.id === command.batchId);
       if (!batch) return failure(state, 'NOT_FOUND', 'Batch nicht gefunden.');
       if (batch.status !== 'awaiting_qc' || batch.qualityScore === null) return failure(state, 'INVALID_TRANSITION', 'Batch wartet nicht auf eine Qualitätsentscheidung.');
-      const qualityDecision = batch.assessmentIds.length > 0 ? 'pass' : undefined;
-      const latestTraceComplete = hasCompleteTrace(state, batch);
-      const assessmentPass = batch.qualityScore >= 75 && latestTraceComplete;
+      const assessment = [...state.qualityAssessments].reverse().find((item) => item.batchId === batch.id);
+      if (!assessment) return failure(state, 'PRECONDITION_FAILED', 'Für diesen Batch liegt keine gespeicherte Qualitätsentscheidung vor.');
+      const latestTraceComplete = assessment.traceComplete;
       const gate = transitionBatch('awaiting_qc', 'released', {
-        qualityDecision: qualityDecision && assessmentPass ? 'pass' : 'review',
+        qualityDecision: assessment.decision,
         traceComplete: latestTraceComplete,
         compliance: { licenseStatus: state.compliance.licenseStatus, blockedOperationCodes: state.compliance.blockedOperationCodes },
       });
@@ -315,7 +315,9 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         const lot = state.inventoryLots.find((item) => item.id === lotId);
         if (!lot) return failure(state, 'NOT_FOUND', 'Bestandslos nicht gefunden.');
         if (lot.qualityScore < order.minQuality) return failure(state, 'QUALITY_GATE_FAILED', 'Die spielinterne Mindestqualität des Auftrags wird nicht erfüllt.');
-        const reservation = reserveInventory(lot, Math.min(remaining, lot.quantityAvailable - lot.quantityReserved));
+        const freeQuantity = lot.quantityAvailable - lot.quantityReserved;
+        if (freeQuantity <= 0) return failure(state, 'INSUFFICIENT_STOCK', 'Bestandslos hat keine freie Menge.');
+        const reservation = reserveInventory(lot, Math.min(remaining, freeQuantity));
         if (!reservation.ok) return failure(state, reservation.error === 'INSUFFICIENT_STOCK' ? 'INSUFFICIENT_STOCK' : 'PRECONDITION_FAILED', 'Bestand kann nicht reserviert werden.');
         const reservedNow = reservation.reservation.quantityReserved - lot.quantityReserved;
         updatedLots.set(lot.id, { ...lot, quantityReserved: reservation.reservation.quantityReserved });
@@ -402,12 +404,21 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       };
       const deliveryEvent: DomainEvent = { ...eventBase(state, command, delivery.id, 1), type: 'delivery.delivered', deliveryId: delivery.id, orderId: order.id };
       const financeEvent: DomainEvent = { ...eventBase(state, command, order.id, 2), type: 'finance.ledger_posted', ledgerEntryId: ledgerEntry.id, amountCents: Number(order.contractValueCents), account: 'revenue' };
-      const storageIds = new Set([...updatedLots.values()].map((lot) => lot.storageRoomId));
+      const roomDeltas = new Map<EntityId, number>();
+      for (const [lotId, updatedLot] of updatedLots) {
+        const originalLot = state.inventoryLots.find((lot) => lot.id === lotId);
+        if (!originalLot) continue;
+        const consumed = originalLot.quantityAvailable - updatedLot.quantityAvailable;
+        roomDeltas.set(updatedLot.storageRoomId, (roomDeltas.get(updatedLot.storageRoomId) ?? 0) + consumed);
+      }
       return commit(state, command, {
         deliveries: state.deliveries.map((item) => item.id === delivery.id ? { ...item, status: 'delivered', deliveredAt: state.time.totalMinutes, proofCode: command.proofCode.trim() } : item),
         orders: state.orders.map((item) => item.id === order.id ? { ...item, status: 'delivered' } : item),
         inventoryLots: state.inventoryLots.map((lot) => updatedLots.get(lot.id) ?? lot),
-        rooms: state.rooms.map((room) => storageIds.has(room.id) ? { ...room, occupied: Math.max(0, room.occupied - (delivery.quantity / storageIds.size)) } : room),
+        rooms: state.rooms.map((room) => {
+          const consumed = roomDeltas.get(room.id) ?? 0;
+          return consumed > 0 ? { ...room, occupied: Math.max(0, room.occupied - consumed) } : room;
+        }),
         economy: { ...state.economy, ledger: [...state.economy.ledger, ledgerEntry] },
         reputation: Math.min(1000, Number(state.reputation) + 5) as GameState['reputation'],
       }, [deliveryEvent, financeEvent], 'DELIVERY_CONFIRMED', 'Apothekenempfang bestätigt; Umsatz einmalig gebucht.', [delivery.id, order.id, ...delivery.lotIds]);
