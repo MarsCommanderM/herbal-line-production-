@@ -55,7 +55,7 @@
 **Aufgaben:** spielinternes QC-Regelset/Version, Assessments, Freigabe/Rejection, Audits, Lizenzwarnung/-sperre, Verstoßregistrierung und Recovery Review.  
 **Gate:** kein Versand vorbei am QC-/Lizenz-Gate; Audit kann jeden relevanten Schritt rekonstruieren; Ergebnisse reproduzierbar.
 
-## Phase 10 — Orders, Lieferung und Apotheker-Kundenfluss
+## Phase 10 — Kundenaufträge und Lieferfluss
 **Aufgaben:** Kundenprofile, Bestellung, Annahme, Allokation, Deadline, Kommissionierung, Route, Auslieferung, Zustellnachweis, Ausnahmefall, Wiederholungs-/Idempotenzregeln.  
 **Gate:** keine Überallokation, keine Doppelzustellung/-abrechnung, lückenlose Verknüpfung Auftrag → Lots → Lieferung.
 
