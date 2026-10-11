@@ -7,7 +7,6 @@ import type {
   GameLogEntry,
   InventoryLotState,
   LedgerEntry,
-  QualityAssessment,
   SimulationMinute,
   TraceEntry,
 } from '../../contracts/domain';
@@ -35,7 +34,6 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
 const entityId = (value: string): EntityId => value as EntityId;
 const eventId = (value: string): EventId => value as EventId;
 const minute = (value: number): SimulationMinute => value as SimulationMinute;
-const cents = (value: number): MoneyCents => value as MoneyCents;
 
 function failure(state: GameState, code: CommandFailureCode, message: string): CommandResult {
   return { ok: false, state, error: { code, message } };
