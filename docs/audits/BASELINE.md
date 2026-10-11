@@ -11,7 +11,7 @@ This is a read-only baseline report prepared from GitHub repository metadata and
 - Master Pack: `Herbal-Line-Production-Master-Pack.zip`
 - Master Pack SHA-256: `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`
 - Master Pack file count: 42
-- Existing open PR at audit time: [#1](https://github.com/MarsCommanderM/herbal-line-production-/pull/1), head `e5f19e968b7b60c3c93e9052c4cb13921c81571e), state open, not merged.
+- Existing open PR at audit time: [#1](https://github.com/MarsCommanderM/herbal-line-production-/pull/1), head `e5f19e968b7b60c3c93e9052c4cb13921c81571e`, state open, not merged.
 - Existing branch at audit time: `ci/verify-engineering-baseline` at `e5f19e968b7b60c3c93e9052c4cb13921c81571e`.
 
 ## Observed drift
@@ -32,7 +32,7 @@ The current `main` tree contains 16 paths not present in the supplied archive, i
 
 The application shell and CI additions were not verified by a clean target checkout in this audit. The repository's current tree is therefore not a byte-for-byte mirror of the supplied Master Pack.
 
-A separate working branch, `production/herbal-line-baseline-20261012`, was created from the historical 42-file pack-shaped snapshot `c558ab073cd09ed58232d0c2453020ddd92e48b4`, rather than writing directly to `main`. That snapshot has the same set of 42 paths as the archive, but the contents of some files differ from the archive; it is a recovery baseline, **not yet a verified 1:1 synchronization**. Exact content parity remains a blocking item and must be checked file-by-file against the archive before claiming sync completion.
+A separate working branch, `production/herbal-line-baseline-20261012`, was created from the historical 42-file pack-shaped snapshot `c558ab073cd09ed58232d0c2453020ddd92e48b4`, rather than writing directly to `main`. That snapshot has the same set of 42 paths as the archive, but a blob-hash comparison found **36 of the 42 file blobs differ** from the supplied archive; it is a recovery baseline, **not a verified 1:1 synchronization**. Exact content parity remains a blocking item and must be checked file-by-file against the archive before claiming sync completion.
 
 ## Verification status
 
@@ -60,3 +60,11 @@ A separate working branch, `production/herbal-line-baseline-20261012`, was creat
 ## Audit conclusion
 
 **Baseline status: PARTIAL / NOT GREEN.** Repository metadata and drift are documented. Exact archive synchronization, build/test verification, and implementation acceptance remain open.
+
+
+## Integration branch status
+
+- Clean integration branch: `production/herbal-line-clean-baseline-20261012`.
+- Integration tree commit: `bbac611ddd3588112f2001b817a20bfc720ae2d5`, based directly on the observed `main` head.
+- It restores the 42 paths from the historical pack-shaped snapshot, carries the reconciled contracts and the application foundation, and removes the unneeded `validate-masterpack.yml` workflow.
+- It does **not** restore the archive's exact file contents. Exact 1:1 synchronization remains blocking. The original `main` branch was not changed by this work.
