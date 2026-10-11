@@ -156,7 +156,10 @@ function isEnvelopeShape(value: unknown): value is SaveEnvelopeV1 {
     && typeof value.savedAtRealTime === 'string' && Number.isFinite(Date.parse(value.savedAtRealTime))
     && Number.isSafeInteger(value.rngState) && Number(value.rngState) >= 0
     && typeof value.checksum === 'string' && /^fnv1a32:[0-9a-f]{8}$/.test(value.checksum)
-    && isPersistedPayload(value.payload);
+    && isPersistedPayload(value.payload)
+    && value.revision === value.payload.revision
+    && value.rngState === value.payload.rngState
+    && value.gameVersion === value.payload.gameVersion;
 }
 
 export function buildSaveEnvelope(state: GameState, savedAtRealTime = new Date().toISOString()): SaveEnvelopeV1 {
