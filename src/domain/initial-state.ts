@@ -27,7 +27,7 @@ export function createInitialGameState(): GameState {
   const logisticsRoomId = entityId('room-logistics-01');
   const sourceLotId = entityId('source-lot-001');
   const plantId = entityId('plant-001');
-  const pharmacyId = entityId('customer-pharmacy-001');
+  const pharmacyId = entityId('customer-buyer-001');
   const sourceAcceptedEventId = eventId('event-seed-source-accepted-001');
 
   return {
@@ -39,26 +39,26 @@ export function createInitialGameState(): GameState {
     player: { id: playerId, callsign: 'Operations Director', level: 1, experience: 0 },
     reputation: reputation(240),
     rooms: [
-      { id: productionRoomId, definitionId: 'room-production', displayName: 'Kultivierung', kind: 'production', capacity: 12, occupied: 1, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 3, unlocked: true, assignedStaffIds: [], assignedMachineIds: [] },
+      { id: productionRoomId, definitionId: 'room-production', displayName: 'Pflanzenraum', kind: 'production', capacity: 12, occupied: 1, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 3, unlocked: true, assignedStaffIds: [], assignedMachineIds: [] },
       { id: processingRoomId, definitionId: 'room-processing', displayName: 'Verarbeitung', kind: 'processing', capacity: 4, occupied: 0, condition: score(95), cleanliness: score(96), availability: score(97), powerUnitsPerHour: 2, unlocked: true, assignedStaffIds: [], assignedMachineIds: [entityId('machine-processing-001')] },
       { id: qualityRoomId, definitionId: 'room-quality', displayName: 'Qualitätssicherung', kind: 'quality', capacity: 2, occupied: 0, condition: score(98), cleanliness: score(99), availability: score(99), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [entityId('staff-quality-001')], assignedMachineIds: [] },
       { id: storageRoomId, definitionId: 'room-storage', displayName: 'Freigegebenes Lager', kind: 'storage', capacity: 40, occupied: 0, condition: score(97), cleanliness: score(98), availability: score(99), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [], assignedMachineIds: [] },
       { id: logisticsRoomId, definitionId: 'room-logistics', displayName: 'Versand', kind: 'logistics', capacity: 5, occupied: 0, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [entityId('staff-logistics-001')], assignedMachineIds: [] },
     ],
     sourceLots: [
-      { id: sourceLotId, sourceRef: 'SUPPLIER-DEMO-001', receivedAt: minute(0), status: 'accepted', quantity: 12, qualityScore: score(92), roomId: productionRoomId, inspectionFindings: [], traceEventIds: [sourceAcceptedEventId] },
+      { id: sourceLotId, sourceRef: 'BOTANICAL-DEMO-001', receivedAt: minute(0), status: 'accepted', quantity: 12, qualityScore: score(92), roomId: productionRoomId, inspectionFindings: [], traceEventIds: [sourceAcceptedEventId] },
     ],
     plants: [
-      { id: plantId, profileId: 'medical-cannabis-campaign-profile', sourceLotId, roomId: productionRoomId, stage: 'active', progress: score(80), vitality: score(88), qualityPotential: score(92), stressIndex: score(8), contaminationIndex: score(3), createdAt: minute(0), lastUpdatedAt: minute(0), batchId: null, rejectedReason: null },
+      { id: plantId, profileId: 'botanical-campaign-profile', sourceLotId, roomId: productionRoomId, stage: 'active', progress: score(80), vitality: score(88), qualityPotential: score(92), stressIndex: score(8), contaminationIndex: score(3), createdAt: minute(0), lastUpdatedAt: minute(0), batchId: null, rejectedReason: null },
     ],
     batches: [],
     inventoryLots: [],
     qualityAssessments: [],
     orders: [
-      { id: entityId('order-pharmacy-001'), customerId: pharmacyId, itemDefinitionId: 'HL-MED-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
+      { id: entityId('order-buyer-001'), customerId: pharmacyId, itemDefinitionId: 'BOT-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
     ],
     customers: [
-      { id: pharmacyId, name: 'Apotheke Lindenhof', kind: 'pharmacy', reliabilityScore: score(92), minimumReputation: reputation(100), preferredQuality: score(80), paymentDelayDays: 0, unlocked: true },
+      { id: pharmacyId, name: 'Botanischer Abnehmer Nord', kind: 'pharmacy', reliabilityScore: score(92), minimumReputation: reputation(100), preferredQuality: score(80), paymentDelayDays: 0, unlocked: true },
     ],
     deliveries: [],
     staff: [
