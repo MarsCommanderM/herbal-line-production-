@@ -156,7 +156,7 @@ export interface ProjectedEconomyDay {
  * This is game-balance tooling, not a real-world financial estimate.
  */
 export function projectCampaignBalance(
-  state: Pick<GameState, 'staff' | 'rooms' | 'economy'>,
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy' | 'upgrades'>,
   days: number,
   expectedDailyRevenueCents = 0,
 ): ProjectedEconomyDay[] {
@@ -185,7 +185,7 @@ export function projectCampaignBalance(
 
 /** Number of full days before funds are exhausted under a fixed daily revenue scenario; null means no net burn. */
 export function getCashRunwayDays(
-  state: Pick<GameState, 'staff' | 'rooms' | 'economy'>,
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy' | 'upgrades'>,
   expectedDailyRevenueCents = 0,
 ): number | null {
   assertNonNegativeSafeInteger(expectedDailyRevenueCents, 'expectedDailyRevenueCents');
