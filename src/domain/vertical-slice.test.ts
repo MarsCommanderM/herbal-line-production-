@@ -207,6 +207,39 @@ describe('botanical operations vertical slice', () => {
     expect(result.state.inventoryLots[0]?.quantityReserved).toBe(0);
     expect(result.state.orders[0]?.status).toBe('accepted');
   });
+  it('offers one-time distress support only after cash is exhausted and restores runway', () => {
+    const initial = createInitialGameState();
+    const premature = dispatch(initial, 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT');
+    expect(premature.ok).toBe(false);
+    if (premature.ok) throw new Error('Support must not be available while the campaign has positive funds.');
+    expect(premature.error.code).toBe('PRECONDITION_FAILED');
+    expect(premature.state).toBe(initial);
+
+    const noOpeningFunds = {
+      ...initial,
+      economy: { ...initial.economy, openingBalanceCents: 0 as typeof initial.economy.openingBalanceCents },
+    };
+    const exhausted = applyOk(noOpeningFunds, 'TIME/END_DAY');
+    expect(getCampaignBalance(exhausted)).toBe(-88_000);
+
+    const support = dispatch(exhausted, 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT');
+    expect(support.ok).toBe(true);
+    if (!support.ok) throw new Error(support.error.message);
+    const grant = support.state.economy.ledger.at(-1);
+    expect(grant?.account).toBe('grant');
+    expect(grant?.amountCents).toBe(2_500_000);
+    expect(grant?.idempotencyKey).toBe('distress-support:campaign-1');
+    expect(getCampaignBalance(support.state)).toBe(2_412_000);
+    expect(support.events.map((event) => event.type)).toEqual(['economy.distress_support_granted', 'finance.ledger_posted']);
+    expect(support.state.ui.notifications.at(-1)?.code).toBe('DISTRESS_SUPPORT_GRANTED');
+
+    const repeated = dispatch(support.state, 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT');
+    expect(repeated.ok).toBe(false);
+    if (repeated.ok) throw new Error('Distress support must be one-time only.');
+    expect(repeated.error.code).toBe('DUPLICATE_COMMAND');
+    expect(repeated.state.economy.ledger).toHaveLength(3);
+  });
+
   it('purchases the energy-efficiency upgrade atomically and prevents duplicate investment', () => {
     const initial = createInitialGameState();
     const result = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
