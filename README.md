@@ -1,14 +1,14 @@
-# Herbal Line — Final Production Master Pack
+# Dr. Green Dump / DopeFarm — Final Production Master Pack
 
 **Dokumentstand:** 11. Oktober 2026  
-**Projekt-/Spielname:** Herbal Line  
+**Projekt-/Spielname:** Dr. Green Dump / DopeFarm  
 **Vom Projektauftrag benannter Projektverantwortlicher:** Michael Braunschweig  
 **Plattform:** Browser/Web  
 **Status:** verbindliche Produktionsspezifikation und agentenfähiges Arbeitsbriefing — kein bereits fertig implementierter oder veröffentlichter Spiel-Build.
 
 ## Produktdefinition
 
-Herbal Line ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert im Spiel Produktionsplanung, Pflanzenpflege, Verarbeitung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lagerverwaltung, Logistik und Auslieferung an Apotheken. Im Mittelpunkt stehen Planung, dokumentierte Qualität, Compliance, Zuverlässigkeit, Personal, Ressourcen und nachhaltige Expansion.
+Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert im Spiel Produktionsplanung, Pflanzenpflege, Verarbeitung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lagerverwaltung, Logistik und Auslieferung an Apotheken. Im Mittelpunkt stehen Planung, dokumentierte Qualität, Compliance, Zuverlässigkeit, Personal, Ressourcen und nachhaltige Expansion.
 
 **Darstellungs- und Simulationsgrenze:** Cannabis darf in der fiktiven Spielwelt visuell eindeutig erkennbar sein. Die Spielsysteme sind abstrahierte, erfundene Managementmechaniken. Das Paket enthält keine realen Anbauparameter, Rezepturen, Extraktionsverfahren, Trocknungs-/Aushärtungsprotokolle, Optimierungsanleitungen oder operativen Vertriebsanweisungen. Spielwerte sind ausschließlich fiktive Balancewerte und dürfen nicht als reale Herstellungs- oder Arzneimittelanleitung interpretiert werden.
 
