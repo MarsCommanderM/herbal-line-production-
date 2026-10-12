@@ -234,6 +234,6 @@ test('facility controls enforce staffing roles and complete abstract machine mai
   await page.getByRole('button', { name: 'Wartung abschließen' }).click();
   await expect(page.getByRole('button', { name: 'Wartung abschließen' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Spielstation warten' })).toHaveCount(0);
-  await expect(page.locator('#facility-overview')).toContainText('Zustand: 100/100');
+  await expect(page.locator('#facility-overview')).toContainText('Zustand 100/100');
   await expect(page.locator('#game-feedback')).toContainText('Wartung abgeschlossen');
 });
