@@ -40,6 +40,7 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'MACHINE/START_MAINTENANCE'
     | 'MACHINE/COMPLETE_MAINTENANCE'
     | 'TIME/END_DAY'
+    | 'UPGRADE/PURCHASE'
 }>;
 
 const entityId = (value: string): EntityId => value as EntityId;
@@ -155,6 +156,59 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
   if (command.actorId !== state.player.id) return failure(state, 'COMPLIANCE_BLOCKED', 'Nur der aktuelle Kampagnenleiter darf diese Aktion ausführen.');
 
   switch (command.type) {
+    case 'UPGRADE/PURCHASE': {
+      const definition = getEconomyUpgradeDefinition(command.upgradeId);
+      if (!definition) return failure(state, 'NOT_FOUND', 'Dieses Spielupgrade ist nicht verfügbar.');
+      const upgrade = state.upgrades.find((item) => item.id === definition.id);
+      if (!upgrade || !upgrade.unlocked) return failure(state, 'PRECONDITION_FAILED', 'Dieses Upgrade ist noch nicht freigeschaltet.');
+      if (upgrade.purchasedAt !== null) return failure(state, 'INVALID_TRANSITION', 'Dieses Upgrade wurde bereits gekauft.');
+      const balance = getCampaignBalance(state);
+      if (balance < Number(definition.costCents)) {
+        return failure(state, 'INSUFFICIENT_FUNDS', 'Für dieses Upgrade reicht der aktuelle Kontostand nicht aus.');
+      }
+      const idempotencyKey = 'upgrade-purchase:' + definition.id;
+      if (state.economy.ledger.some((entry) => entry.idempotencyKey === idempotencyKey)) {
+        return failure(state, 'DUPLICATE_COMMAND', 'Für dieses Upgrade existiert bereits eine Finanzbuchung.');
+      }
+      const ledgerEntry: LedgerEntry = {
+        id: entityId('ledger-upgrade-' + definition.id),
+        simulationMinute: state.time.totalMinutes,
+        account: 'investment',
+        amountCents: definition.costCents,
+        referenceId: entityId('upgrade-' + definition.id),
+        reasonCode: 'UPGRADE_PURCHASE_' + definition.id.toUpperCase().replaceAll('-', '_'),
+        idempotencyKey,
+      };
+      const upgradeEvent: DomainEvent = {
+        ...eventBase(state, command, state.player.id, 1),
+        type: 'upgrade.purchased',
+        upgradeId: definition.id,
+        costCents: Number(definition.costCents),
+      };
+      const ledgerEvent: DomainEvent = {
+        ...eventBase(state, command, state.player.id, 2),
+        type: 'finance.ledger_posted',
+        ledgerEntryId: ledgerEntry.id,
+        amountCents: Number(ledgerEntry.amountCents),
+        account: ledgerEntry.account,
+      };
+      return commit(state, command, {
+        upgrades: state.upgrades.map((item) => item.id === definition.id ? { ...item, purchasedAt: state.time.totalMinutes } : item),
+        economy: { ...state.economy, ledger: [...state.economy.ledger, ledgerEntry] },
+        ui: {
+          ...state.ui,
+          notifications: [...state.ui.notifications, {
+            id: entityId('notification-upgrade-' + definition.id),
+            code: 'ECONOMY_UPGRADE_PURCHASED',
+            level: 'success',
+            title: definition.label,
+            message: definition.description,
+            createdAt: state.time.totalMinutes,
+            read: false,
+          }],
+        },
+      }, [upgradeEvent, ledgerEvent], 'ECONOMY_UPGRADE_PURCHASED', definition.label + ' gekauft; die Energiekosten sinken dauerhaft um 20 Prozent.', [state.player.id, ledgerEntry.id, entityId('upgrade-' + definition.id)]);
+    }
     case 'TIME/END_DAY': {
       if (!Number.isSafeInteger(state.time.minuteOfDay) || state.time.minuteOfDay < 0 || state.time.minuteOfDay >= 1440) {
         return failure(state, 'PRECONDITION_FAILED', 'Die aktuelle Spielzeit ist ungültig; der Tag kann nicht abgeschlossen werden.');
