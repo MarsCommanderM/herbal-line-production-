@@ -86,8 +86,8 @@ function commit(
   };
   const violations = validateFacilityInvariants(next);
   if (violations.length > 0) {
-    const first = violations[0];
-    return failure(state, 'PRECONDITION_FAILED', 'Aktion verletzt die Anlageninvarianten: ' + first.message);
+    const firstMessage = violations[0]?.message ?? 'Unbekannte Anlageninvariante verletzt.';
+    return failure(state, 'PRECONDITION_FAILED', 'Aktion verletzt die Anlageninvarianten: ' + firstMessage);
   }
   return { ok: true, state: next, events };
 }
