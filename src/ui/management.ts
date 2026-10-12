@@ -182,18 +182,25 @@ export function renderManagementUI(
 
   actionsRoot.replaceChildren();
   const actions = availableActions(state);
+  if (order && order.status === 'delivered') {
+    const completion = document.createElement('p');
+    completion.className = 'empty-state campaign-complete';
+    completion.textContent = 'Kampagnenziel erreicht: Auftrag ausgeliefert und Umsatz verbucht.';
+    actionsRoot.append(completion);
+  }
   if (actions.length === 0) {
-    const message = document.createElement('p');
     const assessment = batch ? [...state.qualityAssessments].reverse().find((item) => item.batchId === batch.id) : undefined;
     if (batch && batch.status === 'awaiting_qc' && assessment && assessment.decision !== 'pass') {
+      const message = document.createElement('p');
       message.textContent = 'Batch bleibt gesperrt: Die Spiel-QA verlangt eine Prüfung. Eine Freigabe ist nicht verfügbar.';
-    } else if (order && order.status === 'delivered') {
-      message.textContent = 'Kampagnenziel erreicht: Auftrag ausgeliefert und Umsatz verbucht.';
-    } else {
+      message.className = 'empty-state';
+      actionsRoot.append(message);
+    } else if (!(order && order.status === 'delivered')) {
+      const message = document.createElement('p');
       message.textContent = 'Aktuell ist keine zulässige Aktion verfügbar.';
+      message.className = 'empty-state';
+      actionsRoot.append(message);
     }
-    message.className = 'empty-state';
-    actionsRoot.append(message);
   }
   for (const action of actions) {
     const button = document.createElement('button');
