@@ -4,6 +4,27 @@ import { expect, test } from '@playwright/test';
 const unitStage = (page: import('@playwright/test').Page) =>
   page.locator('#game-metrics .metric-card').nth(3).locator('.metric-value');
 
+test('operations dashboard exposes queues, room capacity, and keyboard-usable actions', async ({ page }) => {
+  await page.goto('/');
+  const queues = page.locator('#operations-queues');
+
+  await expect(queues.getByRole('heading', { name: 'Prozesspipeline' })).toBeVisible();
+  await expect(queues).toContainText('Keine aktiven Batches.');
+  await expect(queues.getByRole('heading', { name: 'Raumkapazitäten' })).toBeVisible();
+  await expect(queues.getByRole('list', { name: 'Raumkapazitäten' })).toBeVisible();
+  await expect(queues).toContainText('1 / 12 Plätze belegt');
+  await expect(queues.getByRole('heading', { name: 'Anlagenstatus' })).toBeVisible();
+  await expect(queues).toContainText('machine-processing-001');
+  await expect(queues.getByRole('heading', { name: 'Aufträge & Auslieferung' })).toBeVisible();
+  await expect(queues).toContainText('order-buyer-001');
+
+  const saveButton = page.getByRole('button', { name: 'Jetzt speichern', exact: true });
+  await saveButton.focus();
+  await expect(saveButton).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#save-status')).toContainText('Spielstand gespeichert · Revision 0');
+});
+
 test('management loop completes through QC release, dispatch, and revenue posting in the browser', async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto('/');

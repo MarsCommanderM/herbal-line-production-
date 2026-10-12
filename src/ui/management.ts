@@ -54,6 +54,66 @@ function availableActions(state: GameState): Action[] {
   return actions;
 }
 
+type QueueLevel = 'warning' | 'error';
+
+type QueueEntry = {
+  title: string;
+  status: string;
+  detail: string;
+  level?: QueueLevel;
+  capacity?: { used: number; total: number; label: string };
+};
+
+function queueGroup(title: string, entries: QueueEntry[], emptyMessage: string): HTMLElement {
+  const group = document.createElement('section');
+  group.className = 'queue-group';
+  const heading = document.createElement('h3');
+  heading.textContent = title;
+  group.append(heading);
+
+  if (entries.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'queue-empty';
+    empty.textContent = emptyMessage;
+    group.append(empty);
+    return group;
+  }
+
+  const list = document.createElement('ul');
+  list.className = 'queue-list';
+  list.setAttribute('aria-label', title);
+  for (const entry of entries) {
+    const item = document.createElement('li');
+    item.className = 'queue-item';
+    const row = document.createElement('div');
+    row.className = 'queue-item-heading';
+    const itemTitle = document.createElement('strong');
+    itemTitle.className = 'queue-item-title';
+    itemTitle.textContent = entry.title;
+    const status = document.createElement('span');
+    status.className = 'queue-status';
+    status.textContent = entry.status;
+    if (entry.level) status.dataset.level = entry.level;
+    row.append(itemTitle, status);
+
+    const detail = document.createElement('p');
+    detail.className = 'queue-item-detail';
+    detail.textContent = entry.detail;
+    item.append(row, detail);
+    if (entry.capacity) {
+      const meter = document.createElement('progress');
+      meter.className = 'queue-capacity-meter';
+      meter.max = Math.max(1, entry.capacity.total);
+      meter.value = Math.max(0, Math.min(entry.capacity.used, meter.max));
+      meter.setAttribute('aria-label', entry.capacity.label);
+      item.append(meter);
+    }
+    list.append(item);
+  }
+  group.append(list);
+  return group;
+}
+
 function metric(labelText: string, valueText: string): HTMLElement {
   const card = document.createElement('article');
   card.className = 'metric-card';
@@ -74,7 +134,8 @@ export function renderManagementUI(
   const metricsRoot = document.querySelector<HTMLDivElement>('#game-metrics');
   const actionsRoot = document.querySelector<HTMLDivElement>('#game-actions');
   const logRoot = document.querySelector<HTMLDivElement>('#game-log');
-  if (!metricsRoot || !actionsRoot || !logRoot) return;
+  const queuesRoot = document.querySelector<HTMLDivElement>('#operations-queues');
+  if (!metricsRoot || !actionsRoot || !logRoot || !queuesRoot) return;
 
   const plant = state.plants[0];
   const batch = state.batches[state.batches.length - 1];
@@ -87,7 +148,7 @@ export function renderManagementUI(
     metric('Lizenzstatus', state.compliance.licenseStatus.replaceAll('_', ' ')),
     metric('Einheitenstatus', plant ? plant.stage.replaceAll('_', ' ') : '—'),
     metric('Batchstatus', batch ? batch.status.replaceAll('_', ' ') : 'Kein Batch'),
-    metric('Abnehmernauftrag', order ? order.status.replaceAll('_', ' ') : 'Kein Auftrag'),
+    metric('Abnehmerauftrag', order ? order.status.replaceAll('_', ' ') : 'Kein Auftrag'),
   );
 
   actionsRoot.replaceChildren();
@@ -118,6 +179,69 @@ export function renderManagementUI(
     detail.textContent = action.detail;
     actionsRoot.append(detail);
   }
+
+  queuesRoot.replaceChildren(
+    queueGroup(
+      'Prozesspipeline',
+      state.batches.map((item) => {
+        const room = item.currentRoomId ? state.rooms.find((candidate) => candidate.id === item.currentRoomId) : undefined;
+        const detail = [
+          String(item.quantity) + ' fiktive Einheiten',
+          room ? 'Raum: ' + room.displayName : 'Noch keinem Raum zugewiesen',
+          item.holdReason ? 'Sperrgrund: ' + item.holdReason : 'Trace-Einträge: ' + item.trace.length,
+        ].join(' · ');
+        return {
+          title: 'Batch ' + item.id,
+          status: item.status.replaceAll('_', ' '),
+          detail,
+          level: item.holdReason || item.status === 'awaiting_qc' ? 'warning' as const : undefined,
+        };
+      }),
+      'Keine aktiven Batches.',
+    ),
+    queueGroup(
+      'Raumkapazitäten',
+      state.rooms.map((room) => ({
+        title: room.displayName,
+        status: room.unlocked ? 'verfügbar' : 'gesperrt',
+        detail: room.occupied + ' / ' + room.capacity + ' Plätze belegt · Zustand ' + room.condition + ' / 100',
+        level: room.unlocked ? undefined : 'warning' as const,
+        capacity: { used: room.occupied, total: room.capacity, label: 'Belegung ' + room.displayName },
+      })),
+      'Keine Räume konfiguriert.',
+    ),
+    queueGroup(
+      'Anlagenstatus',
+      state.machines.map((machine) => {
+        const room = state.rooms.find((candidate) => candidate.id === machine.roomId);
+        return {
+          title: 'Maschine ' + machine.id,
+          status: machine.status.replaceAll('_', ' '),
+          detail: (room ? 'Raum: ' + room.displayName : 'Raum unbekannt')
+            + ' · Zustand ' + machine.condition + ' / 100'
+            + (machine.activeJobId ? ' · Aktiver Auftrag: ' + machine.activeJobId : ''),
+          level: machine.status === 'idle' || machine.status === 'active' ? undefined : 'warning' as const,
+        };
+      }),
+      'Keine Anlagen registriert.',
+    ),
+    queueGroup(
+      'Aufträge & Auslieferung',
+      state.orders.map((item) => {
+        const customer = state.customers.find((candidate) => candidate.id === item.customerId);
+        const delivery = item.deliveryId ? state.deliveries.find((candidate) => candidate.id === item.deliveryId) : undefined;
+        return {
+          title: 'Auftrag ' + item.id,
+          status: item.status.replaceAll('_', ' '),
+          detail: (customer ? customer.name : 'Kunde unbekannt')
+            + ' · ' + item.requestedQuantity + ' Einheiten angefordert'
+            + ' · Lieferung: ' + (delivery ? delivery.status.replaceAll('_', ' ') : 'noch nicht angelegt'),
+          level: item.status === 'delivered' ? undefined : item.status === 'available' ? undefined : 'warning' as const,
+        };
+      }),
+      'Keine Aufträge vorhanden.',
+    ),
+  );
 
   logRoot.replaceChildren();
   for (const entry of [...state.logs].slice(-5).reverse()) {

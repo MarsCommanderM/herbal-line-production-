@@ -28,7 +28,7 @@ async function waitForServer() {
 try {
   const pageResponse = await waitForServer();
   const html = await pageResponse.text();
-  for (const id of ['save-campaign', 'load-campaign', 'export-campaign', 'import-campaign', 'game-actions', 'game-feedback']) {
+  for (const id of ['save-campaign', 'load-campaign', 'export-campaign', 'import-campaign', 'game-actions', 'game-feedback', 'operations-queues']) {
     if (!html.includes('id="' + id + '"')) throw new Error('Production HTML is missing #' + id);
   }
   const scriptPath = html.match(/<script[^>]+src="([^"]+)"/)?.[1];
@@ -36,7 +36,7 @@ try {
   const scriptResponse = await fetch(new URL(scriptPath, origin));
   if (!scriptResponse.ok) throw new Error('Production module returned HTTP ' + scriptResponse.status);
   const script = await scriptResponse.text();
-  for (const marker of ['herbal-line-saves', 'Autosave wiederhergestellt', 'Spielstandexport gestartet']) {
+  for (const marker of ['herbal-line-saves', 'Autosave wiederhergestellt', 'Spielstandexport gestartet', 'Prozesspipeline', 'Raumkapazitäten']) {
     if (!script.includes(marker)) throw new Error('Production bundle is missing persistence marker: ' + marker);
   }
   const cssPath = html.match(/<link[^>]+href="([^"]+\.css)"/)?.[1];
