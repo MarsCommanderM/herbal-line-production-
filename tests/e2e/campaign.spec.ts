@@ -291,44 +291,17 @@ test('end-of-day settlement updates the campaign clock, ledger and autosave', as
 });
 
 
-test('energy-efficiency purchase is ledger-backed and lowers future daily costs', async ({ page }) => {
+test('unconfigured upgrade IDs remain unavailable until balance rules are approved', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#game-metrics')).toContainText('880,00');
-  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toBeEnabled();
+  await expect(page.locator('#game-actions')).toContainText('Upgrades derzeit nicht verfügbar');
+  await expect(page.locator('#game-actions')).toContainText('sensor_pack_1');
+  await expect(page.getByRole('button', { name: /Energieeffizienz I kaufen/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Energieeffizienz II kaufen/ })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Energieeffizienz I kaufen' }).click();
-  await expect(page.locator('#game-feedback')).toContainText('Energieeffizienz I gekauft');
-  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
-  await expect(page.locator('#game-metrics')).toContainText('247.500,00');
-  await expect(page.locator('#game-metrics')).toContainText('832,00');
-  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toHaveCount(0);
-
-  await page.getByRole('button', { name: 'Tag abschließen' }).click();
-  await expect(page.locator('#game-feedback')).toContainText('Tag 1 abgeschlossen');
-  await expect(page.locator('#game-metrics')).toContainText('832,00');
-  await expect(page.locator('#game-metrics')).toContainText('221.708,00');
-  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
+  await page.reload();
+  await expect(page.locator('#game-actions')).toContainText('Upgrades derzeit nicht verfügbar');
+  await expect(page.locator('#game-actions')).toContainText('drying_rack_1');
 });
-
-
-test('second efficiency tier unlocks after the first and compounds utility savings', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toHaveCount(0);
-
-  await page.getByRole('button', { name: 'Energieeffizienz I kaufen' }).click();
-  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
-  await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toBeEnabled();
-  await page.getByRole('button', { name: 'Energieeffizienz II kaufen' }).click();
-
-  await expect(page.locator('#game-feedback')).toContainText('Energieeffizienz II gekauft');
-  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
-  await expect(page.locator('#game-metrics')).toContainText('246.000,00');
-  await expect(page.locator('#game-metrics')).toContainText('812,80');
-  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toHaveCount(0);
-});
-
 
 test('full browser campaign loop delivers once and restores the ledger after reload', async ({ page }) => {
   test.setTimeout(90_000);
