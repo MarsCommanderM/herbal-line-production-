@@ -18,7 +18,6 @@ function currentStep(state: GameState): number {
   if (order?.status === 'delivered') return 6;
   if (
     batch?.status === 'released' ||
-    order?.status === 'accepted' ||
     order?.status === 'allocated' ||
     order?.status === 'ready_to_ship' ||
     order?.status === 'shipped' ||

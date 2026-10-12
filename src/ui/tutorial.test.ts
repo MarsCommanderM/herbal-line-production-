@@ -45,6 +45,14 @@ describe('state-derived core-loop tutorial', () => {
     expect(state).toEqual(before);
   });
 
+  it('does not skip production steps when an order is accepted early', () => {
+    const state = createInitialGameState();
+    const order = state.orders[0];
+    if (!order) throw new Error('Initial order is missing.');
+    const accepted = { ...state, orders: state.orders.map((item) => item.id === order.id ? { ...item, status: 'accepted' as const } : item) };
+    expect(getTutorialProgress(accepted)).toMatchObject({ step: 1, status: 'active', title: 'Simulation und Zustand' });
+  });
+
   it('advances to the unit-to-batch step when the simulation milestone is ready', () => {
     const state = createInitialGameState();
     const plant = state.plants[0];
