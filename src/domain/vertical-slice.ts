@@ -159,12 +159,12 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
 
   switch (command.type) {
     case 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT': {
-      const balance = Number(getBalanceCents(state.economy));
-      if (balance > 0) return failure(state, 'PRECONDITION_FAILED', 'Krisenhilfe ist erst bei ausgeschöpftem Spielbudget verfügbar.');
       const idempotencyKey = 'distress-support:campaign-1';
       if (state.economy.ledger.some((entry) => entry.idempotencyKey === idempotencyKey)) {
         return failure(state, 'DUPLICATE_COMMAND', 'Die einmalige Krisenhilfe wurde bereits verwendet.');
       }
+      const balance = Number(getBalanceCents(state.economy));
+      if (balance > 0) return failure(state, 'PRECONDITION_FAILED', 'Krisenhilfe ist erst bei ausgeschöpftem Spielbudget verfügbar.');
       const dailyCosts = calculateDailyOperatingCosts(state).totalCents;
       const amount = Math.max(2_500_000, -balance + dailyCosts * 7);
       if (!Number.isSafeInteger(amount) || amount <= 0) {
