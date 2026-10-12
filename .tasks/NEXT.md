@@ -3,10 +3,10 @@
 ## Current verified state
 
 - P0-001 repository truth audit exists in `docs/audits/BASELINE.md`.
-- P0-002 contract decisions are recorded in `docs/audits/CONTRACT_RECONCILIATION.md`; exact byte-for-byte parity with the supplied Master Pack remains open.
+- P0-002 contract decisions and the intentional generic-botanical scope fork are recorded in `docs/audits/CONTRACT_RECONCILIATION.md` and `docs/audits/MASTERPACK_PARITY_REPORT.md`; exact byte-for-byte ZIP parity is not claimed or targeted.
 - P0-003 reproducible Vite/TypeScript baseline is verified on the current integration revision.
-- Latest verified code revision: `bce2a0bd0edda036032be03e8dfea3033057ea52`.
-- Evidence: [GitHub Actions run 38182289439](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182289439) — install, lint, format, typecheck, 26 unit tests, production build, 3 Chromium E2E tests, production preview smoke, master-pack validator and `git diff --check` all passed.
+- Latest verified invariant/fuzz feature revision: `64e29a6fe0165075b61914f296114294c2d3e981`.
+- Evidence: [GitHub Actions run 38208111520](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38208111520) — locked install, lint, format, strict typecheck, unit tests, production build, 7 Chromium E2E tests, preview smoke, master-pack validator and `git diff --check` passed.
 
 ## P0-002 — Reconcile Project Truth (SCOPE DECISION RECORDED; EXACT MIRROR NOT CLAIMED)
 
@@ -18,8 +18,8 @@
 ## P0-003 — Reproducible Engineering Baseline (VERIFIED)
 
 - **Goal:** Pinned dependencies, committed lockfile, strict TypeScript, lint, formatting, unit tests, production build, browser tests, preview smoke, and pack validation.
-- **Evidence:** run 38182289439 on commit `bce2a0bd0edda036032be03e8dfea3033057ea52`.
-- **Status:** all required workflow steps green on that exact revision.
+- **Evidence:** run 38208111520 on feature revision `64e29a6fe0165075b61914f296114294c2d3e981` passed all required workflow steps.
+- **Status:** pinned install, lint, format, strict typecheck, unit tests, production build, Chromium E2E, preview smoke, master-pack validation and diff check verified green.
 
 ## P1-001 — Vertical Slice Domain (IMPLEMENTED; ACCEPTANCE CONTINUES)
 
@@ -43,8 +43,8 @@
 ## P2-001 — Facility, capacity, staffing and maintenance (IMPLEMENTED BASELINE; REVIEW CONTINUES)
 
 - **Implemented on this branch:** cross-entity invariant validation runs before every successful domain commit. It checks room capacity/occupancy, batch/plant/inventory links, QC state, terminal rejected batches, machine/job consistency, inventory reservation bounds, and ledger idempotency keys.
-- **Evidence:** unit tests validate the initial state, deliberately corrupted state, full queue → processing → QC → rejection progression, duplicate ledger keys, and rejection of commands that would preserve an invalid state. Same-revision CI run 38207727309 passed, including all 7 Chromium E2E tests.
-- **Remaining:** property-based/fuzz coverage, assignment/maintenance constraints, and broader command-by-command invariant coverage.
+- **Evidence:** unit tests validate the initial state, deliberately corrupted state, full queue → processing → QC → rejection progression, duplicate ledger keys, and rejection of commands that would preserve an invalid state. A deterministic corruption matrix and 100 generated room-occupancy mutations also pass. Same-revision CI run 38208111520 passed, including all 7 Chromium E2E tests.
+- **Remaining:** property-based testing with generated command sequences, assignment/maintenance constraints, and broader command-by-command invariant coverage.
 
 ## Operating rule
 
