@@ -1,8 +1,14 @@
 import type { GameState, MoneyCents } from '../../contracts/domain';
 import { GAME_BALANCE } from './balance-config';
 
-export const ENERGY_EFFICIENCY_UPGRADE_ID = GAME_BALANCE.upgrades[0].id;
-export const ENERGY_EFFICIENCY_UPGRADE_2_ID = GAME_BALANCE.upgrades[1].id;
+function requiredUpgradeId(id: string): string {
+  const upgrade = GAME_BALANCE.upgrades.find((item) => item.id === id);
+  if (!upgrade) throw new Error('Required balance upgrade is missing: ' + id);
+  return upgrade.id;
+}
+
+export const ENERGY_EFFICIENCY_UPGRADE_ID = requiredUpgradeId('energy-efficiency-1');
+export const ENERGY_EFFICIENCY_UPGRADE_2_ID = requiredUpgradeId('energy-efficiency-2');
 
 export interface EconomyUpgradeDefinition {
   id: string;
