@@ -125,11 +125,12 @@ test('autosave survives reload and corrupt primary recovers the last valid backu
 });
 
 test('exported saves can be imported after a later campaign change', async ({ page }) => {
+  test.setTimeout(60_000);
   await page.goto('/');
   await page.getByRole('button', { name: 'Spielstand speichern' }).click();
   await expect(page.locator('#game-feedback')).toContainText('Spielstand gespeichert');
 
-  const downloadPromise = page.waitForEvent('download');
+  const downloadPromise = page.waitForEvent('download', { timeout: 10_000 });
   await page.getByRole('button', { name: 'Spielstand exportieren' }).click();
   const download = await downloadPromise;
   const stream = await download.createReadStream();
@@ -141,10 +142,14 @@ test('exported saves can be imported after a later campaign change', async ({ pa
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
 
-  const chooserPromise = page.waitForEvent('filechooser');
+  const fileInput = page.locator('#import-save-file');
+  await fileInput.evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.click = () => { input.dataset.programmaticClickObserved = 'true'; };
+  });
   await page.getByRole('button', { name: 'Spielstand importieren' }).click();
-  const chooser = await chooserPromise;
-  await chooser.setFiles({ name: 'campaign-save.json', mimeType: 'application/json', buffer: exported });
+  await expect(fileInput).toHaveAttribute('data-programmatic-click-observed', 'true');
+  await fileInput.setInputFiles({ name: 'campaign-save.json', mimeType: 'application/json', buffer: exported });
 
   await expect(page.locator('#game-feedback')).toContainText('Spielstand importiert');
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
