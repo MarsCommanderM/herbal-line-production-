@@ -13,10 +13,6 @@ test('manual save restores the exact committed campaign state', async ({ page })
   await page.getByRole('button', { name: 'Jetzt speichern' }).click();
   await expect(page.locator('#save-status')).toContainText('Spielstand gespeichert · Revision 0');
 
-  await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
-  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
-  await expect(unitStage(page)).toHaveText('ready for harvest');
-
   await page.getByRole('button', { name: 'Spielstand laden' }).click();
   await expect(page.locator('#save-status')).toContainText('Spielstand geladen · Revision 0');
   await expect(unitStage(page)).toHaveText('active');

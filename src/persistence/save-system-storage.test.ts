@@ -156,5 +156,12 @@ describe('IndexedDB save transaction recovery', () => {
       revision: original.revision,
       checksum: original.checksum,
     });
+
+    const retried = await repository.save('autosave', newer);
+    expect(retried.revision).toBe(1);
+    await expect(repository.load('autosave')).resolves.toMatchObject({
+      revision: newer.revision,
+      checksum: newer.checksum,
+    });
   });
 });

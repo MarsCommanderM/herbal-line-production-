@@ -39,10 +39,6 @@ export function stableStringify(value: unknown): string {
   return JSON.stringify(stableValue(value));
 }
 
-/**
- * Synchronous SHA-256 over canonical JSON. This detects accidental corruption;
- * it is not an authenticity mechanism because an editor can recompute the hash.
- */
 /** Compatibility verifier for schema-v1 saves written before SHA-256 was introduced. */
 function legacyFNV1aChecksum(payload: unknown): string {
   const bytes = new TextEncoder().encode(stableStringify(payload));
@@ -54,6 +50,10 @@ function legacyFNV1aChecksum(payload: unknown): string {
   return 'fnv1a32:' + hash.toString(16).padStart(8, '0');
 }
 
+/**
+ * Synchronous SHA-256 over canonical JSON. This detects accidental corruption;
+ * it is not an authenticity mechanism because an editor can recompute the hash.
+ */
 export function checksumPayload(payload: unknown): string {
   const input = new TextEncoder().encode(stableStringify(payload));
   const bitLength = input.length * 8;
