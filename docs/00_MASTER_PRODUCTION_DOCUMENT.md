@@ -4,9 +4,9 @@
 
 ## 1. Produktauftrag
 
-Herbal Line ist ein hochwertiges Web-Managementspiel über den Betrieb einer fiktiven, streng regulierten botanischen Anlage. Der Spieler koordiniert Räume und Personal, verwaltet abstrakte Pflanzen- und Chargenzustände, steuert fiktive Qualitätsprüfungen, sichert Rückverfolgbarkeit, verwaltet Lagerbestände und erfüllt generische Kundenaufträge zuverlässig.
+Herbal Line ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler plant einen fiktiven Betrieb, koordiniert Räume und Personal, verwaltet abstrahierte Pflanzen- und Chargenzustände, steuert Qualitätsprüfungen, sichert Rückverfolgbarkeit, verwaltet Lagerbestände und erfüllt fiktive Apothekenaufträge zuverlässig.
 
-Das Spiel ist eine abstrakte Managementsimulation, keine reale Produktions- oder Vertriebsanleitung. Alle Pflanzenzustände und Prozessparameter sind fiktive Spielwerte. Das Spiel enthält keine realen Anbauparameter, Rezepturen, Aufbereitungs-/Extraktionsmethoden oder operativen Anleitungen zur Herstellung oder Distribution kontrollierter Substanzen.
+Das Spiel ist eine Simulation, keine Anbau-, Arzneimittelherstellungs- oder Vertriebsanleitung. Alle Pflanzenzustände und Prozessparameter sind abstrahierte fiktive Spielwerte. Das Spiel enthält keine realen Kultivierungsrezepte, Klimasetpoints, Nährstoffpläne, Ernte-/Aushärtungsprotokolle, Extraktionsmethoden, Herstellungsbedingungen oder realen Liefer-/Vertriebsverfahren.
 
 ## 2. Spielversprechen
 
