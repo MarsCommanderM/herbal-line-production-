@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "balanceVersion": "fictional-game-balance-v1",
+  "economy": {
+    "utilityRateCentsPerUnitHour": 125,
+    "operatingHoursPerCampaignDay": 24
+  },
+  "quality": {
+    "releaseThreshold": 75,
+    "reviewThreshold": 60,
+    "contaminationPenaltyMultiplier": 0.5
+  },
+  "upgrades": [
+    {
+      "id": "energy-efficiency-1",
+      "label": "Energieeffizienz I",
+      "description": "Senkt die fiktiven Energiekosten dauerhaft um 20 Prozent.",
+      "costCents": 250000,
+      "utilityReductionPercent": 20
+    },
+    {
+      "id": "energy-efficiency-2",
+      "label": "Energieeffizienz II",
+      "description": "Reduziert die verbleibenden fiktiven Energiekosten zusätzlich um 10 Prozent.",
+      "costCents": 150000,
+      "utilityReductionPercent": 10,
+      "prerequisiteUpgradeId": "energy-efficiency-1"
+    }
+  ]
+}

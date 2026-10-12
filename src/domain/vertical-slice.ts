@@ -16,6 +16,7 @@ import type { CommandBase, CommandFailureCode, DomainCommand, CommandResult } fr
 import type { DomainEvent } from '../../contracts/events';
 import { calculateDailyOperatingCosts, createDailyOperatingLedgerEntries, getBalanceCents } from './finance';
 import { getEconomyUpgradeDefinition } from './upgrades';
+import { GAME_BALANCE } from './balance-config';
 import { validateGameStateInvariants } from './invariants';
 import { clampScore, roomSupportsStaffRole, validateFacilityInvariants } from './facility';
 import { reserveInventory, transitionBatch } from './transitions';
@@ -150,7 +151,7 @@ function qualityScoreFor(state: GameState, batch: BatchState): number {
   if (plants.length === 0) return 0;
   const potential = plants.reduce((sum, plant) => sum + plant.qualityPotential, 0) / plants.length;
   const contamination = plants.reduce((sum, plant) => sum + plant.contaminationIndex, 0) / plants.length;
-  return Math.max(0, Math.min(100, Math.round(potential - contamination * 0.5)));
+  return Math.max(0, Math.min(100, Math.round(potential - contamination * GAME_BALANCE.quality.contaminationPenaltyMultiplier)));
 }
 
 export function applyVerticalSliceCommand(state: GameState, command: VerticalSliceCommand): CommandResult {
@@ -414,13 +415,13 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       if (qualityRoom.occupied >= qualityRoom.capacity) return failure(state, 'CAPACITY_EXCEEDED', 'Die Qualitätssicherung hat keine freie Spielkapazität.');
       const scoreValue = qualityScoreFor(state, batch);
       const traceComplete = hasCompleteTrace(state, batch);
-      const decision: QualityAssessment['decision'] = scoreValue >= 75 && traceComplete ? 'pass' : scoreValue >= 60 ? 'review' : 'fail';
+      const decision: QualityAssessment['decision'] = scoreValue >= GAME_BALANCE.quality.releaseThreshold && traceComplete ? 'pass' : scoreValue >= GAME_BALANCE.quality.reviewThreshold ? 'review' : 'fail';
       const assessmentId = command.assessmentId;
       if (state.batches.some((item) => item.assessmentIds.includes(assessmentId))) return failure(state, 'DUPLICATE_COMMAND', 'Diese Prüf-ID existiert bereits.');
       const assessment: QualityAssessment = {
         id: assessmentId,
         batchId: batch.id,
-        ruleSetVersion: 'fictional-game-balance-v1',
+        ruleSetVersion: GAME_BALANCE.balanceVersion,
         performedAt: state.time.totalMinutes,
         score: scoreValue as Score0To100,
         findings: traceComplete ? (decision === 'pass' ? [] : ['FICTIONAL_SCORE_BELOW_RELEASE_THRESHOLD']) : ['TRACE_CHAIN_INCOMPLETE'],

@@ -1,7 +1,8 @@
 import type { GameState, MoneyCents } from '../../contracts/domain';
+import { GAME_BALANCE } from './balance-config';
 
-export const ENERGY_EFFICIENCY_UPGRADE_ID = 'energy-efficiency-1';
-export const ENERGY_EFFICIENCY_UPGRADE_2_ID = 'energy-efficiency-2';
+export const ENERGY_EFFICIENCY_UPGRADE_ID = GAME_BALANCE.upgrades[0].id;
+export const ENERGY_EFFICIENCY_UPGRADE_2_ID = GAME_BALANCE.upgrades[1].id;
 
 export interface EconomyUpgradeDefinition {
   id: string;
@@ -12,23 +13,10 @@ export interface EconomyUpgradeDefinition {
   prerequisiteUpgradeId?: string;
 }
 
-export const ECONOMY_UPGRADES: readonly EconomyUpgradeDefinition[] = [
-  {
-    id: ENERGY_EFFICIENCY_UPGRADE_ID,
-    label: 'Energieeffizienz I',
-    description: 'Senkt die fiktiven Energiekosten dauerhaft um 20 Prozent.',
-    costCents: 250_000 as MoneyCents,
-    utilityReductionPercent: 20,
-  },
-  {
-    id: ENERGY_EFFICIENCY_UPGRADE_2_ID,
-    label: 'Energieeffizienz II',
-    description: 'Reduziert die verbleibenden fiktiven Energiekosten zusätzlich um 10 Prozent.',
-    costCents: 150_000 as MoneyCents,
-    utilityReductionPercent: 10,
-    prerequisiteUpgradeId: ENERGY_EFFICIENCY_UPGRADE_ID,
-  },
-];
+export const ECONOMY_UPGRADES: readonly EconomyUpgradeDefinition[] = GAME_BALANCE.upgrades.map((upgrade) => ({
+  ...upgrade,
+  costCents: upgrade.costCents as MoneyCents,
+}));
 
 export function getEconomyUpgradeDefinition(id: string): EconomyUpgradeDefinition | undefined {
   return ECONOMY_UPGRADES.find((upgrade) => upgrade.id === id);
