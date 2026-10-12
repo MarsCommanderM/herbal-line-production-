@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline completeness and basic consistency checks for the Herbal Line master pack."""
+"""Offline completeness and basic consistency checks for the Dr. Green Dump / DopeFarm master pack."""
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -29,8 +29,8 @@ def main() -> int:
             for key in ("projectId", "title", "platform", "language", "productDescription", "releaseStandard"):
                 if not manifest.get(key):
                     errors.append(f"manifest field is empty or missing: {key}")
-            if manifest.get("title") != "Herbal Line":
-                errors.append("manifest title does not match expected project title")
+            if manifest.get("title") != "Dr. Green Dump / DopeFarm":
+                errors.append("manifest title does not match expected game title")
         except (json.JSONDecodeError, OSError) as exc:
             errors.append(f"manifest cannot be parsed: {exc}")
     for path in (ROOT / "docs").glob("*.md"):
