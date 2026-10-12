@@ -277,3 +277,21 @@ test('energy-efficiency purchase is ledger-backed and lowers future daily costs'
   await expect(page.locator('#game-metrics')).toContainText('221.708,00');
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
 });
+
+
+test('second efficiency tier unlocks after the first and compounds utility savings', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Energieeffizienz I kaufen' }).click();
+  await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Energieeffizienz II kaufen' }).click();
+
+  await expect(page.locator('#game-feedback')).toContainText('Energieeffizienz II gekauft');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
+  await expect(page.locator('#game-metrics')).toContainText('246.000,00');
+  await expect(page.locator('#game-metrics')).toContainText('812,80');
+  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toHaveCount(0);
+});
