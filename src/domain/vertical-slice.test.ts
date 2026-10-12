@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CommandId, EntityId, Score0To100 } from '../../contracts/domain';
 import type { VerticalSliceCommand } from './vertical-slice';
 import { createInitialGameState } from './initial-state';
-import { applyVerticalSliceCommand, getCampaignBalance } from './vertical-slice';
+import { applyVerticalSliceCommand, getCampaignBalance, isOperationBlocked } from './vertical-slice';
 
 const entity = (value: string): EntityId => value as EntityId;
 const commandId = (value: string): CommandId => value as CommandId;
@@ -52,6 +52,17 @@ function progressToReleasedInventory() {
 }
 
 describe('botanical operations vertical slice', () => {
+  it('uses one canonical compliance gate for global and operation-specific holds', () => {
+    const state = createInitialGameState();
+    expect(isOperationBlocked(state, 'BATCH/QUEUE')).toBe(false);
+    state.compliance.blockedOperationCodes = ['BATCH/QUEUE'];
+    expect(isOperationBlocked(state, 'BATCH/QUEUE')).toBe(true);
+    expect(isOperationBlocked(state, 'ORDER/ACCEPT')).toBe(false);
+    state.compliance.licenseStatus = 'recovery_review';
+    expect(isOperationBlocked(state, 'ORDER/ACCEPT')).toBe(true);
+  });
+
+
   it('completes fictional stage, batch, QC, stock, buyer order, and delivery flow', () => {
     let state = progressToReleasedInventory();
     expect(state.batches[0]?.status).toBe('released');
@@ -127,6 +138,53 @@ describe('botanical operations vertical slice', () => {
     expect(result.error.code).toBe('PRECONDITION_FAILED');
     expect(result.state).toBe(invalidState);
     expect(result.state.plants[0]?.stage).toBe('active');
+  });
+
+  it('blocks batch queueing while the campaign license is suspended without mutating state', () => {
+    let state = createInitialGameState();
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', {
+      batchId: entity('batch-compliance-hold'),
+      plantIds: [entity('plant-001')],
+      profileId: 'fictional-botanical-batch',
+    });
+    state.compliance.licenseStatus = 'suspended';
+    const before = structuredClone(state);
+
+    const result = dispatch(state, 'BATCH/QUEUE', {
+      batchId: entity('batch-compliance-hold'),
+      roomId: entity('room-processing-01'),
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('A suspended license must block queueing.');
+    expect(result.error.code).toBe('COMPLIANCE_BLOCKED');
+    expect(result.state).toEqual(before);
+    expect(result.state.rooms.find((room) => room.id === entity('room-processing-01'))?.occupied).toBe(0);
+  });
+
+  it('blocks an explicitly prohibited operation even when the license is active', () => {
+    let state = createInitialGameState();
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', {
+      batchId: entity('batch-operation-hold'),
+      plantIds: [entity('plant-001')],
+      profileId: 'fictional-botanical-batch',
+    });
+    state.compliance.blockedOperationCodes = ['BATCH/QUEUE'];
+    const before = structuredClone(state);
+
+    const result = dispatch(state, 'BATCH/QUEUE', {
+      batchId: entity('batch-operation-hold'),
+      roomId: entity('room-processing-01'),
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('An explicitly blocked operation must be rejected.');
+    expect(result.error.code).toBe('COMPLIANCE_BLOCKED');
+    expect(result.state).toEqual(before);
   });
 
   it('blocks release when the saved QC decision is review', () => {
