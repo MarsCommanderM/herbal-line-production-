@@ -28,6 +28,8 @@ Inhalte sind datengetrieben. Definitionen (Content) sind unveränderliche Versio
 - Kunden: `buyer_a` und `buyer_b`, mit ausschließlich abstrakten Zuverlässigkeits-/Qualitätsanforderungen und einer erforderlichen Reputation.
 - Upgrades: `sensor_pack_1` und `drying_rack_1` sind Spielverbesserungen mit in-game Effekten. Sie dürfen keine realen Anleitungen zu Anbau, Verarbeitung kontrollierter Produkte oder Extraktion enthalten.
 - Das aktuell implementierte Wirtschaftsupgrade `energy-efficiency-1` kostet einmalig 250.000 Cent Spielgeld und reduziert die fiktiven Energiekosten um 20 Prozent. Der Kauf erzeugt einen `investment`-Ledger-Eintrag mit idempotency key `upgrade-purchase:energy-efficiency-1`; unzureichendes Guthaben und doppelte Käufe werden abgewiesen.
+- `energy-efficiency-2` ist erst nach `energy-efficiency-1` verfügbar, kostet 150.000 Cent Spielgeld und senkt die verbleibenden Energiekosten zusätzlich um 10 Prozent. Beide Käufe werden separat als `investment` gebucht; der Effekt wird aus dem persistenten Upgradezustand abgeleitet.
+
 - Bei ausgeschöpftem Spielbudget kann einmalig `ECONOMY/ACTIVATE_DISTRESS_SUPPORT` verwendet werden. Die fiktive Krisenhilfe wird als `grant`-Ledger-Eintrag mit key `distress-support:campaign-1` gebucht und stellt mindestens sieben Tage der aktuell berechneten Betriebskosten bereit; bei positivem Kontostand und nach bereits erfolgter Nutzung wird sie abgewiesen.
 
 

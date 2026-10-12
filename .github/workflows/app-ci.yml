@@ -18,7 +18,7 @@ jobs:
   verify:
     name: Typecheck, tests, build, and master-pack validation
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout exact revision
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -39,8 +39,8 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
-      - name: Install Chromium for browser tests
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium, Firefox, and WebKit for browser tests
+        run: npx playwright install --with-deps chromium firefox webkit
       - name: Browser end-to-end acceptance
         run: npm run test:e2e
       - name: Serve production build and smoke-test assets

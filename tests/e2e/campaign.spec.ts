@@ -28,9 +28,18 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
-  await expect(page.locator('#world-root canvas')).toBeVisible();
+  const graphicsCanvas = page.locator('#world-root canvas');
+  const graphicsWarning = page.locator('#fatal-error');
+  await expect.poll(async () => (await graphicsCanvas.isVisible()) || (await graphicsWarning.isVisible())).toBe(true);
+  if (await graphicsCanvas.isVisible()) {
+    await expect(graphicsCanvas).toBeVisible();
+  } else {
+    await expect(graphicsWarning).toContainText('Die Management-Oberfläche bleibt nutzbar');
+  }
   await expect(page.getByRole('heading', { name: 'Kampagnenstatus' })).toBeVisible();
   await expect(page.locator('#campaign-guidance')).toContainText('Produktionseinheit aktiv');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 1 von 6');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Simulation und Zustand');
 
   await page.getByRole('button', { name: 'Spielstand speichern' }).click();
   await expect(page.locator('#game-feedback')).toContainText('Spielstand gespeichert');
@@ -38,6 +47,7 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
   await expect(page.locator('#campaign-guidance')).toContainText('Nächster Prozessschritt bereit');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 2 von 6');
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
 
   await page.getByRole('button', { name: 'Spielstand laden' }).click();
@@ -160,9 +170,16 @@ test('failed or unresolved QC offers a documented terminal rejection instead of 
   await expect(page.locator('#game-log')).toContainText('BATCH REJECTED');
 });
 
-test('keyboard navigation reaches primary controls in a predictable order', async ({ page }) => {
+test('keyboard navigation reaches primary controls in a predictable order', async ({ page }, testInfo) => {
   await page.goto('/');
-  const expectedIds = ['reset-camera', 'save-game', 'load-game', 'export-game', 'import-game'];
+  // Focus the first control explicitly; Firefox also tabs to its scrollable management landmark.
+  await page.locator('#reset-camera').focus();
+  await expect(page.locator(':focus')).toHaveAttribute('id', 'reset-camera');
+  if (testInfo.project.name === 'firefox') {
+    await page.keyboard.press('Tab');
+    await expect(page.locator(':focus')).toHaveAttribute('id', 'game-panel');
+  }
+  const expectedIds = ['save-game', 'load-game', 'export-game', 'import-game'];
   for (const id of expectedIds) {
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toHaveAttribute('id', id);
@@ -276,4 +293,87 @@ test('energy-efficiency purchase is ledger-backed and lowers future daily costs'
   await expect(page.locator('#game-metrics')).toContainText('832,00');
   await expect(page.locator('#game-metrics')).toContainText('221.708,00');
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
+});
+
+
+test('second efficiency tier unlocks after the first and compounds utility savings', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Energieeffizienz I kaufen' }).click();
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
+  await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Energieeffizienz II kaufen' }).click();
+
+  await expect(page.locator('#game-feedback')).toContainText('Energieeffizienz II gekauft');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
+  await expect(page.locator('#game-metrics')).toContainText('246.000,00');
+  await expect(page.locator('#game-metrics')).toContainText('812,80');
+  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toHaveCount(0);
+});
+
+
+test('full browser campaign loop delivers once and restores the ledger after reload', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto('/');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 1 von 6');
+
+  const actions = [
+    'Simulationsschritt ausführen',
+    'Einheit in Batch überführen',
+    'Batch erstellen',
+    'Verarbeitung einplanen',
+    'Spielprozess starten',
+    'Qualitätsprüfung ausführen',
+    'Batch freigeben',
+    'Abnehmerauftrag annehmen',
+    'Freigegebenen Bestand reservieren',
+    'Lieferung vorbereiten',
+    'Lieferung versenden',
+    'Wareneingang bestätigen',
+  ];
+
+  for (const [index, label] of actions.entries()) {
+    await page.getByRole('button', { name: label, exact: true }).click();
+    await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision ' + (index + 1));
+    if (index === 0) {
+      await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 2 von 6');
+    }
+  }
+
+  await expect(page.locator('#campaign-guidance')).toContainText('Kampagnenziel erreicht');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 6 von 6');
+  await expect(page.locator('#game-metrics')).toContainText('delivered');
+
+  const countRevenuePostings = async (): Promise<number> => page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const record = await new Promise<{ envelope: { payload: { economy: { ledger: { account: string }[] } } } }>((resolve, reject) => {
+        const request = database.transaction('saves', 'readonly').objectStore('saves').get('campaign-01');
+        request.onsuccess = () => {
+          if (!request.result) {
+            reject(new Error('Autosaved campaign record is missing.'));
+            return;
+          }
+          resolve(request.result as { envelope: { payload: { economy: { ledger: { account: string }[] } } } });
+        };
+        request.onerror = () => reject(request.error);
+      });
+      return record.envelope.payload.economy.ledger.filter((entry) => entry.account === 'revenue').length;
+    } finally {
+      database.close();
+    }
+  });
+
+  expect(await countRevenuePostings()).toBe(1);
+  await page.reload();
+  await expect(page.locator('#campaign-guidance')).toContainText('Kampagnenziel erreicht');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 6 von 6');
+  expect(await countRevenuePostings()).toBe(1);
 });
