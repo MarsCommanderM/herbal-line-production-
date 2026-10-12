@@ -1,70 +1,32 @@
-# Contract Reconciliation — 2026-10-12
+# Contract Reconciliation — Dr. Green Dump / DopeFarm — 2026-10-12
 
-## Authority
+## Aktuelle Produkt- und Quellenautorität
 
-The supplied Herbal Line Master Pack is the binding reference for product requirements, domain concepts, schemas and production gates. The agreed product is a fictional, strictly regulated medical-cannabis production management simulation. Current implementation details must be reconciled against the canonical archive; a generic botanical rescope is not an approved product decision. The simulation remains fictional and must not provide real-world controlled-substance production or distribution instructions.
+Der Spielname lautet **Dr. Green Dump / DopeFarm**. Das gelieferte Archiv trägt noch den historischen Namen `Herbal-Line-Production-Master-Pack.zip`; dieser Dateiname ist nicht der Produktname. Die verbindliche Spielvision ist eine legale, kontrollierte, streng regulierte medizinische Cannabis-Pflanzenproduktion mit erkennbaren Pflanzen und direkt sichtbarer Pflege. Allgemeine Kräuter-/Botanikdarstellung ist nicht zulässig. Pflege-, Klima-, Nährstoff- und Prozesswerte sind erfundene Spielwerte; reale Produktionsanleitungen sind nicht Teil des Spiels. Apothekeninterne Abläufe sind außerhalb des Scope.
 
-## Canonical contract facts restored from the archive
+## Vertragseigentümerschaft
 
-The canonical `contracts/*.ts` files now match the original archive's Git blob hashes exactly. They are not the same as the previously modified implementation contracts.
+- Laufzeitverträge unter `contracts/` müssen mit der laufenden Domain-Implementierung, Save-Formaten, UI und Tests konsistent sein.
+- Source-Pack-Verträge, die vom Runtime-Vertrag abweichen, dürfen nicht unbemerkt überschrieben oder als identisch ausgegeben werden.
+- Jede beabsichtigte Abweichung erhält einen Decision-Log-Eintrag mit Quelle, Grund, Migrationsauswirkung und Tests.
+- Kein Balancewert, Preis, Upgradeeffekt, XP-Gewinn, Levelschwellenwert oder Unlock wird ohne belegbare Anforderung oder bestätigte Produktentscheidung ergänzt.
+- State-Mutationen passieren über typisierte Commands; abgeleitete Sicht-/UI-Daten bleiben fachlich nicht autoritativ. Neue Pflegeaktionen müssen in Contracts, Reducer/Handler, UI, Persistenz und Tests gemeinsam integriert werden.
 
-- `LicenseStatus` is `valid | warning | suspended`; `recovery_review` is not a canonical license status.
-- `QualityAssessment` requires both `passed: boolean` and `decision: pass | fail | review`.
-- `GameState` does not declare a top-level `qualityAssessments` array.
-- `EconomyState` includes revenue/expense summaries as fields in addition to the ledger.
-- Canonical ledger accounts are `revenue | expense | penalty | investment | refund`; `grant` is not included.
-- The canonical public command type is `GameCommand`, not `DomainCommand`.
-- Canonical events do not include several event strings currently emitted by the implementation, including `upgrade.purchased`, `time.day_ended`, and several facility/machine events.
-- The canonical save payload is `GameState`, including its `ui` field.
+## Historische CI-Fehler — nicht mehr als aktueller Status ausgeben
 
-These facts are source-contract evidence, not a statement that the implementation has already been reconciled.
+Der frühere Lauf [38290153329](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153329) scheiterte beim Typecheck unmittelbar nach dem Einspielen der Originalverträge. Er berichtete unter anderem fehlende Economy-Summaryfelder, `grant`, `recovery_review`, fehlendes `qualityAssessments`, unvereinbare Event-Varianten und Save-Payload-Unterschiede. Dieser Lauf dokumentiert den damaligen Vertragsbruch; er ist kein aktueller Statusbericht für spätere Commits.
 
-## Current CI evidence after canonical contract restoration
+Auf dem Integrationsstand `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38` liefen Install, Lint, Formatcheck, Strict Typecheck, Unit-Tests und Produktionsbuild erfolgreich. Browser-E2E war bei der letzten Abfrage noch aktiv. Eine abgeschlossene, vollständig grüne Gesamtpipeline ist für diesen Stand daraus noch nicht belegt. [App-CI-Lauf](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38305545109) · [Master-Pack-Validierung](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38305545140).
 
-The GitHub Actions run on the restoration branch, [Herbal Line CI run 38290153329](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153329), **failed at strict TypeScript typecheck**. Domain tests, production build and browser E2E were skipped because typecheck failed.
+## Aktuelle offene Integrationspunkte
 
-Reported error groups include:
-
-- missing canonical `EconomyState` summary fields in initial state and finance fixtures;
-- unsupported `grant` ledger account;
-- implementation-only `recovery_review` status;
-- references to undeclared `GameState.qualityAssessments`;
-- import of missing `DomainCommand`;
-- implementation-only event types;
-- missing `QualityAssessment.passed`;
-- mismatch between `InventoryLotState` and the implementation's `InventoryReservation` shape;
-- save codec payload missing canonical `ui`.
-
-The separate [Master Pack Validation run 38290153248](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153248) passed. That workflow validates required pack files/basic metadata; it does not establish that the game typechecks or builds.
-
-A previous green CI run on revision `bce2a0bd0edda036032be03e8dfea3033057ea52` is historical and predates restoration of the exact canonical contracts. It must not be used as evidence that the current restoration branch passes.
-## Persistence behavior now implemented
-
-- Canonical JSON serialization and SHA-256 integrity check.
-- Version-1 save envelope with UI excluded.
-- IndexedDB save repository with validation before writes and reads.
-- Manual save/load plus autosave after successful domain commands.
-- Last-known-good backup written before replacing a valid primary save.
-- Fallback to backup if the primary save fails validation.
-- JSON export and validated import.
-- Browser E2E coverage for reload persistence, corrupt-primary recovery and export/import round-trip.
-
-## Remaining blockers
-
-1. **Exact Master Pack parity remains unverified.** The ZIP SHA-256 is `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`; it contains 42 files. The historical pack-shaped recovery snapshot had 42 matching paths but 36 blob-content mismatches. The current implementation branch must not be called a 1:1 mirror until a reproducible per-path comparison proves it.
-2. Save schema migration beyond v1, quota exhaustion, and interrupted-write recovery need explicit tests before release acceptance.
-3. Chromium is the only automated browser target so far.
-4. Full game-loop UX, comprehensive accessibility, final licensed assets, visual/performance QA, security review and release acceptance remain open.
+1. Alle Browser-E2E-Tests müssen gegen den aktuellen Produktnamen laufen; veraltete Erwartungen wie `Botanical Operations` sind zu beseitigen.
+2. Sichtbare Cannabis-Pflegeaktionen müssen echte Fachzustände ändern, sichtbare Reaktionen auslösen, protokolliert und nach Reload wiederherstellbar sein.
+3. Save-Migration, beschädigte Daten, Export/Import und Recovery müssen für den aktuellen State geprüft werden.
+4. Economy/Progression benötigt belegte Regeln und deterministische Grenzfalltests; nicht autorisierte Upgrade-Preise/-Effekte sind kein kanonischer Default.
+5. UI-Inhalte, Asset-/Rechteregister und Produktionsrichtlinie müssen denselben Produktumfang benennen.
+6. Das finale CI-Ergebnis ist an den exakten Commit zu binden; laufende oder abgebrochene Workflows zählen nicht als bestanden.
 
 ## Decision rule
 
-Do not rewrite canonical documents to fit the current implementation silently. Record any intentional deviation, explain why it is needed, add a migration or compatibility plan where applicable, and verify the resulting contract and implementation on the same commit.
-
-
-## Product-scope correction and restoration authority
-
-The original `Herbal-Line-Production-Master-Pack.zip` is the binding source of truth, not merely historical input. Herbal Line is the originally agreed fictional, strictly regulated medical-cannabis production management simulation. The generic botanical/herbal rescoping documented in earlier repository versions was not owner-approved and is not accepted as a valid product decision.
-
-Restore the canonical Master-Pack documents exactly from the ZIP on the dedicated restoration branch, verify every path/content hash, and retain reproducible evidence. Then reconcile code, domain contracts, economy/progression, UI and content against the canonical documents without discarding compatible implementation work. Keep `main` untouched until the reviewed restoration and mandatory checks pass. Do not claim 1:1 parity until the current branch has passed the per-path comparison.
-
-The implementation has also closed the QC review/failure dead end with a terminal `BATCH/REJECT` command. It requires a documented reason, releases room occupancy, clears any active machine assignment, removes the batch from the active queue, and prevents later release. The management UI exposes this action only when a stored QC decision is `fail` or `review`; domain guards remain authoritative.
+Produktname und Produktumfang werden durch die neueste ausdrückliche Owner-Anweisung festgelegt. Das historische Archiv wird mit seinem originalen Hash als Quelle dokumentiert, aber nicht als Grund verwendet, eine spätere, bestätigte Produktidentität zurückzusetzen. Änderungen an technischen Verträgen bleiben kontrolliert, nachvollziehbar und mit Tests belegt. `main` wird erst nach Review und erfolgreichen Pflichtgates geändert.

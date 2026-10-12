@@ -26,7 +26,7 @@ function applyOk(
 
 test('campaign controls run a step and restore a saved state', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
   const graphicsCanvas = page.locator('#world-root canvas');
   const graphicsWarning = page.locator('#fatal-error');

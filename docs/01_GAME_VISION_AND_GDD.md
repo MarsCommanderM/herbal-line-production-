@@ -1,8 +1,8 @@
-# Game Vision & Game Design Document
+# Dr. Green Dump / DopeFarm — Game Vision & Game Design Document
 
 ## High Concept
 
-Ein strategisches Management-/Tycoon-Spiel über den Aufbau einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler leitet einen kleinen Betrieb und entwickelt ihn zu einem zuverlässigen, dokumentationsstarken Lieferanten für fiktive Apothekenkunden.
+Ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert den Anbau und sichtbare, ausführliche Pflege direkt an erkennbaren Cannabis-Pflanzen, simulierte Verarbeitung, Qualitätssicherung, Lager, Logistik und Auslieferung an fiktive Apothekenkunden. Apothekeninterne Abläufe sind nicht Teil des Spiels.
 
 ## Genre, Plattform, Perspektive
 

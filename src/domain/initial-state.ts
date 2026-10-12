@@ -56,7 +56,7 @@ export function createInitialGameState(): GameState {
     inventoryLots: [],
     qualityAssessments: [],
     orders: [
-      { id: entityId('order-buyer-001'), customerId: buyerId, itemDefinitionId: 'BOT-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
+      { id: entityId('order-buyer-001'), customerId: buyerId, itemDefinitionId: 'MED-CANNABIS-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
     ],
     customers: [
       { id: buyerId, name: 'Apotheke Nord', kind: 'licensed_buyer', reliabilityScore: score(92), minimumReputation: reputation(100), preferredQuality: score(80), paymentDelayDays: 0, unlocked: true },

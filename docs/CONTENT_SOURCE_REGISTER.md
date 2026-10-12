@@ -1,7 +1,7 @@
 # Content source register
 
-**Status:** first authored tutorial release; exact-revision automated verification pending.  
-**Scope:** Herbal Line's fictional management-game UI only.
+**Status:** authored tutorial and UI content; verify on the exact release revision.  
+**Scope:** Dr. Green Dump / DopeFarm's fictional medical-cannabis management-game UI only.
 
 | Content family | Canonical source | External sources | Validation | Release status |
 |---|---|---|---|---|
@@ -16,3 +16,8 @@
 - No external factual claim is included in the new tutorial. Therefore no external research citation is required for this change.
 - Any later external research notice must record its publisher, canonical URL, retrieval date, version, license/usage terms, and the exact in-game claim it supports before display.
 - Content changes are not release-approved solely because automated tests pass; product/content review remains a release gate.
+
+
+## Product-specific content policy
+
+Plant-care content may describe game controls and invented balance effects for visibly recognizable medical-cannabis plants. Do not include real-world growing setpoints, nutrient recipes, cultivation schedules, yield optimization or operating instructions. The in-game facility ends its customer workflow at recorded delivery to a fictional pharmacy; pharmacy operations are out of scope.

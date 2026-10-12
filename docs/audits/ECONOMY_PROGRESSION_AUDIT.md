@@ -1,4 +1,4 @@
-# Economy and Progression Contract Audit — 2026-10-12
+# Dr. Green Dump / DopeFarm — Economy and Progression Contract Audit — 2026-10-12
 
 ## Authority inspected
 
@@ -53,3 +53,8 @@
 4. Add tests proving insufficient funds, duplicate purchase prevention, one ledger posting per purchase, and effect application only after a valid purchase.
 5. Add a deterministic economy/progression harness once the missing numeric rules have an authoritative source.
 6. Re-run strict typecheck, unit/contract tests, production build and browser E2E on one identified commit. No result is claimed in this audit.
+
+
+## Scope rule
+
+The title and core product remain Dr. Green Dump / DopeFarm, a medical-cannabis production management game with fictional game-only process values. Economics and progression must not introduce real production instructions. Values without explicit source or owner confirmation remain an open balance decision, not an implicit design authorization.

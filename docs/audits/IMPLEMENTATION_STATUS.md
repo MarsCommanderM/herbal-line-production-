@@ -62,3 +62,8 @@ Final asset licensing inventory, visual regression/performance proof, security/p
 ## Next action
 
 Resolve the P0 per-path Master Pack comparison without overwriting valuable implementation work. Then continue P1 dashboard/accessibility and persistence fault-injection coverage.
+
+
+## Status interpretation — current production branch
+
+The PASS entries above are evidence for their explicitly named historical snapshot/run only; they are not proof that all later branches or commits passed. For the restoration branch, the checked base revision before the consolidated product-directive patch was `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38`: typecheck, domain unit tests and production build had passed in runs `38305545109` / `38305540569`, but browser E2E was still running at the last observation. The separate pack validator passed in run `38305545140`. No overall green status is claimed until all required jobs complete successfully on one exact commit.

@@ -70,7 +70,7 @@ The first verified application baseline was merged to `main` via PR [#4](https:/
 - Application CI: **PASS** — [run 38181538851](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181538851)
 - Master Pack validation workflow: **PASS** — [run 38181538905](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181538905)
 - Verified gates: `npm ci`, source lint, format check, strict TypeScript typecheck, unit tests, production build, master-pack validation, and `git diff --check`.
-- The merged implementation contains the first deterministic generic botanical operations loop, typed commands/events, abstract QC and traceability gates, inventory reservation, generic buyer order, delivery confirmation, ledger-derived revenue, and accessible management controls.
+- The historical implementation at that revision contained a generic-botanical operations loop. That was an unapproved scope drift, not the accepted product definition; this historical note must not be used to justify generic plants or a generic product identity in current builds.
 
 ### Remaining blockers
 
@@ -92,3 +92,8 @@ The initial save/load implementation was merged via [PR #5](https://github.com/M
 - Added: stable JSON serialization, SHA-256 save checksums, envelope validation, IndexedDB save/load/list/delete/export/import, transient UI reconstruction, manual save/load controls, and tests for checksum corruption and repository lifecycle.
 
 **Remaining persistence acceptance:** real-browser IndexedDB round-trip, schema migration beyond v1, quota exhaustion, interrupted transaction recovery, and browser E2E.
+
+
+## Current owner-approved production directive — 2026-10-12
+
+The current game title is **Dr. Green Dump / DopeFarm**. It is a high-quality web management game about the legal and controlled operation of a strictly regulated medical-cannabis plant production facility. Recognizable cannabis plants and directly visible care actions are required: fictional in-game watering, lighting, climate/humidity control, nutrient care, pruning and cutting placement. All numeric values and effects are invented balance data, not real-world cultivation instructions. The game ends its customer workflow at recorded delivery to pharmacies; internal pharmacy operations are out of scope. This owner directive supersedes prior generic-botanical descriptions in historical baseline notes.

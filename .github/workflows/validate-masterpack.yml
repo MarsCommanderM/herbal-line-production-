@@ -1,4 +1,4 @@
-name: Master Pack Validation
+name: Dr. Green Dump / DopeFarm — Master Pack Validation
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: master-pack-validation-${{ github.ref }}
+  group: dopefarm-master-pack-validation-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:

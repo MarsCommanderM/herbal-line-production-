@@ -1,4 +1,4 @@
-# Feature-Scope, Priorisierung und Release-Inhalt
+# Dr. Green Dump / DopeFarm — Feature-Scope, Priorisierung und Release-Inhalt
 
 ## Prioritäten
 
@@ -13,7 +13,7 @@
 2. Feste Simulationsschritte, Pause/Resume und 1×/2×/4× Speed.
 3. Kanonischer State, typed commands/actions, selectors und Domain-Events.
 4. Räume, Kapazität und auswählbare Entities.
-5. Fiktiver Pflanzenlebenszyklus mit normalisierten Skalen, Aktionen und Qualitätseffekt.
+5. Visuell ausgeführte Pflegeinteraktionen für erkennbare Cannabis-Pflanzen; ausschließlich fiktive, normalisierte Spielwerte und Effekte.
 6. Charge mit Herkunft, Status und Audit-Trail.
 7. Verarbeitung → Verpackung → QC → Freigabe/Reject.
 8. Inventar mit Bestandsjournal und Reservierungen.

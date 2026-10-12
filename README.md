@@ -1,6 +1,6 @@
 # Dr. Green Dump / DopeFarm — Final Production Master Pack
 
-**Dokumentstand:** 11. Oktober 2026  
+**Dokumentstand:** 12. Oktober 2026  
 **Projekt-/Spielname:** Dr. Green Dump / DopeFarm  
 **Vom Projektauftrag benannter Projektverantwortlicher:** Michael Braunschweig  
 **Plattform:** Browser/Web  
@@ -8,7 +8,7 @@
 
 ## Produktdefinition
 
-Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert im Spiel Produktionsplanung, Pflanzenpflege, Verarbeitung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lagerverwaltung, Logistik und Auslieferung an Apotheken. Im Mittelpunkt stehen Planung, dokumentierte Qualität, Compliance, Zuverlässigkeit, Personal, Ressourcen und nachhaltige Expansion.
+Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert Anbau und ausführliche, sichtbar direkt an erkennbaren Cannabis-Pflanzen ausgeführte Pflege, simulierte Verarbeitung, Qualitätssicherung, Lager, Logistik und Auslieferung an Apotheken. Dazu gehören im Spiel sichtbare Aktionen für Bewässerung, Licht, fiktive Klima-/Luftfeuchtigkeits-Einstellungen, Nährstoffversorgung, Beschneiden sowie das Schneiden und Setzen von Stecklingen. Alle Werte und Effekte sind erfundene Spiel-Balancewerte; Apothekeninterne Abläufe gehören nicht zum Spielumfang. Im Mittelpunkt stehen Planung, dokumentierte Qualität, Compliance, Zuverlässigkeit, Personal, Ressourcen und nachhaltige Expansion.
 
 **Darstellungs- und Simulationsgrenze:** Cannabis darf in der fiktiven Spielwelt visuell eindeutig erkennbar sein. Die Spielsysteme sind abstrahierte, erfundene Managementmechaniken. Das Paket enthält keine realen Anbauparameter, Rezepturen, Extraktionsverfahren, Trocknungs-/Aushärtungsprotokolle, Optimierungsanleitungen oder operativen Vertriebsanweisungen. Spielwerte sind ausschließlich fiktive Balancewerte und dürfen nicht als reale Herstellungs- oder Arzneimittelanleitung interpretiert werden.
 

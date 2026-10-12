@@ -10,6 +10,14 @@ Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den Auf
 
 Cannabis darf in der fiktiven Spielwelt visuell erkennbar sein. Spielregeln und Prozessparameter bleiben abstrahierte, erfundene Managementmechaniken: keine realen Anbauparameter, Nährstoff- oder Produktionsrezepte, realen Extraktions-/Aufbereitungsprotokolle oder operativen Anleitungen zur realen Herstellung oder Distribution. Alle Pflanzen-, Qualitäts- und Prozesswerte sind fiktive Spielbalancewerte.
 
+## 2.1 Verbindliche Cannabis-Pflanzenwelt und sichtbare Pflege
+
+Der sichtbare und spielmechanische Kern ist eine legale, streng regulierte medizinische Cannabis-Pflanzenproduktion. Cannabis-Pflanzen müssen als solche visuell erkennbar sein; generische Kräuter, Rundblatt-Botanik oder eine neutrale Pflanzenhalle sind kein Ersatz. Die Welt zeigt eine professionelle Indoor-Anlage mit Pflanzenreihen, Lampen, Bewässerungsinfrastruktur und Klima-/Lüftungstechnik.
+
+Der Spieler führt Pflegeaktionen an einer ausgewählten Pflanze oder Pflanzengruppe aus. Zum Releaseumfang gehören sichtbare Spielaktionen für Bewässerung, Beleuchtung einstellen, fiktive Temperatur-/Luftfeuchtigkeitssteuerung, Nährstoffversorgung, Beschneiden sowie Stecklinge schneiden und setzen. Die Aktionen müssen den Pflanzenzustand verändern, unmittelbar sichtbares Feedback am betroffenen Objekt auslösen und per Tests nachweisen, dass die fachliche Änderung korrekt und speicherbar ist. Reine Textbuttons ohne sichtbare Reaktion reichen nicht aus.
+
+Alle numerischen Eingaben, Schwellen und Effekte sind erfundene Spiel-Balancewerte. Keine realen Anbausollwerte, Rezepturen, Klima-/Nährstoffpläne oder sonstigen realen Kultivierungsanleitungen verwenden. Apothekeninterne Betriebsabläufe sind ausdrücklich nicht Teil des Spiels; die Kette endet bei der dokumentierten Auslieferung an die Apotheke.
+
 ## 3. Harte Produktionsregel
 
 **Ziel ist das finale, auslieferbare Spiel.** Ein Prototyp, grauer Blockout, dekoratives Mock-up, leeres Modul, Demo-Flow oder eine Attrappe darf niemals als abgeschlossen oder produktionsreif ausgegeben werden. Ein Vertical Slice ist nur akzeptabel, wenn er bereits echte End-to-End-Architektur, funktionale Systeme, stabile Speicherung, finale Qualitätsrichtung und echte Abnahmetests verwendet.

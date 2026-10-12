@@ -1,8 +1,8 @@
-name: Herbal Line CI
+name: Dr. Green Dump / DopeFarm CI
 
 on:
   push:
-    branches: ["**"]
+    branches: ["main"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: herbal-line-ci-${{ github.ref }}
+  group: dr-green-dump-dopefarm-ci-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
