@@ -80,6 +80,97 @@ describe('game-state invariants', () => {
     expect(checkpoints.every((issues) => issues.length === 0)).toBe(true);
   });
 
+
+  it('detects a deterministic matrix of cross-entity corruption cases', () => {
+    const initial = createInitialGameState();
+    const storage = initial.rooms.find((room) => room.kind === 'storage');
+    const processingMachine = initial.machines[0];
+    const source = initial.sourceLots[0];
+    if (!storage || !processingMachine || !source) throw new Error('Initial campaign fixtures are incomplete.');
+
+    const invalidLot: GameState['inventoryLots'][number] = {
+      id: entity('fuzz-inventory'),
+      batchId: entity('missing-batch'),
+      itemDefinitionId: 'BOT-01',
+      quantityAvailable: 2,
+      quantityReserved: 3,
+      qualityScore: 70 as Score0To100,
+      status: 'released',
+      createdAt: initial.time.totalMinutes,
+      expiresAt: null,
+      storageRoomId: storage.id,
+    };
+    const invalidLedger: GameState['economy']['ledger'][number] = {
+      id: entity('fuzz-ledger'),
+      simulationMinute: initial.time.totalMinutes,
+      account: 'revenue',
+      amountCents: 100 as GameState['economy']['openingBalanceCents'],
+      referenceId: null,
+      reasonCode: 'FUZZ_CASE',
+      idempotencyKey: '',
+    };
+
+    const mutations: Array<{ code: string; mutate: (state: GameState) => GameState }> = [
+      {
+        code: 'INVALID_REVISION',
+        mutate: (state) => ({ ...state, revision: -1 }),
+      },
+      {
+        code: 'INVALID_SIMULATION_TIME',
+        mutate: (state) => ({ ...state, time: { ...state.time, totalMinutes: -1 as GameState['time']['totalMinutes'] } }),
+      },
+      {
+        code: 'ROOM_OCCUPANCY_OUT_OF_RANGE',
+        mutate: (state) => ({ ...state, rooms: state.rooms.map((room) => room.id === storage.id ? { ...room, occupied: room.capacity + 1 } : room) }),
+      },
+      {
+        code: 'INVALID_INVENTORY_RESERVED',
+        mutate: (state) => ({ ...state, inventoryLots: [invalidLot] }),
+      },
+      {
+        code: 'ACTIVE_MACHINE_WITHOUT_JOB',
+        mutate: (state) => ({ ...state, machines: state.machines.map((machine) => machine.id === processingMachine.id ? { ...machine, status: 'active', activeJobId: null } : machine) }),
+      },
+      {
+        code: 'INACTIVE_MACHINE_WITH_JOB',
+        mutate: (state) => ({ ...state, machines: state.machines.map((machine) => machine.id === processingMachine.id ? { ...machine, status: 'idle', activeJobId: entity('missing-batch') } : machine) }),
+      },
+      {
+        code: 'PLANT_BATCH_LINK_MISMATCH',
+        mutate: (state) => ({ ...state, plants: state.plants.map((plant) => ({ ...plant, batchId: entity('missing-batch') })) }),
+      },
+      {
+        code: 'EMPTY_LEDGER_IDEMPOTENCY_KEY',
+        mutate: (state) => ({ ...state, economy: { ...state.economy, ledger: [invalidLedger] } }),
+      },
+      {
+        code: 'INVENTORY_BATCH_LINK_MISMATCH',
+        mutate: (state) => ({ ...state, inventoryLots: [{ ...invalidLot, quantityReserved: 0 }] }),
+      },
+    ];
+
+    for (const mutation of mutations) {
+      const result = validateGameStateInvariants(mutation.mutate(initial));
+      expect(result.map((issue) => issue.code), mutation.code).toContain(mutation.code);
+    }
+  });
+
+  it('rejects a range of generated room occupancy corruptions', () => {
+    const initial = createInitialGameState();
+    const storage = initial.rooms.find((room) => room.kind === 'storage');
+    if (!storage) throw new Error('Storage room fixture is missing.');
+
+    for (let seed = 1; seed <= 100; seed += 1) {
+      const invalid = {
+        ...initial,
+        rooms: initial.rooms.map((room) => room.id === storage.id
+          ? { ...room, occupied: room.capacity + seed }
+          : room),
+      };
+      expect(validateGameStateInvariants(invalid).map((issue) => issue.code)).toContain('ROOM_OCCUPANCY_OUT_OF_RANGE');
+    }
+  });
+
   it('detects duplicate financial idempotency keys', () => {
     const state = createInitialGameState();
     const entry = {
