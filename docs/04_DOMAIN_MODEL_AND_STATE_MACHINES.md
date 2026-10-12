@@ -94,7 +94,7 @@ Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte S
 
 `clean → dirty → saving → saved` und bei Fehler `saving → save_failed → retry_pending`.
 
-- Simulationsaktionen laufen unabhängig davon, ob eine Speicherung gerade läuft; die Save-Schicht speichert einen konsistenten Snapshot.
+- Simulationsaktionen laufen unabhängig davon weiter, ob eine Speicherung gerade läuft; die Save-Schicht speichert einen konsistenten Snapshot.
 - Ein älterer Snapshot darf nie einen neueren erfolgreich geschriebenen Snapshot überschreiben.
 - Migrationen laufen vor vollständiger Validierung und vor Übergabe an den Store.
 
