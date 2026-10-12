@@ -52,3 +52,12 @@ The intended authority is the supplied Herbal Line Master Pack: `AGENTS.md`, `PR
 - Verified: locked dependency install, policy lint, formatting, strict typecheck, domain unit tests, production build, Chromium install, Playwright E2E, production preview smoke, Master-Pack document/JSON validation and whitespace.
 - The prior failed browser assertion exposed a UI-state regression, not a domain failure. The completion message is now rendered independently of available compliance actions; the original end-to-end assertion remains intact and passed on the accepted commit.
 - P2-001 starts with a read-only audit of facility/capacity/staffing/maintenance primitives; implementation must preserve save schema v1 unless evidence proves a contract change is unavoidable.
+
+
+## P2-001 acceptance record — 2026-10-12
+
+- Exact accepted commit: `a0325cf5a941dabbc0c4683919e7c0bca5ca860f`.
+- Workflow: [#38257706542 — success](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38257706542); every step passed, including unit tests, Playwright browser E2E, production smoke, document/JSON validation and whitespace.
+- Added guards and tests for maintenance assignment eligibility, room occupancy accounting, and machine/room consistency. Existing browser E2E verifies room purchase, capacity display, the maintenance lifecycle, ledger entry, and persisted state.
+- No save contract or schema version changed.
+- P2-002 is the next task: audit ledger-derived balances, transaction idempotency, affordability gates and progression side effects before making changes.

@@ -4,7 +4,7 @@
 
 - Working branch: `production/herbal-line-baseline-20261012`
 - Historical verified baseline: `a9ff0d8cf481529baab73b62d1d1526402cfa169` (full CI run #38210853633).
-- Latest accepted revision: `cc730e9fdca65d7c3bb1912faf1dbd053f047daf` — [Run #38251987389 succeeded](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38251987389) across every workflow step, including browser E2E, production smoke, document/JSON validation and whitespace.
+- Latest accepted revision: `a0325cf5a941dabbc0c4683919e7c0bca5ca860f` — [Run #38257706542 succeeded](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38257706542) across every workflow step, including browser E2E, production smoke, document/JSON validation and whitespace.
 - CI evidence: [Run #38210853633 — success](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38210853633). This exact revision passed locked install, lint, format, strict typecheck, domain tests, production build, Playwright browser E2E, production-preview smoke, Master-Pack document/JSON validation, and whitespace checks.
 - Default branch observed during this update: `main@4a1e2724dcce32d4b5a2516bb5a3df651884fc37`, 98 tracked paths. Recovery-branch commits in this task were not pushed to `main`.
 - **Still blocked:** byte-for-byte comparison with `Herbal-Line-Production-Master-Pack.zip`. The archive bytes are not available in the current working surface, so the historical path/hash record is not a fresh parity proof.
@@ -37,9 +37,13 @@ The dashboard exposes process batches, room occupancy/capacity meters, machine s
 
 Accepted at `cc730e9fdca65d7c3bb1912faf1dbd053f047daf`; [full CI run #38251987389 passed](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38251987389). Fictional incident capture, operation-specific blocking, corrective-action completion, audit-derived license/risk state, audit and license-change events, and the management queue are covered by domain and browser tests. High/critical incidents suspend operations; corrective action alone cannot restore the license. The browser suite also confirms the campaign-completion message remains visible alongside the compliance action after delivery.
 
-## P2-001 — Facility, capacity, staffing and maintenance (IN PROGRESS — IMPLEMENTATION)
+## P2-001 — Facility, capacity, staffing and maintenance (VERIFIED)
 
-Read-only audit found the core primitives and several guards already exist. The first identified gap was that a degraded but actively running machine could receive a maintenance assignment that could never start; the assignment path now rejects machine states that are neither idle nor broken. Added negative-path coverage for this dead end and for machine/room mismatch, plus an end-to-end occupancy accounting assertion across queue → QC → storage → delivery. Save schema v1 remains unchanged. Acceptance remains pending until the exact implementation SHA passes the full CI workflow.
+Accepted at `a0325cf5a941dabbc0c4683919e7c0bca5ca860f`; [full CI run #38257706542 passed](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38257706542). Review confirmed room capacity checks, occupancy transfer/release accounting, exclusive staff assignment, role compatibility, machine-room consistency, and the maintenance lifecycle. A degraded active machine can no longer receive a maintenance assignment that cannot start. New domain tests cover occupancy across queue → QC → storage → delivery, mismatched machine/room rejection, and rejection of the active-machine maintenance dead end. Existing browser E2E verifies facility purchase, capacity display, maintenance assignment/start/completion, condition restoration, ledger entry and save persistence. Save schema v1 is unchanged.
+
+## P2-002 — Economy and progression (IN PROGRESS — AUDIT)
+
+Audit balance derivation, ledger idempotency, investment/expense/revenue/penalty/refund entries, affordability gates, upgrade purchasing, and progression/reputation effects before implementation. Add invariant and negative-path tests first. Never mutate a cached balance independently of the ledger; preserve save-v1 compatibility. Completion requires a reviewed diff and full CI green on one exact SHA.
 
 ## Operating rule
 
