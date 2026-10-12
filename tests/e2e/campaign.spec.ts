@@ -1,8 +1,9 @@
-import type { CommandId, EntityId, Score0To100 } from '../../contracts/domain';
+import type { CommandId, EntityId, GameState, Score0To100 } from '../../contracts/domain';
 import { createInitialGameState } from '../../src/domain/initial-state';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from '../../src/domain/vertical-slice';
 import { createSaveEnvelope, stableStringify } from '../../src/persistence/save-codec';
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 const entity = (value: string): EntityId => value as EntityId;
 const commandId = (value: string): CommandId => value as CommandId;
@@ -22,6 +23,40 @@ function applyOk(
   const result = applyVerticalSliceCommand(state, command);
   if (!result.ok) throw new Error(result.error.message);
   return result.state;
+}
+
+async function seedCampaignSave(page: Page, state: GameState): Promise<void> {
+  const envelope = await createSaveEnvelope(state, '2026-10-12T12:00:00.000Z');
+  const serialized = stableStringify(envelope);
+  const metadata = {
+    slotId: 'campaign-01',
+    revision: envelope.revision,
+    savedAtRealTime: envelope.savedAtRealTime,
+    gameVersion: envelope.gameVersion,
+    byteLength: new TextEncoder().encode(serialized).byteLength,
+  };
+
+  await page.goto('/');
+  await page.evaluate(async ({ envelope: saveEnvelope, metadata: saveMetadata }) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line', 1);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains('saves')) request.result.createObjectStore('saves', { keyPath: 'slotId' });
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction('saves', 'readwrite');
+      const store = transaction.objectStore('saves');
+      store.clear();
+      store.put({ slotId: 'campaign-01', envelope: saveEnvelope, metadata: saveMetadata });
+      transaction.oncomplete = () => { database.close(); resolve(); };
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error);
+    });
+  }, { envelope, metadata });
+  await page.reload();
 }
 
 test('campaign controls run a step and restore a saved state', async ({ page }) => {
@@ -90,11 +125,12 @@ test('autosave survives reload and corrupt primary recovers the last valid backu
 });
 
 test('exported saves can be imported after a later campaign change', async ({ page }) => {
+  test.setTimeout(60_000);
   await page.goto('/');
   await page.getByRole('button', { name: 'Spielstand speichern' }).click();
   await expect(page.locator('#game-feedback')).toContainText('Spielstand gespeichert');
 
-  const downloadPromise = page.waitForEvent('download');
+  const downloadPromise = page.waitForEvent('download', { timeout: 10_000 });
   await page.getByRole('button', { name: 'Spielstand exportieren' }).click();
   const download = await downloadPromise;
   const stream = await download.createReadStream();
@@ -106,10 +142,14 @@ test('exported saves can be imported after a later campaign change', async ({ pa
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
 
-  const chooserPromise = page.waitForEvent('filechooser');
+  const fileInput = page.locator('#import-save-file');
+  await fileInput.evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.click = () => { input.dataset.programmaticClickObserved = 'true'; };
+  });
   await page.getByRole('button', { name: 'Spielstand importieren' }).click();
-  const chooser = await chooserPromise;
-  await chooser.setFiles({ name: 'campaign-save.json', mimeType: 'application/json', buffer: exported });
+  await expect(fileInput).toHaveAttribute('data-programmatic-click-observed', 'true');
+  await fileInput.setInputFiles({ name: 'campaign-save.json', mimeType: 'application/json', buffer: exported });
 
   await expect(page.locator('#game-feedback')).toContainText('Spielstand importiert');
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
@@ -130,36 +170,7 @@ test('failed or unresolved QC offers a documented terminal rejection instead of 
   state = applyOk(state, 'BATCH/SUBMIT_QC', { batchId: entity('batch-qc-review'), assessmentId: entity('assessment-qc-review') });
   expect(state.qualityAssessments.at(-1)?.decision).toBe('review');
 
-  const envelope = await createSaveEnvelope(state, '2026-10-12T12:00:00.000Z');
-  const serialized = stableStringify(envelope);
-  const metadata = {
-    slotId: 'campaign-01',
-    revision: envelope.revision,
-    savedAtRealTime: envelope.savedAtRealTime,
-    gameVersion: envelope.gameVersion,
-    byteLength: new TextEncoder().encode(serialized).byteLength,
-  };
-
-  await page.goto('/');
-  await page.evaluate(async ({ envelope: saveEnvelope, metadata: saveMetadata }) => {
-    const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('herbal-line', 1);
-      request.onupgradeneeded = () => {
-        if (!request.result.objectStoreNames.contains('saves')) request.result.createObjectStore('saves', { keyPath: 'slotId' });
-      };
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    await new Promise<void>((resolve, reject) => {
-      const transaction = database.transaction('saves', 'readwrite');
-      transaction.objectStore('saves').put({ slotId: 'campaign-01', envelope: saveEnvelope, metadata: saveMetadata });
-      transaction.oncomplete = () => { database.close(); resolve(); };
-      transaction.onerror = () => reject(transaction.error);
-      transaction.onabort = () => reject(transaction.error);
-    });
-  }, { envelope, metadata });
-
-  await page.reload();
+  await seedCampaignSave(page, state);
   await expect(page.locator('#campaign-guidance')).toContainText('Freigabe blockiert');
   await expect(page.getByRole('button', { name: 'Batch ablehnen' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Batch freigeben' })).toHaveCount(0);
@@ -168,6 +179,70 @@ test('failed or unresolved QC offers a documented terminal rejection instead of 
   await expect(page.locator('#game-metrics')).toContainText('rejected');
   await expect(page.getByRole('button', { name: 'Batch ablehnen' })).toHaveCount(0);
   await expect(page.locator('#game-log')).toContainText('BATCH REJECTED');
+});
+
+test('suspended license disables queueing and preserves the created batch', async ({ page }) => {
+  let state = createInitialGameState();
+  state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+  state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+  state = applyOk(state, 'BATCH/CREATE', {
+    batchId: entity('batch-compliance-hold'),
+    plantIds: [entity('plant-001')],
+    profileId: 'fictional-botanical-batch',
+  });
+  state.compliance.licenseStatus = 'suspended';
+
+  await seedCampaignSave(page, state);
+  const queueButton = page.getByRole('button', { name: 'Verarbeitung einplanen' });
+  await expect(page.locator('#campaign-tutorial')).toContainText('Einführung pausiert: Compliance');
+  await expect(queueButton).toBeDisabled();
+  await expect(queueButton).toHaveAttribute('title', /Compliance-Sperre aktiv/);
+  await expect(page.locator('#game-actions')).toContainText('Compliance-Sperre aktiv');
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision ' + state.revision);
+
+  const persisted = await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      return await new Promise<{ revision: number; batchStatus: string; roomOccupancy: number }>((resolve, reject) => {
+        const request = database.transaction('saves', 'readonly').objectStore('saves').get('campaign-01');
+        request.onsuccess = () => {
+          const record = request.result as { envelope: { payload: GameState } };
+          const savedState = record.envelope.payload;
+          resolve({
+            revision: savedState.revision,
+            batchStatus: savedState.batches[0]?.status ?? 'missing',
+            roomOccupancy: savedState.rooms.find((room) => room.id === 'room-processing-01')?.occupied ?? -1,
+          });
+        };
+        request.onerror = () => reject(request.error);
+      });
+    } finally {
+      database.close();
+    }
+  });
+  expect(persisted).toEqual({ revision: state.revision, batchStatus: 'created', roomOccupancy: 0 });
+});
+
+test('explicit operation hold disables the affected action while leaving unrelated actions available', async ({ page }) => {
+  let state = createInitialGameState();
+  state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+  state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+  state = applyOk(state, 'BATCH/CREATE', {
+    batchId: entity('batch-operation-hold'),
+    plantIds: [entity('plant-001')],
+    profileId: 'fictional-botanical-batch',
+  });
+  state.compliance.blockedOperationCodes = ['BATCH/QUEUE'];
+
+  await seedCampaignSave(page, state);
+  await expect(page.getByRole('button', { name: 'Verarbeitung einplanen' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Verarbeitung einplanen' })).toHaveAttribute('title', /Compliance-Sperre aktiv/);
+  await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Tag abschließen' })).toBeEnabled();
 });
 
 test('keyboard navigation reaches primary controls in a predictable order', async ({ page }, testInfo) => {

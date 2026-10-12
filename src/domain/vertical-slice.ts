@@ -127,7 +127,7 @@ function hasCompleteTrace(state: GameState, batch: BatchState): boolean {
   });
 }
 
-function isBlocked(state: GameState, operationCode: string): boolean {
+export function isOperationBlocked(state: GameState, operationCode: string): boolean {
   return state.compliance.licenseStatus === 'suspended'
     || state.compliance.licenseStatus === 'recovery_review'
     || state.compliance.blockedOperationCodes.includes(operationCode);
@@ -382,7 +382,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       if (!batch || !room) return failure(state, 'NOT_FOUND', 'Batch oder Verarbeitungsraum nicht gefunden.');
       if (batch.status !== 'created' || room.kind !== 'processing' || !room.unlocked) return failure(state, 'INVALID_TRANSITION', 'Batch oder Raum ist nicht für die Einplanung verfügbar.');
       if (room.occupied >= room.capacity) return failure(state, 'CAPACITY_EXCEEDED', 'Der Verarbeitungsraum hat keine freie Spielkapazität.');
-      if (isBlocked(state, 'BATCH/QUEUE')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren diesen Vorgang.');
+      if (isOperationBlocked(state, 'BATCH/QUEUE')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren diesen Vorgang.');
       const event: DomainEvent = { ...eventBase(state, command, batch.id), type: 'batch.queued', batchId: batch.id };
       const updated = withTrace({ ...batch, status: 'queued', currentRoomId: room.id, updatedAt: state.time.totalMinutes }, event, command.actorId, 'BATCH_QUEUED', [room.id]);
       return commit(state, command, {
@@ -395,7 +395,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       const machine = state.machines.find((item) => item.id === command.machineId);
       if (!batch || !machine) return failure(state, 'NOT_FOUND', 'Batch oder Anlage nicht gefunden.');
       if (batch.status !== 'queued' || machine.status !== 'idle' || machine.roomId !== batch.currentRoomId) return failure(state, 'INVALID_TRANSITION', 'Batch und Anlage sind nicht startbereit.');
-      if (isBlocked(state, 'BATCH/START_PROCESSING')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren die Verarbeitung.');
+      if (isOperationBlocked(state, 'BATCH/START_PROCESSING')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren die Verarbeitung.');
       const event: DomainEvent = { ...eventBase(state, command, batch.id), type: 'batch.processing_started', batchId: batch.id };
       const updated = withTrace({ ...batch, status: 'processing', updatedAt: state.time.totalMinutes }, event, command.actorId, 'BATCH_PROCESSING_STARTED', [machine.id]);
       return commit(state, command, {
@@ -504,7 +504,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       if (!order || !customer) return failure(state, 'NOT_FOUND', 'Auftrag oder Kunde nicht gefunden.');
       if (order.status !== 'available') return failure(state, 'INVALID_TRANSITION', 'Dieser Auftrag ist nicht mehr verfügbar.');
       if (!customer.unlocked || state.reputation < customer.minimumReputation) return failure(state, 'COMPLIANCE_BLOCKED', 'Kundenanforderungen sind nicht erfüllt.');
-      if (isBlocked(state, 'ORDER/ACCEPT')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren die Auftragsannahme.');
+      if (isOperationBlocked(state, 'ORDER/ACCEPT')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren die Auftragsannahme.');
       const event: DomainEvent = { ...eventBase(state, command, order.id), type: 'order.accepted', orderId: order.id };
       return commit(state, command, { orders: state.orders.map((item) => item.id === order.id ? { ...item, status: 'accepted', acceptedAt: state.time.totalMinutes } : item) }, [event], 'ORDER_ACCEPTED', 'Kundenauftrag angenommen.', [order.id, customer.id]);
     }
@@ -556,7 +556,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       const delivery = state.deliveries.find((item) => item.id === command.deliveryId);
       if (!delivery) return failure(state, 'NOT_FOUND', 'Lieferung nicht gefunden.');
       if (delivery.status !== 'planned' && delivery.status !== 'packed') return failure(state, 'INVALID_TRANSITION', 'Lieferung ist nicht versandbereit.');
-      if (isBlocked(state, 'DELIVERY/DISPATCH')) return failure(state, 'COMPLIANCE_BLOCKED', 'Der Lizenz-/Compliance-Status blockiert den Versand.');
+      if (isOperationBlocked(state, 'DELIVERY/DISPATCH')) return failure(state, 'COMPLIANCE_BLOCKED', 'Der Lizenz-/Compliance-Status blockiert den Versand.');
       const order = state.orders.find((item) => item.id === delivery.orderId);
       if (!order || order.status !== 'ready_to_ship') return failure(state, 'PRECONDITION_FAILED', 'Auftrag ist nicht versandbereit.');
       const reserved = delivery.lotIds.reduce((sum, id) => {

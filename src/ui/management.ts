@@ -1,7 +1,7 @@
 import type { EntityId, GameState } from '../../contracts/domain';
 import { calculateDailyOperatingCosts, getCashRunwayDays, getFinancialHealth, projectCampaignBalance } from '../domain/finance';
 import { ECONOMY_UPGRADES, isEconomyUpgradePurchased } from '../domain/upgrades';
-import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
+import { getCampaignBalance, isOperationBlocked, type VerticalSliceCommand } from '../domain/vertical-slice';
 import { roomSupportsStaffRole } from '../domain/facility';
 import { getCampaignGuidance } from './campaign-guidance';
 import { getTutorialProgress } from './tutorial';
@@ -32,10 +32,32 @@ function availableActions(state: GameState): Action[] {
 
   if (batch && batch.status === 'created') {
     const room = state.rooms.find((item) => item.kind === 'processing' && item.unlocked);
-    if (room) actions.push({ label: 'Verarbeitung einplanen', detail: 'Kapazität und Compliance prüfen, bevor der Batch eingeplant wird.', type: 'BATCH/QUEUE', payload: { batchId: batch.id, roomId: room.id } });
+    if (room) {
+      const blocked = isOperationBlocked(state, 'BATCH/QUEUE');
+      actions.push({
+        label: 'Verarbeitung einplanen',
+        detail: blocked
+          ? 'Compliance-Sperre aktiv. Die Verarbeitung bleibt gesperrt, bis Lizenzstatus und Auditfreigabe wieder gültig sind.'
+          : 'Kapazität und Compliance prüfen, bevor der Batch eingeplant wird.',
+        type: 'BATCH/QUEUE',
+        payload: { batchId: batch.id, roomId: room.id },
+        disabled: blocked,
+      });
+    }
   } else if (batch && batch.status === 'queued') {
     const machine = state.machines.find((item) => item.status === 'idle' && item.roomId === batch.currentRoomId);
-    if (machine) actions.push({ label: 'Spielprozess starten', detail: 'Den rein fiktiven Verarbeitungsschritt starten.', type: 'BATCH/START_PROCESSING', payload: { batchId: batch.id, machineId: machine.id } });
+    if (machine) {
+      const blocked = isOperationBlocked(state, 'BATCH/START_PROCESSING');
+      actions.push({
+        label: 'Spielprozess starten',
+        detail: blocked
+          ? 'Compliance-Sperre aktiv. Der Spielprozess bleibt gesperrt, bis Lizenzstatus und Auditfreigabe wieder gültig sind.'
+          : 'Den rein fiktiven Verarbeitungsschritt starten.',
+        type: 'BATCH/START_PROCESSING',
+        payload: { batchId: batch.id, machineId: machine.id },
+        disabled: blocked,
+      });
+    }
   } else if (batch && batch.status === 'processing') {
     actions.push({ label: 'Qualitätsprüfung ausführen', detail: 'Die versionierten fiktiven Spielregeln und die Rückverfolgbarkeit prüfen.', type: 'BATCH/SUBMIT_QC', payload: { batchId: batch.id, assessmentId: entityId('assessment-001') } });
   } else if (batch && batch.status === 'awaiting_qc') {
@@ -48,14 +70,32 @@ function availableActions(state: GameState): Action[] {
   }
 
   if (order && order.status === 'available') {
-    actions.push({ label: 'Abnehmerauftrag annehmen', detail: 'Kundenstatus, Reputation und Lizenzstatus prüfen.', type: 'ORDER/ACCEPT', payload: { orderId: order.id } });
+    const blocked = isOperationBlocked(state, 'ORDER/ACCEPT');
+    actions.push({
+      label: 'Abnehmerauftrag annehmen',
+      detail: blocked
+        ? 'Compliance-Sperre aktiv. Der Auftrag bleibt gesperrt, bis Lizenzstatus und Auditfreigabe wieder gültig sind.'
+        : 'Kundenstatus, Reputation und Lizenzstatus prüfen.',
+      type: 'ORDER/ACCEPT',
+      payload: { orderId: order.id },
+      disabled: blocked,
+    });
   } else if (order && order.status === 'accepted') {
     const lots = state.inventoryLots.filter((item) => item.status === 'released' && item.quantityAvailable > item.quantityReserved && item.qualityScore >= order.minQuality);
     if (lots.length > 0) actions.push({ label: 'Freigegebenen Bestand reservieren', detail: 'Die angeforderte Menge atomar aus freigegebenen Lots reservieren.', type: 'ORDER/ALLOCATE', payload: { orderId: order.id, lotIds: lots.map((item) => item.id) } });
   } else if (order && order.status === 'allocated' && order.deliveryId === null) {
     actions.push({ label: 'Lieferung vorbereiten', detail: 'Auftrag, reservierte Lots und Lieferroute verknüpfen.', type: 'DELIVERY/CREATE', payload: { deliveryId: entityId('delivery-001'), orderId: order.id, routeId: 'fictional-route-local-01' } });
   } else if (order && order.status === 'ready_to_ship' && order.deliveryId) {
-    actions.push({ label: 'Lieferung versenden', detail: 'Lizenzstatus und reservierten Bestand vor dem Versand erneut prüfen.', type: 'DELIVERY/DISPATCH', payload: { deliveryId: order.deliveryId } });
+    const blocked = isOperationBlocked(state, 'DELIVERY/DISPATCH');
+    actions.push({
+      label: 'Lieferung versenden',
+      detail: blocked
+        ? 'Compliance-Sperre aktiv. Der Versand bleibt gesperrt, bis Lizenzstatus und Auditfreigabe wieder gültig sind.'
+        : 'Lizenzstatus und reservierten Bestand vor dem Versand erneut prüfen.',
+      type: 'DELIVERY/DISPATCH',
+      payload: { deliveryId: order.deliveryId },
+      disabled: blocked,
+    });
   } else if (order && order.status === 'shipped' && order.deliveryId) {
     actions.push({ label: 'Wareneingang bestätigen', detail: 'Den Empfang idempotent bestätigen und den Umsatz einmalig verbuchen.', type: 'DELIVERY/CONFIRM', payload: { deliveryId: order.deliveryId, proofCode: 'RX-ACK-001' } });
   }
