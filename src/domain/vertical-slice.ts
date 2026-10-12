@@ -11,6 +11,8 @@ import type {
   LedgerEntry,
   SimulationMinute,
   TraceEntry,
+  RoomState,
+  StaffRole,
 } from '../../contracts/domain';
 import type { CommandBase, CommandFailureCode, DomainCommand, CommandResult } from '../../contracts/commands';
 import type { DomainEvent } from '../../contracts/events';
@@ -34,11 +36,38 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'COMPLIANCE/RECORD_VIOLATION'
     | 'COMPLIANCE/RESOLVE_VIOLATION'
     | 'COMPLIANCE/START_AUDIT'
+    | 'ROOM/PURCHASE'
+    | 'STAFF/ASSIGN'
+    | 'MACHINE/START_MAINTENANCE'
+    | 'MACHINE/COMPLETE_MAINTENANCE'
 }>;
 
 const entityId = (value: string): EntityId => value as EntityId;
 const eventId = (value: string): EventId => value as EventId;
 const minute = (value: number): SimulationMinute => value as SimulationMinute;
+
+export const ROOM_CATALOG = [
+  { definitionId: 'production_room_small', displayName: 'Erweiterter Produktionsraum', kind: 'production', capacity: 6, costCents: 200_000, powerUnitsPerHour: 12 },
+  { definitionId: 'processing_room_small', displayName: 'Zusätzlicher Verarbeitungsraum', kind: 'processing', capacity: 4, costCents: 250_000, powerUnitsPerHour: 8 },
+  { definitionId: 'quality_lab_small', displayName: 'Zusätzliches Qualitätslabor', kind: 'quality', capacity: 3, costCents: 300_000, powerUnitsPerHour: 6 },
+  { definitionId: 'storage_small', displayName: 'Zusätzliches Lager', kind: 'storage', capacity: 12, costCents: 150_000, powerUnitsPerHour: 3 },
+  { definitionId: 'logistics_desk', displayName: 'Zusätzlicher Logistikplatz', kind: 'logistics', capacity: 4, costCents: 100_000, powerUnitsPerHour: 1 },
+] as const;
+
+function hasRoomCapacity(room: RoomState, requested: number): boolean {
+  return Number.isSafeInteger(room.capacity) && room.capacity > 0
+    && Number.isSafeInteger(room.occupied) && room.occupied >= 0
+    && Number.isSafeInteger(requested) && requested >= 0
+    && room.occupied + requested <= room.capacity;
+}
+
+function roomIsOperational(room: RoomState): boolean {
+  return room.unlocked && Number(room.condition) > 0 && Number(room.availability) > 0;
+}
+
+function validEntityId(value: string): boolean {
+  return /^[a-z0-9][a-z0-9_-]{1,63}$/.test(value);
+}
 
 function failure(state: GameState, code: CommandFailureCode, message: string): CommandResult {
   return { ok: false, state, error: { code, message } };
@@ -140,6 +169,191 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
   if (command.actorId !== state.player.id) return failure(state, 'COMPLIANCE_BLOCKED', 'Nur der aktuelle Kampagnenleiter darf diese Aktion ausführen.');
 
   switch (command.type) {
+    case 'ROOM/PURCHASE': {
+      const definition = ROOM_CATALOG.find((item) => item.definitionId === command.definitionId);
+      if (!validEntityId(command.roomId) || !definition) return failure(state, 'INVALID_PAYLOAD', 'Raum-ID oder Raumdefinition ist ungültig.');
+      if (state.rooms.some((room) => room.id === command.roomId)
+        || state.economy.ledger.some((entry) => entry.idempotencyKey === 'room:' + command.roomId + ':purchase')) {
+        return failure(state, 'DUPLICATE_COMMAND', 'Raum-ID wurde bereits verwendet.');
+      }
+      if (getBalanceCents(state.economy) < definition.costCents) return failure(state, 'INSUFFICIENT_FUNDS', 'Das Spielbudget reicht für diesen Raum nicht aus.');
+      const room: RoomState = {
+        id: command.roomId,
+        definitionId: definition.definitionId,
+        displayName: definition.displayName,
+        kind: definition.kind,
+        capacity: definition.capacity,
+        occupied: 0,
+        condition: 100 as Score0To100,
+        cleanliness: 100 as Score0To100,
+        availability: 100 as Score0To100,
+        powerUnitsPerHour: definition.powerUnitsPerHour,
+        unlocked: true,
+        assignedStaffIds: [],
+        assignedMachineIds: [],
+      };
+      const ledgerEntry: LedgerEntry = {
+        id: entityId('ledger-room-' + command.roomId + '-investment'),
+        simulationMinute: state.time.totalMinutes,
+        account: 'investment',
+        amountCents: definition.costCents as LedgerEntry['amountCents'],
+        referenceId: command.roomId,
+        reasonCode: 'room.purchase',
+        idempotencyKey: 'room:' + command.roomId + ':purchase',
+      };
+      const event: DomainEvent = {
+        ...eventBase(state, command, room.id),
+        type: 'room.purchased',
+        roomId: room.id,
+        definitionId: definition.definitionId,
+        costCents: definition.costCents,
+      };
+      return commit(state, command, {
+        rooms: [...state.rooms, room],
+        economy: { ...state.economy, ledger: [...state.economy.ledger, ledgerEntry] },
+      }, [event], 'ROOM_PURCHASED', 'Raumerweiterung gekauft und als Investition verbucht.', [room.id]);
+    }
+    case 'STAFF/ASSIGN': {
+      if (!validEntityId(command.assignmentId) || !command.entityId) return failure(state, 'INVALID_PAYLOAD', 'Aufgaben-ID und Zielentität sind erforderlich.');
+      if (state.assignments.some((assignment) => assignment.id === command.assignmentId)) return failure(state, 'DUPLICATE_COMMAND', 'Aufgaben-ID existiert bereits.');
+      const staff = state.staff.find((item) => item.id === command.staffId);
+      if (!staff) return failure(state, 'NOT_FOUND', 'Mitarbeiter nicht gefunden.');
+      if (staff.activeAssignmentId !== null || state.assignments.some((item) => item.staffId === staff.id && item.status === 'active')) {
+        return failure(state, 'PRECONDITION_FAILED', 'Mitarbeiter hat bereits eine aktive Aufgabe.');
+      }
+      let targetRoomId: EntityId | null = null;
+      let requiredRole: StaffRole | null = null;
+      switch (command.taskCode) {
+        case 'BATCH/OPERATIONS': {
+          const batch = state.batches.find((item) => item.id === command.entityId);
+          if (!batch) return failure(state, 'NOT_FOUND', 'Batch für die Personalzuweisung nicht gefunden.');
+          if ((batch.status !== 'queued' && batch.status !== 'processing') || !batch.currentRoomId) return failure(state, 'INVALID_TRANSITION', 'Batch ist nicht für eine operative Personalzuweisung bereit.');
+          targetRoomId = batch.currentRoomId;
+          requiredRole = 'operations';
+          break;
+        }
+        case 'BATCH/QUALITY': {
+          const batch = state.batches.find((item) => item.id === command.entityId);
+          if (!batch) return failure(state, 'NOT_FOUND', 'Batch für die Personalzuweisung nicht gefunden.');
+          if (batch.status !== 'awaiting_qc') return failure(state, 'INVALID_TRANSITION', 'Batch wartet nicht auf Qualitätssicherung.');
+          const room = state.rooms.find((item) => item.kind === 'quality' && item.unlocked);
+          if (!room) return failure(state, 'PRECONDITION_FAILED', 'Kein Qualitätsraum verfügbar.');
+          targetRoomId = room.id;
+          requiredRole = 'quality';
+          break;
+        }
+        case 'DELIVERY/LOGISTICS': {
+          const delivery = state.deliveries.find((item) => item.id === command.entityId);
+          if (!delivery) return failure(state, 'NOT_FOUND', 'Lieferung für die Personalzuweisung nicht gefunden.');
+          if (!['planned', 'packed', 'dispatched', 'exception'].includes(delivery.status)) return failure(state, 'INVALID_TRANSITION', 'Lieferung benötigt keine aktive Logistikzuweisung.');
+          const room = state.rooms.find((item) => item.kind === 'logistics' && item.unlocked);
+          if (!room) return failure(state, 'PRECONDITION_FAILED', 'Kein Logistikraum verfügbar.');
+          targetRoomId = room.id;
+          requiredRole = 'logistics';
+          break;
+        }
+        case 'MACHINE/MAINTENANCE': {
+          const machine = state.machines.find((item) => item.id === command.entityId);
+          if (!machine) return failure(state, 'NOT_FOUND', 'Maschine für die Wartungszuweisung nicht gefunden.');
+          if (Number(machine.condition) >= 100 && machine.status !== 'broken') return failure(state, 'INVALID_TRANSITION', 'Die Maschine benötigt aktuell keine Wartung.');
+          targetRoomId = machine.roomId;
+          requiredRole = 'maintenance';
+          break;
+        }
+        default:
+          return failure(state, 'INVALID_PAYLOAD', 'Unbekannter Aufgabencode.');
+      }
+      if (staff.role !== requiredRole) return failure(state, 'PRECONDITION_FAILED', 'Mitarbeiterrolle passt nicht zur Aufgabe.');
+      if (state.assignments.some((item) => item.entityId === command.entityId && item.taskCode === command.taskCode && (item.status === 'active' || item.status === 'queued'))) {
+        return failure(state, 'DUPLICATE_COMMAND', 'Für dieses Ziel besteht bereits eine offene Aufgabe dieses Typs.');
+      }
+      const targetRoom = state.rooms.find((item) => item.id === targetRoomId);
+      if (!targetRoom || !roomIsOperational(targetRoom)) return failure(state, 'PRECONDITION_FAILED', 'Zielraum ist nicht verfügbar.');
+      const assignment = {
+        id: command.assignmentId,
+        staffId: staff.id,
+        taskCode: command.taskCode,
+        entityId: command.entityId,
+        startedAt: state.time.totalMinutes,
+        dueAt: null,
+        progress: 0 as Score0To100,
+        status: 'active' as const,
+      };
+      const event: DomainEvent = {
+        ...eventBase(state, command, assignment.id),
+        type: 'staff.assignment_created',
+        assignmentId: assignment.id,
+        staffId: staff.id,
+        taskCode: assignment.taskCode,
+      };
+      return commit(state, command, {
+        assignments: [...state.assignments, assignment],
+        staff: state.staff.map((item) => item.id === staff.id ? { ...item, assignedRoomId: targetRoom.id, activeAssignmentId: assignment.id } : item),
+        rooms: state.rooms.map((room) => {
+          const withoutStaff = room.assignedStaffIds.filter((id) => id !== staff.id);
+          if (room.id === targetRoom.id) return { ...room, assignedStaffIds: [...new Set([...withoutStaff, staff.id])] };
+          return withoutStaff.length === room.assignedStaffIds.length ? room : { ...room, assignedStaffIds: withoutStaff };
+        }),
+      }, [event], 'STAFF_ASSIGNED', 'Mitarbeiterrolle und Zielraum geprüft; Aufgabe verbindlich zugewiesen.', [staff.id, assignment.id, command.entityId]);
+    }
+    case 'MACHINE/START_MAINTENANCE': {
+      const machine = state.machines.find((item) => item.id === command.machineId);
+      const assignment = state.assignments.find((item) => item.id === command.assignmentId);
+      const staff = assignment ? state.staff.find((item) => item.id === assignment.staffId) : undefined;
+      if (!machine || !assignment || !staff) return failure(state, 'NOT_FOUND', 'Maschine, Wartungsauftrag oder Mitarbeiter nicht gefunden.');
+      if (assignment.taskCode !== 'MACHINE/MAINTENANCE' || assignment.entityId !== machine.id || assignment.status !== 'active'
+        || staff.role !== 'maintenance' || staff.activeAssignmentId !== assignment.id) {
+        return failure(state, 'PRECONDITION_FAILED', 'Aktiver, passender Wartungsauftrag ist erforderlich.');
+      }
+      if ((machine.status !== 'idle' && machine.status !== 'broken') || (Number(machine.condition) >= 100 && machine.status !== 'broken')) {
+        return failure(state, 'INVALID_TRANSITION', 'Maschine ist nicht wartungsbereit.');
+      }
+      if (Number(staff.energy) < 10) return failure(state, 'PRECONDITION_FAILED', 'Mitarbeiterenergie reicht für die Wartung nicht aus.');
+      const room = state.rooms.find((item) => item.id === machine.roomId);
+      if (!room || !roomIsOperational(room)) return failure(state, 'PRECONDITION_FAILED', 'Maschinenraum ist nicht verfügbar.');
+      const event: DomainEvent = {
+        ...eventBase(state, command, machine.id),
+        type: 'machine.maintenance_started',
+        machineId: machine.id,
+        assignmentId: assignment.id,
+        condition: machine.condition,
+      };
+      return commit(state, command, {
+        machines: state.machines.map((item) => item.id === machine.id ? { ...item, status: 'maintenance', activeJobId: assignment.id } : item),
+      }, [event], 'MACHINE_MAINTENANCE_STARTED', 'Fiktive Maschinenwartung gestartet.', [machine.id, assignment.id, staff.id]);
+    }
+    case 'MACHINE/COMPLETE_MAINTENANCE': {
+      const machine = state.machines.find((item) => item.id === command.machineId);
+      const assignment = state.assignments.find((item) => item.id === command.assignmentId);
+      const staff = assignment ? state.staff.find((item) => item.id === assignment.staffId) : undefined;
+      if (!machine || !assignment || !staff) return failure(state, 'NOT_FOUND', 'Maschine, Wartungsauftrag oder Mitarbeiter nicht gefunden.');
+      if (machine.status !== 'maintenance' || machine.activeJobId !== assignment.id
+        || assignment.taskCode !== 'MACHINE/MAINTENANCE' || assignment.entityId !== machine.id
+        || assignment.status !== 'active' || staff.role !== 'maintenance' || staff.activeAssignmentId !== assignment.id) {
+        return failure(state, 'PRECONDITION_FAILED', 'Nur die aktive Wartung dieser Maschine kann abgeschlossen werden.');
+      }
+      if (Number(staff.energy) < 10) return failure(state, 'PRECONDITION_FAILED', 'Mitarbeiterenergie reicht zum Abschluss nicht aus.');
+      const condition = Math.min(100, Number(machine.condition) + 35) as Score0To100;
+      const completedEvent: DomainEvent = {
+        ...eventBase(state, command, machine.id, 1),
+        type: 'machine.maintenance_completed',
+        machineId: machine.id,
+        assignmentId: assignment.id,
+        condition,
+      };
+      const assignmentEvent: DomainEvent = {
+        ...eventBase(state, command, assignment.id, 2),
+        type: 'staff.assignment_completed',
+        assignmentId: assignment.id,
+        staffId: staff.id,
+        taskCode: assignment.taskCode,
+      };
+      return commit(state, command, {
+        machines: state.machines.map((item) => item.id === machine.id ? { ...item, condition, status: condition > 0 ? 'idle' : 'broken', activeJobId: null } : item),
+        assignments: state.assignments.map((item) => item.id === assignment.id ? { ...item, status: 'completed', progress: 100 as Score0To100 } : item),
+        staff: state.staff.map((item) => item.id === staff.id ? { ...item, energy: (Number(item.energy) - 10) as Score0To100, activeAssignmentId: null } : item),
+      }, [completedEvent, assignmentEvent], 'MACHINE_MAINTENANCE_COMPLETED', 'Wartung abgeschlossen; Maschinenzustand aktualisiert und Personalenergie verbucht.', [machine.id, assignment.id, staff.id]);
+    }
     case 'PLANT/ADVANCE_FICTIONAL_STEP': {
       const plant = state.plants.find((item) => item.id === command.plantId);
       if (!plant) return failure(state, 'NOT_FOUND', 'Produktionseinheit nicht gefunden.');
@@ -210,7 +424,8 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       const room = state.rooms.find((item) => item.id === command.roomId);
       if (!batch || !room) return failure(state, 'NOT_FOUND', 'Batch oder Verarbeitungsraum nicht gefunden.');
       if (batch.status !== 'created' || room.kind !== 'processing' || !room.unlocked) return failure(state, 'INVALID_TRANSITION', 'Batch oder Raum ist nicht für die Einplanung verfügbar.');
-      if (room.occupied >= room.capacity) return failure(state, 'CAPACITY_EXCEEDED', 'Der Verarbeitungsraum hat keine freie Spielkapazität.');
+      if (!roomIsOperational(room)) return failure(state, 'PRECONDITION_FAILED', 'Der Verarbeitungsraum ist nicht betriebsbereit.');
+      if (!hasRoomCapacity(room, 1)) return failure(state, 'CAPACITY_EXCEEDED', 'Der Verarbeitungsraum hat keine freie Spielkapazität.');
       if (isBlocked(state, 'BATCH/QUEUE')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren diesen Vorgang.');
       const event: DomainEvent = { ...eventBase(state, command, batch.id), type: 'batch.queued', batchId: batch.id };
       const updated = withTrace({ ...batch, status: 'queued', currentRoomId: room.id, updatedAt: state.time.totalMinutes }, event, command.actorId, 'BATCH_QUEUED', [room.id]);
@@ -224,6 +439,10 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       const machine = state.machines.find((item) => item.id === command.machineId);
       if (!batch || !machine) return failure(state, 'NOT_FOUND', 'Batch oder Anlage nicht gefunden.');
       if (batch.status !== 'queued' || machine.status !== 'idle' || machine.roomId !== batch.currentRoomId) return failure(state, 'INVALID_TRANSITION', 'Batch und Anlage sind nicht startbereit.');
+      const processingRoom = state.rooms.find((item) => item.id === batch.currentRoomId);
+      if (!processingRoom || !roomIsOperational(processingRoom) || Number(processingRoom.condition) < 20 || Number(machine.condition) < 20) {
+        return failure(state, 'PRECONDITION_FAILED', 'Maschine oder Verarbeitungsraum benötigt Wartung bzw. ist nicht verfügbar.');
+      }
       if (isBlocked(state, 'BATCH/START_PROCESSING')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren die Verarbeitung.');
       const event: DomainEvent = { ...eventBase(state, command, batch.id), type: 'batch.processing_started', batchId: batch.id };
       const updated = withTrace({ ...batch, status: 'processing', updatedAt: state.time.totalMinutes }, event, command.actorId, 'BATCH_PROCESSING_STARTED', [machine.id]);
@@ -240,7 +459,8 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       const processingRoom = state.rooms.find((item) => item.id === batch.currentRoomId);
       const assessor = state.staff.find((item) => item.role === 'quality');
       if (!qualityRoom || !processingRoom || !assessor) return failure(state, 'PRECONDITION_FAILED', 'Qualitätssicherung ist nicht verfügbar.');
-      if (qualityRoom.occupied >= qualityRoom.capacity) return failure(state, 'CAPACITY_EXCEEDED', 'Die Qualitätssicherung hat keine freie Spielkapazität.');
+      if (!roomIsOperational(qualityRoom)) return failure(state, 'PRECONDITION_FAILED', 'Qualitätssicherung ist nicht betriebsbereit.');
+      if (!hasRoomCapacity(qualityRoom, 1)) return failure(state, 'CAPACITY_EXCEEDED', 'Die Qualitätssicherung hat keine freie Spielkapazität.');
       const scoreValue = qualityScoreFor(state, batch);
       const traceComplete = hasCompleteTrace(state, batch);
       const decision: QualityAssessment['decision'] = scoreValue >= 75 && traceComplete ? 'pass' : scoreValue >= 60 ? 'review' : 'fail';
@@ -283,7 +503,8 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       if (!gate.ok) return failure(state, gate.error, 'Die Qualitäts-, Rückverfolgbarkeits- oder Compliance-Freigabe wurde nicht bestanden.');
       const storageRoom = state.rooms.find((room) => room.kind === 'storage' && room.unlocked);
       if (!storageRoom) return failure(state, 'PRECONDITION_FAILED', 'Kein freigegebenes Lager verfügbar.');
-      if (storageRoom.occupied + batch.quantity > storageRoom.capacity) return failure(state, 'CAPACITY_EXCEEDED', 'Das freigegebene Lager hat nicht genug Kapazität.');
+      if (!roomIsOperational(storageRoom)) return failure(state, 'PRECONDITION_FAILED', 'Das freigegebene Lager ist nicht betriebsbereit.');
+      if (!hasRoomCapacity(storageRoom, batch.quantity)) return failure(state, 'CAPACITY_EXCEEDED', 'Das freigegebene Lager hat nicht genug Kapazität.');
       const lotId = entityId('inventory-' + batch.id);
       if (state.inventoryLots.some((lot) => lot.id === lotId)) return failure(state, 'DUPLICATE_COMMAND', 'Bestandslos existiert bereits.');
       const lot: InventoryLotState = {

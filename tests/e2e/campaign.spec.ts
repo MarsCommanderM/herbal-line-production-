@@ -52,7 +52,70 @@ test('operations dashboard exposes queues, room capacity, and keyboard-usable ac
   await expect(page.locator('#save-status')).toContainText('Spielstand gespeichert · Revision 0');
 });
 
-test('management loop completes through QC release, dispatch, and revenue posting in the browser', async ({ page }) => {
+test('facility purchase and machine maintenance preserve capacity, assignment, ledger, and save invariants', async ({ page }) => {
+  await page.goto('/');
+  const runAction = async (label: string, revision: number): Promise<void> => {
+    await page.getByRole('button', { name: label, exact: true }).click();
+    await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision ' + revision);
+  };
+
+  await runAction('Kleinen Produktionsraum kaufen', 1);
+  await expect(page.locator('#operations-queues')).toContainText('Erweiterter Produktionsraum');
+  await expect(page.locator('#operations-queues')).toContainText('0 / 6 Plätze belegt');
+  await runAction('Wartungsauftrag zuweisen', 2);
+  await runAction('Wartung starten', 3);
+  await expect(page.locator('#operations-queues')).toContainText('maintenance');
+  await runAction('Wartung abschließen', 4);
+  await expect(page.locator('#operations-queues')).toContainText('Zustand 100 / 100');
+
+  const saved = await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line-saves', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    return await new Promise<{ revision: number; roomCount: number; expansionCapacity: number; machineStatus: string; machineCondition: number; assignmentStatus: string; staffEnergy: number; investmentCount: number }>((resolve, reject) => {
+      const transaction = database.transaction('slots', 'readonly');
+      const request = transaction.objectStore('slots').get('autosave');
+      request.onsuccess = () => {
+        const envelope = (request.result as { envelope: { revision: number; payload: {
+          rooms: Array<{ definitionId: string; capacity: number }>;
+          machines: Array<{ id: string; status: string; condition: number }>;
+          assignments: Array<{ taskCode: string; status: string }>;
+          staff: Array<{ role: string; energy: number }>;
+          economy: { ledger: Array<{ account: string; reasonCode: string }> };
+        } } }).envelope;
+        database.close();
+        resolve({
+          revision: envelope.revision,
+          roomCount: envelope.payload.rooms.length,
+          expansionCapacity: envelope.payload.rooms.find((room) => room.definitionId === 'production_room_small')?.capacity ?? 0,
+          machineStatus: envelope.payload.machines.find((machine) => machine.id === 'machine-processing-001')?.status ?? 'missing',
+          machineCondition: envelope.payload.machines.find((machine) => machine.id === 'machine-processing-001')?.condition ?? -1,
+          assignmentStatus: envelope.payload.assignments.find((assignment) => assignment.taskCode === 'MACHINE/MAINTENANCE')?.status ?? 'missing',
+          staffEnergy: envelope.payload.staff.find((staff) => staff.role === 'maintenance')?.energy ?? -1,
+          investmentCount: envelope.payload.economy.ledger.filter((entry) => entry.account === 'investment' && entry.reasonCode === 'room.purchase').length,
+        });
+      };
+      request.onerror = () => { database.close(); reject(request.error); };
+    });
+  });
+  expect(saved.revision).toBe(4);
+  expect(saved.roomCount).toBe(6);
+  expect(saved.expansionCapacity).toBe(6);
+  expect(saved.machineStatus).toBe('idle');
+  expect(saved.machineCondition).toBe(100);
+  expect(saved.assignmentStatus).toBe('completed');
+  expect(saved.staffEnergy).toBe(85);
+  expect(saved.investmentCount).toBe(1);
+
+  await page.reload();
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision 4');
+  await expect(page.locator('#operations-queues')).toContainText('Erweiterter Produktionsraum');
+  await expect(page.locator('#operations-queues')).toContainText('Zustand 100 / 100');
+});
+
+test('management loop completes through QC release, dispatch, and revenue posting in the browser', async ({ page }) =>
   test.setTimeout(120_000);
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();

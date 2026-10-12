@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { CommandId, EntityId, Score0To100 } from '../../contracts/domain';
+import type { CommandId, EntityId, MoneyCents, Score0To100 } from '../../contracts/domain';
 import type { VerticalSliceCommand } from './vertical-slice';
 import { createInitialGameState } from './initial-state';
 import { applyVerticalSliceCommand, getCampaignBalance } from './vertical-slice';
@@ -33,6 +33,18 @@ function applyOk(
   expect(result.ok).toBe(true);
   if (!result.ok) throw new Error(result.error.message);
   return result.state;
+}
+
+function progressToCreatedBatch() {
+  let state = createInitialGameState();
+  state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+  state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+  state = applyOk(state, 'BATCH/CREATE', {
+    batchId: entity('batch-001'),
+    plantIds: [entity('plant-001')],
+    profileId: 'fictional-botanical-batch',
+  });
+  return state;
 }
 
 function progressToReleasedInventory() {
@@ -147,6 +159,127 @@ describe('botanical operations vertical slice', () => {
     expect(result.state.inventoryLots[0]?.quantityReserved).toBe(0);
     expect(result.state.orders[0]?.status).toBe('accepted');
   });
+  it('purchases a known room atomically and records the investment in the ledger', () => {
+    const initial = createInitialGameState();
+    const result = dispatch(initial, 'ROOM/PURCHASE', {
+      roomId: entity('room-expansion-001'), definitionId: 'production_room_small',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.error.message);
+    const room = result.state.rooms.find((item) => item.id === entity('room-expansion-001'));
+    expect(room).toMatchObject({ definitionId: 'production_room_small', kind: 'production', capacity: 6, occupied: 0, unlocked: true });
+    expect(result.state.economy.ledger).toHaveLength(1);
+    expect(result.state.economy.ledger[0]).toMatchObject({
+      account: 'investment', amountCents: 200_000, referenceId: entity('room-expansion-001'),
+      idempotencyKey: 'room:room-expansion-001:purchase',
+    });
+    expect(getCampaignBalance(result.state)).toBe(24_800_000);
+    expect(result.events.map((event) => event.type)).toEqual(['room.purchased']);
+
+    const duplicate = dispatch(result.state, 'ROOM/PURCHASE', {
+      roomId: entity('room-expansion-001'), definitionId: 'production_room_small',
+    });
+    expect(duplicate.ok).toBe(false);
+    if (duplicate.ok) throw new Error('Duplicate room purchase should be rejected.');
+    expect(duplicate.error.code).toBe('DUPLICATE_COMMAND');
+    expect(duplicate.state).toBe(result.state);
+  });
+
+  it('rejects unknown room definitions and unaffordable purchases without mutating state', () => {
+    const initial = createInitialGameState();
+    const unknown = dispatch(initial, 'ROOM/PURCHASE', {
+      roomId: entity('room-expansion-001'), definitionId: 'unlisted-room',
+    });
+    expect(unknown.ok).toBe(false);
+    if (unknown.ok) throw new Error('Unknown room definition should be rejected.');
+    expect(unknown.error.code).toBe('INVALID_PAYLOAD');
+    expect(unknown.state).toBe(initial);
+
+    const lowFunds = { ...initial, economy: { ...initial.economy, openingBalanceCents: 1_000 as MoneyCents } };
+    const unaffordable = dispatch(lowFunds, 'ROOM/PURCHASE', {
+      roomId: entity('room-expansion-001'), definitionId: 'production_room_small',
+    });
+    expect(unaffordable.ok).toBe(false);
+    if (unaffordable.ok) throw new Error('Unaffordable room purchase should be rejected.');
+    expect(unaffordable.error.code).toBe('INSUFFICIENT_FUNDS');
+    expect(unaffordable.state).toBe(lowFunds);
+    expect(unaffordable.state.economy.ledger).toHaveLength(0);
+  });
+
+  it('enforces room capacity bounds before queueing a batch', () => {
+    const initial = progressToCreatedBatch();
+    const full = {
+      ...initial,
+      rooms: initial.rooms.map((room) => room.id === entity('room-processing-01') ? { ...room, occupied: room.capacity } : room),
+    };
+    const result = dispatch(full, 'BATCH/QUEUE', { batchId: entity('batch-001'), roomId: entity('room-processing-01') });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Full room should reject a new batch.');
+    expect(result.error.code).toBe('CAPACITY_EXCEEDED');
+    expect(result.state).toBe(full);
+  });
+
+  it('requires an operational room and machine before processing can start', () => {
+    let state = progressToCreatedBatch();
+    state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-001'), roomId: entity('room-processing-01') });
+    const degraded = { ...state, machines: state.machines.map((machine) => ({ ...machine, condition: 10 as Score0To100 })) };
+    const result = dispatch(degraded, 'BATCH/START_PROCESSING', {
+      batchId: entity('batch-001'), machineId: entity('machine-processing-001'),
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Degraded machine should not start processing.');
+    expect(result.error.code).toBe('PRECONDITION_FAILED');
+    expect(result.state).toBe(degraded);
+    expect(result.state.machines[0]?.status).toBe('idle');
+  });
+
+  it('enforces maintenance role, exclusive assignment, and a complete maintenance lifecycle', () => {
+    const initial = createInitialGameState();
+    const wrongRole = dispatch(initial, 'STAFF/ASSIGN', {
+      assignmentId: entity('assignment-wrong-role'), staffId: entity('staff-operations-001'),
+      taskCode: 'MACHINE/MAINTENANCE', entityId: entity('machine-processing-001'),
+    });
+    expect(wrongRole.ok).toBe(false);
+    if (wrongRole.ok) throw new Error('Operations staff must not receive maintenance work.');
+    expect(wrongRole.error.code).toBe('PRECONDITION_FAILED');
+    expect(wrongRole.state).toBe(initial);
+
+    const assigned = dispatch(initial, 'STAFF/ASSIGN', {
+      assignmentId: entity('assignment-maintenance-001'), staffId: entity('staff-maintenance-001'),
+      taskCode: 'MACHINE/MAINTENANCE', entityId: entity('machine-processing-001'),
+    });
+    expect(assigned.ok).toBe(true);
+    if (!assigned.ok) throw new Error(assigned.error.message);
+    expect(assigned.state.staff.find((item) => item.id === entity('staff-maintenance-001'))?.activeAssignmentId).toBe(entity('assignment-maintenance-001'));
+    expect(assigned.state.rooms.find((item) => item.id === entity('room-processing-01'))?.assignedStaffIds).toContain(entity('staff-maintenance-001'));
+
+    const doubleAssigned = dispatch(assigned.state, 'STAFF/ASSIGN', {
+      assignmentId: entity('assignment-maintenance-002'), staffId: entity('staff-maintenance-001'),
+      taskCode: 'MACHINE/MAINTENANCE', entityId: entity('machine-processing-001'),
+    });
+    expect(doubleAssigned.ok).toBe(false);
+    if (doubleAssigned.ok) throw new Error('Staff with an active assignment must not be double-assigned.');
+    expect(doubleAssigned.error.code).toBe('PRECONDITION_FAILED');
+    expect(doubleAssigned.state).toBe(assigned.state);
+
+    const started = dispatch(assigned.state, 'MACHINE/START_MAINTENANCE', {
+      machineId: entity('machine-processing-001'), assignmentId: entity('assignment-maintenance-001'),
+    });
+    expect(started.ok).toBe(true);
+    if (!started.ok) throw new Error(started.error.message);
+    expect(started.state.machines[0]?.status).toBe('maintenance');
+
+    const completed = dispatch(started.state, 'MACHINE/COMPLETE_MAINTENANCE', {
+      machineId: entity('machine-processing-001'), assignmentId: entity('assignment-maintenance-001'),
+    });
+    expect(completed.ok).toBe(true);
+    if (!completed.ok) throw new Error(completed.error.message);
+    expect(completed.state.machines[0]).toMatchObject({ status: 'idle', condition: 100, activeJobId: null });
+    expect(completed.state.staff.find((item) => item.id === entity('staff-maintenance-001'))).toMatchObject({ energy: 85, activeAssignmentId: null });
+    expect(completed.state.assignments[0]).toMatchObject({ status: 'completed', progress: 100 });
+    expect(completed.events.map((event) => event.type)).toEqual(['machine.maintenance_completed', 'staff.assignment_completed']);
+  });
+
   it('requires corrective action and a clean audit before clearing a severe compliance block', () => {
     const recorded = dispatch(createInitialGameState(), 'COMPLIANCE/RECORD_VIOLATION', {
       violationId: entity('violation-simulated-001'), code: 'SIMULATED_TRACE_GAP', severity: 'high',

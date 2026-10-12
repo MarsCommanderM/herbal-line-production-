@@ -39,7 +39,7 @@ export function createInitialGameState(): GameState {
     player: { id: playerId, callsign: 'Operations Director', level: 1, experience: 0 },
     reputation: reputation(240),
     rooms: [
-      { id: productionRoomId, definitionId: 'room-production', displayName: 'Pflanzenraum', kind: 'production', capacity: 12, occupied: 1, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 3, unlocked: true, assignedStaffIds: [], assignedMachineIds: [] },
+      { id: productionRoomId, definitionId: 'room-production', displayName: 'Pflanzenraum', kind: 'production', capacity: 12, occupied: 1, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 3, unlocked: true, assignedStaffIds: [entityId('staff-operations-001')], assignedMachineIds: [] },
       { id: processingRoomId, definitionId: 'room-processing', displayName: 'Verarbeitung', kind: 'processing', capacity: 4, occupied: 0, condition: score(95), cleanliness: score(96), availability: score(97), powerUnitsPerHour: 2, unlocked: true, assignedStaffIds: [], assignedMachineIds: [entityId('machine-processing-001')] },
       { id: qualityRoomId, definitionId: 'room-quality', displayName: 'Qualitätssicherung', kind: 'quality', capacity: 2, occupied: 0, condition: score(98), cleanliness: score(99), availability: score(99), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [entityId('staff-quality-001')], assignedMachineIds: [] },
       { id: storageRoomId, definitionId: 'room-storage', displayName: 'Freigegebenes Lager', kind: 'storage', capacity: 40, occupied: 0, condition: score(97), cleanliness: score(98), availability: score(99), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [], assignedMachineIds: [] },
@@ -65,6 +65,7 @@ export function createInitialGameState(): GameState {
       { id: entityId('staff-operations-001'), profileId: 'operations-generalist', displayName: 'Mara Weiss', role: 'operations', skill: score(84), energy: score(95), morale: score(88), wageCentsPerDay: cents(14500), assignedRoomId: productionRoomId, activeAssignmentId: null },
       { id: entityId('staff-quality-001'), profileId: 'quality-specialist', displayName: 'Jonas Berg', role: 'quality', skill: score(91), energy: score(92), morale: score(90), wageCentsPerDay: cents(17500), assignedRoomId: qualityRoomId, activeAssignmentId: null },
       { id: entityId('staff-logistics-001'), profileId: 'logistics-coordinator', displayName: 'Lea König', role: 'logistics', skill: score(87), energy: score(94), morale: score(89), wageCentsPerDay: cents(15500), assignedRoomId: logisticsRoomId, activeAssignmentId: null },
+      { id: entityId('staff-maintenance-001'), profileId: 'maintenance-specialist', displayName: 'Nora Weiss', role: 'maintenance', skill: score(82), energy: score(95), morale: score(86), wageCentsPerDay: cents(16000), assignedRoomId: null, activeAssignmentId: null },
     ],
     assignments: [],
     machines: [

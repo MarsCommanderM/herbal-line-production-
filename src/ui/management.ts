@@ -1,5 +1,5 @@
 import type { EntityId, GameState } from '../../contracts/domain';
-import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
+import { getCampaignBalance, ROOM_CATALOG, type VerticalSliceCommand } from '../domain/vertical-slice';
 
 type Action = {
   label: string;
@@ -51,6 +51,56 @@ function availableActions(state: GameState): Action[] {
   } else if (order && order.status === 'shipped' && order.deliveryId) {
     actions.push({ label: 'Wareneingang bestätigen', detail: 'Den Empfang idempotent bestätigen und den Umsatz einmalig verbuchen.', type: 'DELIVERY/CONFIRM', payload: { deliveryId: order.deliveryId, proofCode: 'RX-ACK-001' } });
   }
+  const expansion = ROOM_CATALOG.find((item) => item.definitionId === 'production_room_small');
+  if (expansion && !state.rooms.some((room) => room.definitionId === expansion.definitionId)
+    && getCampaignBalance(state) >= expansion.costCents) {
+    actions.push({
+      label: 'Kleinen Produktionsraum kaufen',
+      detail: 'Eine definierte Raum-Erweiterung als Investition erwerben; Budget und Raum-ID werden geprüft.',
+      type: 'ROOM/PURCHASE',
+      payload: { roomId: entityId('room-production-expansion-001'), definitionId: expansion.definitionId },
+    });
+  }
+
+  const maintenanceMachine = state.machines.find((machine) => Number(machine.condition) < 100 || machine.status === 'broken');
+  if (maintenanceMachine) {
+    const maintenanceAssignment = state.assignments.find((assignment) =>
+      assignment.taskCode === 'MACHINE/MAINTENANCE'
+      && assignment.entityId === maintenanceMachine.id
+      && assignment.status === 'active',
+    );
+    if (maintenanceAssignment && maintenanceMachine.status === 'maintenance') {
+      actions.push({
+        label: 'Wartung abschließen',
+        detail: 'Die aktive Wartung abschließen, den Maschinenzustand verbessern und Personalenergie verbuchen.',
+        type: 'MACHINE/COMPLETE_MAINTENANCE',
+        payload: { machineId: maintenanceMachine.id, assignmentId: maintenanceAssignment.id },
+      });
+    } else if (maintenanceAssignment) {
+      actions.push({
+        label: 'Wartung starten',
+        detail: 'Maschine und Wartungszuweisung prüfen, bevor die Anlage in den Wartungszustand wechselt.',
+        type: 'MACHINE/START_MAINTENANCE',
+        payload: { machineId: maintenanceMachine.id, assignmentId: maintenanceAssignment.id },
+      });
+    } else {
+      const availableTechnician = state.staff.find((staff) => staff.role === 'maintenance' && staff.activeAssignmentId === null);
+      if (availableTechnician) {
+        actions.push({
+          label: 'Wartungsauftrag zuweisen',
+          detail: 'Einen verfügbaren Wartungsspezialisten exklusiv dieser Maschine zuweisen.',
+          type: 'STAFF/ASSIGN',
+          payload: {
+            assignmentId: entityId('assignment-maintenance-' + (state.revision + 1)),
+            staffId: availableTechnician.id,
+            taskCode: 'MACHINE/MAINTENANCE',
+            entityId: maintenanceMachine.id,
+          },
+        });
+      }
+    }
+  }
+
   const openViolation = state.compliance.violations.find((item) => item.resolvedAt === null);
   if (openViolation) {
     actions.push({
