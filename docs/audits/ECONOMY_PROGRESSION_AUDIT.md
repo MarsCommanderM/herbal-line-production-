@@ -4,7 +4,7 @@
 
 - Original archive: `Herbal-Line-Production-Master-Pack.zip`, SHA-256 `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`.
 - Canonical `docs/07_DATA_AND_RULES_CATALOG.md`: exact archive blob `35b2f9611f47489cea1c2c50e3dab1c4d2e36ddb`.
-- Canonical `contracts/domain.ts` and `contracts/commands.ts` are still not restored to their expected archive blobs on this branch; the findings below distinguish pack requirements from the currently implemented contract.
+- Original runtime-source contracts are preserved under `masterpack/canonical/contracts/`. Active contracts intentionally include runtime extensions for saved quality assessments, compliance recovery and visible plant care; those extensions must remain explicit and tested.
 
 ## Findings
 
@@ -17,16 +17,15 @@
 - The canonical command contract includes `UPGRADE/PURCHASE`; the canonical state contract models `UpgradeState` as `id`, `unlocked`, and `purchasedAt`.
 - The canonical economy rules require cent-based accounting, one idempotent ledger entry per booking, sufficient-funds checks, revenue only on successful delivery, and ledger-derived totals.
 
-**Current implementation evidence**
-- `src/domain/upgrades.ts` instead defines `energy-efficiency-1` and `energy-efficiency-2`.
-- It assigns purchase costs of 250,000 and 150,000 cents, utility reductions of 20% and 10%, and a prerequisite from upgrade 2 to upgrade 1.
-- `src/domain/vertical-slice.ts` applies those costs to the ledger and hardcodes a 20% cost-reduction statement in the purchase log.
-- These IDs, prices, effects and prerequisite rules are not supported by the inspected canonical pack. They must not be presented as owner-approved balance values.
+**Previous implementation finding and current disposition**
+- The previous implementation had `energy-efficiency-1/2`, prices of 250,000/150,000 cents, 20%/10% cost reductions and a prerequisite not supported by the canonical pack.
+- Those active definitions have now been removed from the upgrade catalog. The catalog is intentionally empty; source-listed `sensor_pack_1` and `drying_rack_1` IDs remain locked and unbuyable until their fictional prices/effects/unlocks receive an authoritative balance definition.
+- Domain tests now require unconfigured/legacy upgrade purchase attempts to fail atomically without adding a ledger entry. The full current-commit CI run is still required to accept this change.
 
 **Disposition**
 - Do not invent replacement prices, percentages, prerequisites or unlock conditions.
 - Preserve the existing ledger/idempotency patterns where compatible.
-- Reconcile the upgrade content to the canonical IDs. Keep any upgrade unavailable or explicitly unconfigured until its missing balance values/effects are supported by an approved source; do not silently retain the energy-efficiency design as if canonical.
+- Keep the source-listed upgrade IDs unavailable until an approved balance table defines prices, effects, prerequisites and unlock criteria. Do not silently bring back the removed energy-efficiency prices or percentages.
 
 ### HL-024 / Economy and progression balancing
 

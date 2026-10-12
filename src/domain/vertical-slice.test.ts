@@ -266,54 +266,16 @@ describe('medical cannabis operations vertical slice', () => {
     expect(repeated.state.economy.ledger).toHaveLength(3);
   });
 
-  it('purchases the energy-efficiency upgrade atomically and prevents duplicate investment', () => {
+  it('keeps upgrades unavailable until their fictional balance definitions are approved', () => {
     const initial = createInitialGameState();
-    const result = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error(result.error.message);
-
-    expect(result.state.upgrades.find((item) => item.id === 'energy-efficiency-1')?.purchasedAt).toBe(0);
-    expect(result.state.upgrades.find((item) => item.id === 'energy-efficiency-2')?.unlocked).toBe(true);
-    expect(result.state.economy.ledger).toHaveLength(1);
-    expect(result.state.economy.ledger[0]?.account).toBe('investment');
-    expect(result.state.economy.ledger[0]?.amountCents).toBe(250_000);
-    expect(getCampaignBalance(result.state)).toBe(24_750_000);
-    expect(result.events.map((event) => event.type)).toEqual(['upgrade.purchased', 'finance.ledger_posted']);
-
-    const repeated = dispatch(result.state, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
-    expect(repeated.ok).toBe(false);
-    if (repeated.ok) throw new Error('An upgrade cannot be purchased twice.');
-    expect(repeated.error.code).toBe('INVALID_TRANSITION');
-    expect(repeated.state.economy.ledger).toHaveLength(1);
-
-    const secondPurchase = dispatch(result.state, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-2' });
-    expect(secondPurchase.ok).toBe(true);
-    if (!secondPurchase.ok) throw new Error(secondPurchase.error.message);
-    expect(secondPurchase.state.upgrades.find((item) => item.id === 'energy-efficiency-2')?.purchasedAt).toBe(0);
-    expect(secondPurchase.state.economy.ledger).toHaveLength(2);
-    expect(getCampaignBalance(secondPurchase.state)).toBe(24_600_000);
-  });
-
-  it('rejects unaffordable or unknown upgrades without changing the campaign', () => {
-    const initial = createInitialGameState();
-    const lowFunds = { ...initial, economy: { ...initial.economy, openingBalanceCents: 100 as typeof initial.economy.openingBalanceCents } };
-    const unaffordable = dispatch(lowFunds, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
-    expect(unaffordable.ok).toBe(false);
-    if (unaffordable.ok) throw new Error('Insufficient funds must block an upgrade purchase.');
-    expect(unaffordable.error.code).toBe('INSUFFICIENT_FUNDS');
-    expect(unaffordable.state).toBe(lowFunds);
-
-    const locked = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-2' });
-    expect(locked.ok).toBe(false);
-    if (locked.ok) throw new Error('A dependent upgrade must remain locked until its prerequisite is purchased.');
-    expect(locked.error.code).toBe('PRECONDITION_FAILED');
-    expect(locked.state).toBe(initial);
-
-    const unknown = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: '__proto__' });
-    expect(unknown.ok).toBe(false);
-    if (unknown.ok) throw new Error('Unknown upgrade IDs must be rejected.');
-    expect(unknown.error.code).toBe('NOT_FOUND');
-    expect(unknown.state).toBe(initial);
+    for (const upgradeId of ['sensor_pack_1', 'drying_rack_1', 'energy-efficiency-1', 'energy-efficiency-2']) {
+      const result = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId });
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error('An upgrade without an approved balance definition must not be purchasable.');
+      expect(result.error.code).toBe('NOT_FOUND');
+      expect(result.state).toBe(initial);
+      expect(result.state.economy.ledger).toEqual([]);
+    }
   });
 
   it('ends a campaign day, advances to the next 08:00, and posts wages and utilities once', () => {

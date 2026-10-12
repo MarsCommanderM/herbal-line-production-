@@ -104,6 +104,14 @@ for (const file of uiFiles) {
   }
 }
 
+const upgradeSource = read('src/domain/upgrades.ts');
+if (!/ECONOMY_UPGRADES:\\s*readonly EconomyUpgradeDefinition\\[\\]\\s*=\\s*\\[\\]/.test(upgradeSource)) {
+  failures.push('Unapproved upgrade prices/effects must not be active in the economy catalog.');
+}
+if (/energy-efficiency-[12]/i.test(upgradeSource)) {
+  failures.push('Legacy unapproved energy-efficiency upgrade definitions remain active.');
+}
+
 const actionContracts = read('contracts/commands.ts') + read('contracts/domain.ts');
 for (const action of ['water', 'light', 'temperature', 'humidity', 'nutrients', 'prune', 'take_cutting', 'set_cutting']) {
   if (!actionContracts.includes(action)) failures.push('Runtime contracts are missing the fictional plant-care action "' + action + '".');

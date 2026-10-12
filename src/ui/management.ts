@@ -379,6 +379,14 @@ export function renderManagementUI(
     actionsRoot.append(detail);
   }
 
+  if (ECONOMY_UPGRADES.length === 0) {
+    const upgradeNotice = document.createElement('p');
+    upgradeNotice.className = 'action-detail upgrade-policy-notice';
+    upgradeNotice.setAttribute('role', 'note');
+    upgradeNotice.textContent = 'Upgrades derzeit nicht verfügbar: Für sensor_pack_1 und drying_rack_1 sind noch keine bestätigten fiktiven Preise oder Wirkungen definiert. Es werden daher keine unbestätigten Upgrades angeboten.';
+    actionsRoot.append(upgradeNotice);
+  }
+
   logRoot.replaceChildren();
   for (const entry of [...state.logs].slice(-5).reverse()) {
     const item = document.createElement('article');

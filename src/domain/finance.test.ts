@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EconomyState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
 import { calculateDailyOperatingCosts, createDailyOperatingLedgerEntries, getBalanceCents, getCashRunwayDays, getFinancialHealth, getLedgerTotals, projectCampaignBalance } from './finance';
-import { ENERGY_EFFICIENCY_UPGRADE_2_ID, ENERGY_EFFICIENCY_UPGRADE_ID } from './upgrades';
+import { DRYING_RACK_UPGRADE_ID, ECONOMY_UPGRADES, getEconomyUpgradeDefinition, SENSOR_PACK_UPGRADE_ID } from './upgrades';
 import { createInitialGameState } from './initial-state';
 
 const id = (value: string) => value as EntityId;
@@ -76,36 +76,19 @@ describe('ledger-derived finance', () => {
     expect(createDailyOperatingLedgerEntries(withPostings, 2, minute(2880))).toHaveLength(2);
   });
 
-  it('applies the purchased energy-efficiency upgrade to utility costs only', () => {
+  it('keeps upgrades inactive until approved fictional prices and effects are configured', () => {
     const state = createInitialGameState();
-    const upgrade = {
-      ...state,
-      upgrades: state.upgrades.map((item) => item.id === ENERGY_EFFICIENCY_UPGRADE_ID
-        ? { ...item, purchasedAt: minute(0) }
-        : item),
-    };
-    expect(calculateDailyOperatingCosts(upgrade)).toEqual({
-      staffWagesCents: 64_000,
-      utilitiesCents: 19_200,
-      totalCents: 83_200,
-    });
-  });
+    const baseCosts = calculateDailyOperatingCosts(state);
+    expect(baseCosts).toEqual({ staffWagesCents: 64_000, utilitiesCents: 24_000, totalCents: 88_000 });
+    expect(ECONOMY_UPGRADES).toEqual([]);
+    expect(getEconomyUpgradeDefinition(SENSOR_PACK_UPGRADE_ID)).toBeUndefined();
+    expect(getEconomyUpgradeDefinition(DRYING_RACK_UPGRADE_ID)).toBeUndefined();
 
-  it('applies both efficiency tiers in catalog order with deterministic cent rounding', () => {
-    const state = createInitialGameState();
-    const upgraded = {
+    const legacyOrInjectedPurchase = {
       ...state,
-      upgrades: state.upgrades.map((item) => {
-        if (item.id === ENERGY_EFFICIENCY_UPGRADE_ID) return { ...item, purchasedAt: minute(0) };
-        if (item.id === ENERGY_EFFICIENCY_UPGRADE_2_ID) return { ...item, unlocked: true, purchasedAt: minute(0) };
-        return item;
-      }),
+      upgrades: state.upgrades.map((item) => ({ ...item, unlocked: true, purchasedAt: minute(0) })),
     };
-    expect(calculateDailyOperatingCosts(upgraded)).toEqual({
-      staffWagesCents: 64_000,
-      utilitiesCents: 17_280,
-      totalCents: 81_280,
-    });
+    expect(calculateDailyOperatingCosts(legacyOrInjectedPurchase)).toEqual(baseCosts);
   });
 
   it('classifies campaign financial health using balance and runway', () => {

@@ -268,7 +268,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
             read: false,
           }],
         },
-      }, [upgradeEvent, ledgerEvent], 'ECONOMY_UPGRADE_PURCHASED', definition.label + ' gekauft; die Energiekosten sinken dauerhaft um 20 Prozent.', [state.player.id, ledgerEntry.id, entityId('upgrade-' + definition.id)]);
+      }, [upgradeEvent, ledgerEvent], 'ECONOMY_UPGRADE_PURCHASED', definition.label + ' gekauft. ' + definition.description, [state.player.id, ledgerEntry.id, entityId('upgrade-' + definition.id)]);
     }
     case 'TIME/END_DAY': {
       if (!Number.isSafeInteger(state.time.minuteOfDay) || state.time.minuteOfDay < 0 || state.time.minuteOfDay >= 1440) {
