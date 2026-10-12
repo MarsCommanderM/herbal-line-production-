@@ -44,3 +44,10 @@ Layer: Raum-Ambience, Maschinen/Facility-Beds, UI-Feedback, Alerts, Musik. Lauts
 ## 6. Visuelle Abnahme
 
 Ein Feature ist visuell erst fertig, wenn: finaler Asset-Pfad geladen ist, Materialien plausibel wirken, die Szene bei Zielauflösung/DPR getestet ist, UI-Layouts bei vereinbarten Mindestmaßen funktionieren, Kontrast/Lesbarkeit dokumentiert sind, Assets optimiert wurden, keine Error-Console-Fehler auftreten und Screenshots/Videos aus dem echten Build die Abnahme belegen.
+
+
+## Cannabis-Anlage und Interaktionssichtbarkeit
+
+Die Umgebung muss eindeutig als professionelle medizinische Cannabis-Pflanzenproduktion lesbar sein. Referenzrichtung: großflächige, helle Indoor-Anlage mit Reihen erkennbarer Cannabis-Pflanzen, sichtbaren Lampen, Bewässerungsleitungen, Klima-/Lüftungstechnik und funktionalen Arbeitswegen. Keine Umbenennung in Kräuter-/Botanik-Simulation und keine neutralen Pflanzenmodelle als Ersatz für Cannabis.
+
+Pflege ist eine räumliche, visuelle Interaktion: Spieler wählt eine Pflanze oder Gruppe in der 3D-Welt, öffnet ein kontextbezogenes Pflege-Overlay und löst die passende Spielaktion aus. Animation/Feedback zeigt beispielsweise Bewässerung, Lichtwechsel, Klimaänderung, Nährstoffgabe, Schnitt oder Stecklingsaktion. Zustand und Folgen werden am betroffenen Objekt sichtbar und zusätzlich barrierearm im UI erklärt. Diese Darstellungen verwenden nur fiktive Spielwerte, keine realen Produktionsvorgaben.
