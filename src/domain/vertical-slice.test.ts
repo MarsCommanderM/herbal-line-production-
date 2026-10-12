@@ -181,6 +181,45 @@ describe('botanical operations vertical slice', () => {
     expect(duplicate.error.code).toBe('INVALID_TRANSITION');
   });
 
+  it('starts and completes machine maintenance with a bounded condition increase', () => {
+    const initial = createInitialGameState();
+    const machine = initial.machines[0];
+    if (!machine) throw new Error('Initial machine fixture is missing.');
+    const wornState = {
+      ...initial,
+      machines: initial.machines.map((item) => item.id === machine.id ? { ...item, condition: 60 as Score0To100 } : item),
+    };
+
+    const started = applyOk(wornState, 'MACHINE/START_MAINTENANCE', { machineId: machine.id });
+    const inMaintenance = started.machines.find((item) => item.id === machine.id);
+    expect(inMaintenance?.status).toBe('maintenance');
+    expect(inMaintenance?.activeJobId).toBeNull();
+    expect(started).toMatchObject({ revision: initial.revision + 1 });
+    expect(validateGameStateInvariants(started)).toEqual([]);
+
+    const completed = applyOk(started, 'MACHINE/COMPLETE_MAINTENANCE', { machineId: machine.id });
+    const restored = completed.machines.find((item) => item.id === machine.id);
+    expect(restored?.status).toBe('idle');
+    expect(restored?.condition).toBe(85);
+    expect(restored?.activeJobId).toBeNull();
+    expect(validateGameStateInvariants(completed)).toEqual([]);
+  });
+
+  it('rejects maintenance while a machine is actively processing a batch', () => {
+    let state = createInitialGameState();
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', { batchId: entity('batch-maintenance'), plantIds: [entity('plant-001')], profileId: 'fictional-profile' });
+    state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-maintenance'), roomId: entity('room-processing-01') });
+    state = applyOk(state, 'BATCH/START_PROCESSING', { batchId: entity('batch-maintenance'), machineId: entity('machine-processing-001') });
+
+    const result = dispatch(state, 'MACHINE/START_MAINTENANCE', { machineId: entity('machine-processing-001') });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('An active machine cannot enter maintenance.');
+    expect(result.error.code).toBe('INVALID_TRANSITION');
+    expect(result.state).toBe(state);
+  });
+
   it('requires a documented reason for batch rejection', () => {
     let state = createInitialGameState();
     state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
