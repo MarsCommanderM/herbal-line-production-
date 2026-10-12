@@ -1,4 +1,4 @@
-import { ENERGY_EFFICIENCY_UPGRADE_ID } from './upgrades';
+import { ENERGY_EFFICIENCY_UPGRADE_2_ID, ENERGY_EFFICIENCY_UPGRADE_ID } from './upgrades';
 import type {
   EntityId,
   EventId,
@@ -72,7 +72,10 @@ export function createInitialGameState(): GameState {
     machines: [
       { id: entityId('machine-processing-001'), definitionId: 'fictional-processing-station', roomId: processingRoomId, condition: score(95), status: 'idle', activeJobId: null },
     ],
-    upgrades: [{ id: ENERGY_EFFICIENCY_UPGRADE_ID, unlocked: true, purchasedAt: null }],
+    upgrades: [
+      { id: ENERGY_EFFICIENCY_UPGRADE_ID, unlocked: true, purchasedAt: null },
+      { id: ENERGY_EFFICIENCY_UPGRADE_2_ID, unlocked: false, purchasedAt: null },
+    ],
     compliance: { risk: risk(8), licenseStatus: 'valid', violations: [], auditDueAt: minute(4320), lastAuditAt: minute(0), blockedOperationCodes: [] },
     economy: { openingBalanceCents: cents(25000000), ledger: [] },
     logs: [
