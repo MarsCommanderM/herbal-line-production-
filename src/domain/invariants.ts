@@ -98,6 +98,9 @@ export function validateGameStateInvariants(state: GameState): StateInvariantVio
   }
 
   for (const machine of state.machines) {
+    if (!Number.isSafeInteger(machine.condition) || machine.condition < 0 || machine.condition > 100) {
+      add('INVALID_MACHINE_CONDITION', 'machines.' + machine.id + '.condition', 'Machine condition must be an integer from zero to one hundred.');
+    }
     if (machine.status === 'active' && machine.activeJobId === null) {
       add('ACTIVE_MACHINE_WITHOUT_JOB', 'machines.' + machine.id, 'An active machine must reference an active job.');
     }
