@@ -9,10 +9,26 @@ import {
   validateAndMigrateSave,
 } from './save-system';
 
+function legacyFNV1aChecksum(payload: unknown): string {
+  const bytes = new TextEncoder().encode(stableStringify(payload));
+  let hash = 0x811c9dc5;
+  for (const byte of bytes) {
+    hash ^= byte;
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return 'fnv1a32:' + hash.toString(16).padStart(8, '0');
+}
+
 describe('save envelope integrity', () => {
   it('uses the SHA-256 algorithm over canonical JSON', () => {
     expect(checksumPayload('abc')).toBe('sha256:6cc43f858fbb763301637b5af970e2a46b46f461f27e5a0f41e009c59b827b25');
     expect(checksumPayload({})).toBe('sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a');
+  });
+
+  it('continues to validate existing v1 FNV-1a saves during compatibility rollout', () => {
+    const current = buildSaveEnvelope(createInitialGameState(), '2026-10-12T12:00:00.000Z');
+    const legacy = { ...current, checksum: legacyFNV1aChecksum(current.payload) };
+    expect(validateAndMigrateSave(legacy)).toEqual({ ok: true, envelope: legacy });
   });
 
   it('creates a versioned envelope without transient UI state', () => {
