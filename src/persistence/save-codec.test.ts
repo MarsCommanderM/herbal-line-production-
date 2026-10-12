@@ -46,6 +46,7 @@ describe('versioned save codec', () => {
   it('rejects invalid JSON, unsupported versions, and structurally incomplete envelopes', async () => {
     expect(await verifySaveEnvelope('{broken')).toEqual({ ok: false, errorCode: 'INVALID_ENVELOPE' });
     expect(await verifySaveEnvelope({ schemaVersion: 99 })).toEqual({ ok: false, errorCode: 'UNSUPPORTED_VERSION' });
+    expect(await verifySaveEnvelope({ schemaVersion: 0 })).toEqual({ ok: false, errorCode: 'UNSUPPORTED_VERSION' });
     expect(await verifySaveEnvelope({ format: 'herbal-line-save', schemaVersion: 1 })).toEqual({ ok: false, errorCode: 'INVALID_ENVELOPE' });
   });
 

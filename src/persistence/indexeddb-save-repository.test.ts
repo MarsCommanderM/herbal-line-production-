@@ -27,7 +27,12 @@ class FakeObjectStore {
       } catch (error) {
         Object.defineProperty(request, 'error', { value: error, configurable: true });
         request.onerror?.(new Event('error'));
-        this.transaction.onerror?.(new Event('error'));
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          this.transaction.error = error;
+          this.transaction.onabort?.(new Event('abort'));
+        } else {
+          this.transaction.onerror?.(new Event('error'));
+        }
       }
     });
     return request;
@@ -35,6 +40,10 @@ class FakeObjectStore {
 
   put(value: FakeStoredRecord): IDBRequest<IDBValidKey> {
     return this.request(() => {
+      if (this.database.abortNextPut) {
+        this.database.abortNextPut = false;
+        throw new DOMException('Simulated transaction abort.', 'AbortError');
+      }
       if (this.database.failNextPut) {
         this.database.failNextPut = false;
         throw new DOMException('Simulated storage quota exhaustion.', 'QuotaExceededError');
@@ -79,6 +88,7 @@ class FakeTransaction {
 
 class FakeDatabase {
   failNextPut = false;
+  abortNextPut = false;
   readonly records = new Map<string, FakeStoredRecord>();
   readonly stores = new Set<string>();
   readonly objectStoreNames = {
@@ -191,6 +201,21 @@ describe('IndexedDbSaveRepository', () => {
     database.failNextPut = true;
 
     await expect(repository.save('campaign-01', newerEnvelope)).rejects.toThrow();
+    expect(await repository.load('campaign-01')).toEqual(goodEnvelope);
+  });
+
+  it('preserves the last committed save when a write transaction aborts', async () => {
+    const { repository, factory } = createRepository();
+    const initial = createInitialGameState();
+    const goodEnvelope = await createSaveEnvelope(initial, '2026-10-12T12:00:00.000Z');
+    await repository.save('campaign-01', goodEnvelope);
+
+    const newerEnvelope = await createSaveEnvelope({ ...initial, revision: 1 }, '2026-10-12T12:01:00.000Z');
+    const database = factory.databases.get('herbal-line-test');
+    if (!database) throw new Error('Test database was not created.');
+    database.abortNextPut = true;
+
+    await expect(repository.save('campaign-01', newerEnvelope)).rejects.toThrow('Simulated transaction abort.');
     expect(await repository.load('campaign-01')).toEqual(goodEnvelope);
   });
 
