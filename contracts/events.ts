@@ -11,5 +11,8 @@ export type DomainEvent =
   | (EventBase & { type: 'delivery.dispatched' | 'delivery.delivered' | 'delivery.exception'; deliveryId: EntityId; orderId: EntityId; reasonCode?: string })
   | (EventBase & { type: 'compliance.violation_recorded' | 'compliance.license_changed' | 'compliance.audit_completed'; code: string; status?: string })
   | (EventBase & { type: 'finance.ledger_posted'; ledgerEntryId: EntityId; amountCents: number; account: string })
+  | (EventBase & { type: 'facility.staff_assigned' | 'facility.staff_unassigned'; staffId: EntityId; roomId: EntityId })
+  | (EventBase & { type: 'facility.machine_moved'; machineId: EntityId; previousRoomId: EntityId; nextRoomId: EntityId })
+  | (EventBase & { type: 'machine.maintenance_started' | 'machine.maintenance_completed'; machineId: EntityId; roomId: EntityId; condition: number })
   | (EventBase & { type: 'persistence.save_succeeded' | 'persistence.save_failed'; slotId: string; reasonCode?: string });
 export type DomainEventType = DomainEvent['type'];
