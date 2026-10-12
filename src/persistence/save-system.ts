@@ -6,12 +6,19 @@ const DATABASE_VERSION = 1;
 const OBJECT_STORE = 'slots';
 const CURRENT_SCHEMA_VERSION = 1;
 const DEFAULT_SLOT = 'autosave';
+const BACKUP_PREFIX = '__backup__:';
 
 interface StoredSave {
   slotId: string;
   envelope: SaveEnvelopeV1;
   metadata: SaveMetadata;
 }
+
+export type SaveLoadResult =
+  | { status: 'empty' }
+  | { status: 'loaded'; envelope: SaveEnvelopeV1 }
+  | { status: 'recovered'; envelope: SaveEnvelopeV1; primaryRestored: boolean };
+type SaveValidationErrorCode = Extract<MigrationResult, { ok: false }>['errorCode'];
 
 export class SaveSystemError extends Error {
   constructor(
@@ -290,6 +297,15 @@ function toError(error: unknown, fallback: string): SaveSystemError {
   return new SaveSystemError(error instanceof Error ? error.message : fallback, 'STORAGE_FAILED');
 }
 
+function toValidationError(message: string, errorCode: SaveValidationErrorCode): SaveSystemError {
+  const code = errorCode === 'CHECKSUM_MISMATCH'
+    ? 'CHECKSUM_MISMATCH'
+    : errorCode === 'UNSUPPORTED_VERSION'
+      ? 'UNSUPPORTED_VERSION'
+      : 'INVALID_ENVELOPE';
+  return new SaveSystemError(message + ': ' + errorCode, code);
+}
+
 export class IndexedDbSaveRepository implements SaveRepository {
   private databasePromise: Promise<IDBDatabase> | undefined;
 
@@ -319,10 +335,18 @@ export class IndexedDbSaveRepository implements SaveRepository {
     return this.databasePromise;
   }
 
+  private async readStoredRecord(database: IDBDatabase, slotId: string): Promise<StoredSave | undefined> {
+    return new Promise((resolve, reject) => {
+      const request = database.transaction(OBJECT_STORE, 'readonly').objectStore(OBJECT_STORE).get(slotId);
+      request.onsuccess = () => resolve(request.result as StoredSave | undefined);
+      request.onerror = () => reject(request.error ?? new Error('Save read failed.'));
+    });
+  }
+
   async save(slotId: string, envelope: SaveEnvelopeV1): Promise<SaveMetadata> {
     validateSlotId(slotId);
     const validation = validateAndMigrateSave(envelope);
-    if (!validation.ok) throw new SaveSystemError('Ungültiger Spielstand: ' + validation.errorCode, validation.errorCode === 'CHECKSUM_MISMATCH' ? 'CHECKSUM_MISMATCH' : validation.errorCode === 'UNSUPPORTED_VERSION' ? 'UNSUPPORTED_VERSION' : 'INVALID_ENVELOPE');
+    if (!validation.ok) throw toValidationError('Ungültiger Spielstand', validation.errorCode);
     const normalized = { ...validation.envelope, checksum: checksumPayload(validation.envelope.payload) };
     const serialized = JSON.stringify(normalized);
     const metadata = toMetadata(slotId, normalized, new TextEncoder().encode(serialized).byteLength);
@@ -330,10 +354,30 @@ export class IndexedDbSaveRepository implements SaveRepository {
       const database = await this.openDatabase();
       await new Promise<void>((resolve, reject) => {
         const transaction = database.transaction(OBJECT_STORE, 'readwrite');
-        transaction.objectStore(OBJECT_STORE).put({ slotId, envelope: normalized, metadata } satisfies StoredSave);
+        const store = transaction.objectStore(OBJECT_STORE);
         transaction.oncomplete = () => resolve();
         transaction.onerror = () => reject(transaction.error ?? new Error('Save transaction failed.'));
         transaction.onabort = () => reject(transaction.error ?? new Error('Save transaction aborted.'));
+
+        const existingRequest = store.get(slotId);
+        existingRequest.onsuccess = () => {
+          const existing = existingRequest.result as StoredSave | undefined;
+          if (existing) {
+            const existingValidation = validateAndMigrateSave(existing.envelope);
+            if (existingValidation.ok) {
+              const previousEnvelope = {
+                ...existingValidation.envelope,
+                checksum: checksumPayload(existingValidation.envelope.payload),
+              };
+              const backupSlotId = BACKUP_PREFIX + slotId;
+              const backupBytes = new TextEncoder().encode(JSON.stringify(previousEnvelope)).byteLength;
+              const backupMetadata = toMetadata(backupSlotId, previousEnvelope, backupBytes);
+              store.put({ slotId: backupSlotId, envelope: previousEnvelope, metadata: backupMetadata } satisfies StoredSave);
+            }
+          }
+          store.put({ slotId, envelope: normalized, metadata } satisfies StoredSave);
+        };
+        existingRequest.onerror = () => reject(existingRequest.error ?? new Error('Previous save read failed.'));
       });
       return metadata;
     } catch (error) {
@@ -341,29 +385,54 @@ export class IndexedDbSaveRepository implements SaveRepository {
     }
   }
 
-  async load(slotId: string): Promise<SaveEnvelopeV1 | null> {
+  async loadWithRecovery(slotId: string): Promise<SaveLoadResult> {
     validateSlotId(slotId);
     try {
       const database = await this.openDatabase();
-      const record = await new Promise<StoredSave | undefined>((resolve, reject) => {
-        const request = database.transaction(OBJECT_STORE, 'readonly').objectStore(OBJECT_STORE).get(slotId);
-        request.onsuccess = () => resolve(request.result as StoredSave | undefined);
-        request.onerror = () => reject(request.error ?? new Error('Save read failed.'));
-      });
-      if (!record) return null;
-      const validation = validateAndMigrateSave(record.envelope);
-      if (!validation.ok) throw new SaveSystemError('Gespeicherter Spielstand ist beschädigt: ' + validation.errorCode, validation.errorCode === 'CHECKSUM_MISMATCH' ? 'CHECKSUM_MISMATCH' : validation.errorCode === 'UNSUPPORTED_VERSION' ? 'UNSUPPORTED_VERSION' : 'INVALID_ENVELOPE');
-      return validation.envelope;
+      const primaryRecord = await this.readStoredRecord(database, slotId);
+      const primaryValidation = primaryRecord ? validateAndMigrateSave(primaryRecord.envelope) : null;
+      if (primaryValidation?.ok) return { status: 'loaded', envelope: primaryValidation.envelope };
+
+      const backupSlotId = BACKUP_PREFIX + slotId;
+      const backupRecord = await this.readStoredRecord(database, backupSlotId);
+      const backupValidation = backupRecord ? validateAndMigrateSave(backupRecord.envelope) : null;
+      if (backupValidation?.ok) {
+        let primaryRestored = true;
+        try {
+          // Restore through the ordinary validated write path; a corrupt primary is never copied over the backup.
+          await this.save(slotId, backupValidation.envelope);
+        } catch {
+          // Keep the verified backup available in memory even if quota or storage state blocks restoration.
+          primaryRestored = false;
+        }
+        return { status: 'recovered', envelope: backupValidation.envelope, primaryRestored };
+      }
+
+      if (primaryValidation && !primaryValidation.ok) {
+        throw toValidationError('Gespeicherter Spielstand ist beschädigt', primaryValidation.errorCode);
+      }
+      if (backupValidation && !backupValidation.ok) {
+        throw toValidationError('Das letzte gespeicherte Backup ist beschädigt', backupValidation.errorCode);
+      }
+      return { status: 'empty' };
     } catch (error) {
       throw toError(error, 'Spielstand konnte nicht geladen werden.');
     }
+  }
+
+  async load(slotId: string): Promise<SaveEnvelopeV1 | null> {
+    const result = await this.loadWithRecovery(slotId);
+    return result.status === 'empty' ? null : result.envelope;
   }
 
   async listSlots(): Promise<SaveMetadata[]> {
     const database = await this.openDatabase();
     return new Promise((resolve, reject) => {
       const request = database.transaction(OBJECT_STORE, 'readonly').objectStore(OBJECT_STORE).getAll();
-      request.onsuccess = () => resolve((request.result as StoredSave[]).map((record) => record.metadata).sort((a, b) => a.slotId.localeCompare(b.slotId)));
+      request.onsuccess = () => resolve((request.result as StoredSave[])
+        .filter((record) => !record.slotId.startsWith(BACKUP_PREFIX))
+        .map((record) => record.metadata)
+        .sort((a, b) => a.slotId.localeCompare(b.slotId)));
       request.onerror = () => reject(new SaveSystemError('Save-Slots konnten nicht aufgelistet werden.', 'STORAGE_FAILED'));
     });
   }
@@ -373,7 +442,9 @@ export class IndexedDbSaveRepository implements SaveRepository {
     const database = await this.openDatabase();
     await new Promise<void>((resolve, reject) => {
       const transaction = database.transaction(OBJECT_STORE, 'readwrite');
-      transaction.objectStore(OBJECT_STORE).delete(slotId);
+      const store = transaction.objectStore(OBJECT_STORE);
+      store.delete(slotId);
+      store.delete(BACKUP_PREFIX + slotId);
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(new SaveSystemError('Save-Slot konnte nicht gelöscht werden.', 'STORAGE_FAILED'));
       transaction.onabort = () => reject(new SaveSystemError('Löschen wurde abgebrochen.', 'STORAGE_FAILED'));
@@ -391,7 +462,7 @@ export class IndexedDbSaveRepository implements SaveRepository {
     try {
       const parsed: unknown = JSON.parse(await input.text());
       const validation = validateAndMigrateSave(parsed);
-      if (!validation.ok) throw new SaveSystemError('Import abgelehnt: ' + validation.errorCode, validation.errorCode === 'CHECKSUM_MISMATCH' ? 'CHECKSUM_MISMATCH' : validation.errorCode === 'UNSUPPORTED_VERSION' ? 'UNSUPPORTED_VERSION' : 'INVALID_ENVELOPE');
+      if (!validation.ok) throw toValidationError('Import abgelehnt', validation.errorCode);
       return await this.save(slotId, validation.envelope);
     } catch (error) {
       if (error instanceof SaveSystemError) throw error;

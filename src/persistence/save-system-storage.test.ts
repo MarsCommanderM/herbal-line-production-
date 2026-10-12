@@ -64,8 +64,8 @@ class FakeObjectStore {
 
   put(value: StoredSave): IDBRequest<IDBValidKey> {
     return this.request(() => {
-      if (this.database.failNextPut) {
-        this.database.failNextPut = false;
+      if (this.database.failSlotId === value.slotId) {
+        this.database.failSlotId = undefined;
         throw new DOMException('Simulated storage quota exhaustion.', 'QuotaExceededError');
       }
       this.database.records.set(value.slotId, structuredClone(value));
@@ -95,7 +95,7 @@ class FakeObjectStore {
 class FakeDatabase {
   readonly records = new Map<string, StoredSave>();
   readonly stores = new Set<string>();
-  failNextPut = false;
+  failSlotId: string | undefined;
   readonly objectStoreNames = {
     contains: (name: string) => this.stores.has(name),
   };
@@ -148,7 +148,7 @@ describe('IndexedDB save transaction recovery', () => {
 
     const database = factory.databases.get('herbal-line-saves');
     if (!database) throw new Error('Test database was not created.');
-    database.failNextPut = true;
+    database.failSlotId = 'autosave';
     const newer = buildSaveEnvelope({ ...initial, revision: 1 }, '2026-10-12T12:01:00.000Z');
 
     await expect(repository.save('autosave', newer)).rejects.toMatchObject({ code: 'STORAGE_FAILED' });
@@ -163,5 +163,62 @@ describe('IndexedDB save transaction recovery', () => {
       revision: newer.revision,
       checksum: newer.checksum,
     });
+  });
+
+  it('recovers the verified backup after primary corruption and hides backup records from slots', async () => {
+    const factory = new FakeIndexedDbFactory();
+    const repository = new IndexedDbSaveRepository(factory as unknown as IDBFactory);
+    const initial = createInitialGameState();
+    const original = buildSaveEnvelope(initial, '2026-10-12T12:00:00.000Z');
+    const newer = buildSaveEnvelope({ ...initial, revision: 1 }, '2026-10-12T12:01:00.000Z');
+    await repository.save('autosave', original);
+    await repository.save('autosave', newer);
+
+    const database = factory.databases.get('herbal-line-saves');
+    if (!database) throw new Error('Test database was not created.');
+    const corrupted = database.records.get('autosave');
+    if (!corrupted) throw new Error('Primary save was not written.');
+    corrupted.envelope.payload.reputation = 999 as typeof corrupted.envelope.payload.reputation;
+    database.records.set('autosave', corrupted);
+
+    const recovery = await repository.loadWithRecovery('autosave');
+    expect(recovery.status).toBe('recovered');
+    if (recovery.status !== 'recovered') throw new Error('Expected backup recovery.');
+    expect(recovery.primaryRestored).toBe(true);
+    expect(recovery.envelope.revision).toBe(0);
+    await expect(repository.load('autosave')).resolves.toMatchObject({ revision: 0 });
+    expect(database.records.get('autosave')?.envelope.checksum).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect((await repository.listSlots()).map((slot) => slot.slotId)).toEqual(['autosave']);
+
+    await repository.deleteSlot('autosave');
+    expect(await repository.listSlots()).toEqual([]);
+    expect(database.records.has('autosave')).toBe(false);
+    expect(database.records.has('__backup__:autosave')).toBe(false);
+    await expect(repository.loadWithRecovery('autosave')).resolves.toEqual({ status: 'empty' });
+  });
+
+  it('loads a verified backup in memory when restoring the primary fails', async () => {
+    const factory = new FakeIndexedDbFactory();
+    const repository = new IndexedDbSaveRepository(factory as unknown as IDBFactory);
+    const initial = createInitialGameState();
+    const original = buildSaveEnvelope(initial, '2026-10-12T12:00:00.000Z');
+    const newer = buildSaveEnvelope({ ...initial, revision: 1 }, '2026-10-12T12:01:00.000Z');
+    await repository.save('autosave', original);
+    await repository.save('autosave', newer);
+
+    const database = factory.databases.get('herbal-line-saves');
+    if (!database) throw new Error('Test database was not created.');
+    const corrupted = database.records.get('autosave');
+    if (!corrupted) throw new Error('Primary save was not written.');
+    corrupted.envelope.payload.reputation = 999 as typeof corrupted.envelope.payload.reputation;
+    database.records.set('autosave', corrupted);
+    database.failSlotId = 'autosave';
+
+    const recovery = await repository.loadWithRecovery('autosave');
+    expect(recovery.status).toBe('recovered');
+    if (recovery.status !== 'recovered') throw new Error('Expected in-memory backup recovery.');
+    expect(recovery.primaryRestored).toBe(false);
+    expect(recovery.envelope.revision).toBe(0);
+    expect(database.records.get('autosave')?.envelope.payload.reputation).toBe(999);
   });
 });

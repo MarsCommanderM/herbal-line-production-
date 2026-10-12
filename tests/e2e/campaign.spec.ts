@@ -33,8 +33,10 @@ test('autosave survives a full browser reload', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toHaveCount(0);
 });
 
-test('corrupted persisted state is rejected without replacing the safe startup state', async ({ page }) => {
+test('corrupt primary save recovers the last verified backup in real IndexedDB', async ({ page }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Jetzt speichern' }).click();
+  await expect(page.locator('#save-status')).toContainText('Spielstand gespeichert · Revision 0');
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
 
@@ -60,6 +62,57 @@ test('corrupted persisted state is rejected without replacing the safe startup s
     });
   });
 
+  await page.reload();
+  await expect(page.locator('#save-status')).toContainText('Letztes gültiges Backup wiederhergestellt · Revision 0');
+  await expect(unitStage(page)).toHaveText('active');
+  await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toHaveCount(0);
+
+  const restored = await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line-saves', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    return await new Promise<{ revision: number; checksum: string }>((resolve, reject) => {
+      const transaction = database.transaction('slots', 'readonly');
+      const request = transaction.objectStore('slots').get('autosave');
+      request.onsuccess = () => {
+        const stored = request.result as { envelope: { revision: number; checksum: string } };
+        database.close();
+        resolve({ revision: stored.envelope.revision, checksum: stored.envelope.checksum });
+      };
+      request.onerror = () => { database.close(); reject(request.error); };
+    });
+  });
+  expect(restored.revision).toBe(0);
+  expect(restored.checksum).toMatch(/^sha256:[0-9a-f]{64}$/);
+});
+
+test('a corrupted save without a valid backup never replaces the safe startup state', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
+
+  await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line-saves', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction('slots', 'readwrite');
+      const request = transaction.objectStore('slots').get('autosave');
+      request.onsuccess = () => {
+        const stored = request.result as { envelope: { payload: { reputation: number } } };
+        stored.envelope.payload.reputation = 999;
+        transaction.objectStore('slots').put(stored);
+      };
+      transaction.oncomplete = () => { database.close(); resolve(); };
+      transaction.onerror = () => { database.close(); reject(transaction.error); };
+      transaction.onabort = () => { database.close(); reject(transaction.error); };
+    });
+  });
   await page.reload();
   await expect(page.locator('#save-status')).toContainText('CHECKSUM_MISMATCH');
   await expect(unitStage(page)).toHaveText('active');

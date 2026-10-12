@@ -76,16 +76,25 @@ function saveCurrentState(manual: boolean): Promise<void> {
 
 async function loadCampaign(): Promise<void> {
   await pendingSave;
-  const envelope = await saveRepository.load(DEFAULT_SAVE_SLOT);
-  if (!envelope) {
+  const result = await saveRepository.loadWithRecovery(DEFAULT_SAVE_SLOT);
+  if (result.status === 'empty') {
     setSaveStatus('Noch kein gespeicherter Spielstand vorhanden.', 'info');
     return;
   }
   const freshUi = createInitialGameState().ui;
-  gameState = restoreGameState(envelope, freshUi);
+  gameState = restoreGameState(result.envelope, freshUi);
   commandSequence = gameState.revision;
   renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
+  if (result.status === 'recovered') {
+    setSaveStatus(
+      result.primaryRestored
+        ? 'Letztes gültiges Backup wiederhergestellt · Revision ' + gameState.revision
+        : 'Backup geladen, aber Wiederherstellung fehlgeschlagen · Revision ' + gameState.revision + '. Bitte erneut speichern.',
+      result.primaryRestored ? 'info' : 'error',
+    );
+    return;
+  }
   setSaveStatus('Spielstand geladen · Revision ' + gameState.revision, 'success');
 }
 
@@ -296,11 +305,20 @@ async function boot(): Promise<() => void> {
     layout();
   };
   try {
-    const saved = await saveRepository.load(DEFAULT_SAVE_SLOT);
-    if (saved) {
-      gameState = restoreGameState(saved, createInitialGameState().ui);
+    const saved = await saveRepository.loadWithRecovery(DEFAULT_SAVE_SLOT);
+    if (saved.status !== 'empty') {
+      gameState = restoreGameState(saved.envelope, createInitialGameState().ui);
       commandSequence = gameState.revision;
-      setSaveStatus('Autosave wiederhergestellt · Revision ' + gameState.revision, 'success');
+      if (saved.status === 'recovered') {
+        setSaveStatus(
+          saved.primaryRestored
+            ? 'Letztes gültiges Backup wiederhergestellt · Revision ' + gameState.revision
+            : 'Backup geladen, aber Wiederherstellung fehlgeschlagen · Revision ' + gameState.revision + '. Bitte erneut speichern.',
+          saved.primaryRestored ? 'info' : 'error',
+        );
+      } else {
+        setSaveStatus('Autosave wiederhergestellt · Revision ' + gameState.revision, 'success');
+      }
     } else {
       setSaveStatus('Neue Kampagne · Autosave wird nach Aktionen erstellt.', 'info');
     }
