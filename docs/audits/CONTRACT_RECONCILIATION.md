@@ -55,8 +55,10 @@ Latest verified revision: `bce2a0bd0edda036032be03e8dfea3033057ea52`.
 Do not rewrite canonical documents to fit the current implementation silently. Record any intentional deviation, explain why it is needed, add a migration or compatibility plan where applicable, and verify the resulting contract and implementation on the same commit.
 
 
-## Source archive provenance and scope decision
+## Product-scope correction and restoration authority
 
-The source archive is preserved as historical input, but the current app is intentionally a fictional generic botanical operations simulator. A measured per-path comparison is documented in `docs/audits/MASTERPACK_PARITY_REPORT.md`; expected source hashes remain in `docs/audits/MASTERPACK_EXPECTED_BLOBS.json`. Do not claim exact 1:1 ZIP parity and do not overwrite the working app with the historical pack as a bulk operation.
+The original `Herbal-Line-Production-Master-Pack.zip` is the binding source of truth, not merely historical input. Herbal Line is the originally agreed fictional, strictly regulated medical-cannabis production management simulation. The generic botanical/herbal rescoping documented in earlier repository versions was not owner-approved and is not accepted as a valid product decision.
+
+Restore the canonical Master-Pack documents exactly from the ZIP on the dedicated restoration branch, verify every path/content hash, and retain reproducible evidence. Then reconcile code, domain contracts, economy/progression, UI and content against the canonical documents without discarding compatible implementation work. Keep `main` untouched until the reviewed restoration and mandatory checks pass. Do not claim 1:1 parity until the current branch has passed the per-path comparison.
 
 The implementation has also closed the QC review/failure dead end with a terminal `BATCH/REJECT` command. It requires a documented reason, releases room occupancy, clears any active machine assignment, removes the batch from the active queue, and prevents later release. The management UI exposes this action only when a stored QC decision is `fail` or `review`; domain guards remain authoritative.
