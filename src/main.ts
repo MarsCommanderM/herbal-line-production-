@@ -25,8 +25,30 @@ const gameFeedback = document.querySelector<HTMLParagraphElement>('#game-feedbac
 let gameState = createInitialGameState();
 let commandSequence = 0;
 let persistenceBusy = false;
+let persistenceIdlePromise: Promise<void> = Promise.resolve();
+let resolvePersistenceIdle: (() => void) | null = null;
 const saveRepository = new IndexedDbSaveRepository();
 let onGameStateChanged: () => void = () => {};
+
+function beginPersistence(): void {
+  persistenceBusy = true;
+  persistenceIdlePromise = new Promise<void>((resolve) => {
+    resolvePersistenceIdle = resolve;
+  });
+  setPersistenceControlsDisabled(true);
+}
+
+function finishPersistence(): void {
+  persistenceBusy = false;
+  setPersistenceControlsDisabled(false);
+  const resolve = resolvePersistenceIdle;
+  resolvePersistenceIdle = null;
+  resolve?.();
+}
+
+async function waitForPersistenceIdle(): Promise<void> {
+  while (persistenceBusy) await persistenceIdlePromise;
+}
 
 function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<string, unknown>): void {
   if (persistenceBusy) {
@@ -113,8 +135,7 @@ async function readBestAvailableSave(): Promise<{ envelope: NonNullable<Awaited<
 
 async function autosaveCampaign(): Promise<void> {
   if (persistenceBusy) return;
-  persistenceBusy = true;
-  setPersistenceControlsDisabled(true);
+  beginPersistence();
   const revision = gameState.revision;
   let status: { level: 'success' | 'error'; message: string } | null = null;
   try {
@@ -126,8 +147,7 @@ async function autosaveCampaign(): Promise<void> {
       status = { level: 'error', message: 'Autosave fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)) };
     }
   } finally {
-    persistenceBusy = false;
-    setPersistenceControlsDisabled(false);
+    finishPersistence();
   }
   // Completion feedback is emitted only after the controls are usable again.
   if (status) setSaveStatus(status.level, status.message);
@@ -135,8 +155,7 @@ async function autosaveCampaign(): Promise<void> {
 
 async function saveCampaign(): Promise<void> {
   if (persistenceBusy) return;
-  persistenceBusy = true;
-  setPersistenceControlsDisabled(true);
+  beginPersistence();
   let feedback: { level: 'success' | 'error'; message: string } | null = null;
   let status: { level: 'success' | 'error'; message: string } | null = null;
   try {
@@ -151,8 +170,7 @@ async function saveCampaign(): Promise<void> {
     feedback = { level: 'error', message: 'Speichern fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)) };
     status = { level: 'error', message: 'Speichern fehlgeschlagen.' };
   } finally {
-    persistenceBusy = false;
-    setPersistenceControlsDisabled(false);
+    finishPersistence();
   }
   // Completion feedback is emitted only after the controls are usable again.
   if (feedback) setFeedback(feedback.level, feedback.message);
@@ -181,16 +199,14 @@ async function applyLoadedSave(): Promise<void> {
 
 async function loadCampaign(): Promise<void> {
   if (persistenceBusy) return;
-  persistenceBusy = true;
-  setPersistenceControlsDisabled(true);
+  beginPersistence();
   try {
     await applyLoadedSave();
   } catch (error) {
     setFeedback('error', 'Laden fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
     setSaveStatus('error', 'Laden fehlgeschlagen; vorhandene Save-Dateien wurden nicht verändert.');
   } finally {
-    persistenceBusy = false;
-    setPersistenceControlsDisabled(false);
+    finishPersistence();
   }
 }
 
@@ -212,9 +228,10 @@ async function exportCampaign(): Promise<void> {
 }
 
 async function importCampaign(file: File): Promise<void> {
-  if (persistenceBusy) return;
-  persistenceBusy = true;
-  setPersistenceControlsDisabled(true);
+  // A file selection can race the tail of an autosave even after the picker opened.
+  // Queue the import instead of silently discarding it while persistence is busy.
+  await waitForPersistenceIdle();
+  beginPersistence();
   try {
     const current = await saveRepository.load('campaign-01').catch(() => null);
     if (current) await saveRepository.save('campaign-01-backup', current);
@@ -231,8 +248,7 @@ async function importCampaign(file: File): Promise<void> {
     setFeedback('error', 'Import abgelehnt: ' + (error instanceof Error ? error.message : String(error)));
     setSaveStatus('error', 'Import fehlgeschlagen; vorheriger gültiger Spielstand bleibt erhalten.');
   } finally {
-    persistenceBusy = false;
-    setPersistenceControlsDisabled(false);
+    finishPersistence();
     if (importSaveInput) importSaveInput.value = '';
   }
 }

@@ -164,6 +164,7 @@ test('exported saves can be imported after a later campaign change', async ({ pa
 
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
 
   const chooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Spielstand importieren' }).click();
