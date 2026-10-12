@@ -40,10 +40,11 @@
 - **Remaining:** full WCAG contrast/semantics review, broader assistive-technology testing, and more viewport coverage.
 - **Gate:** every primary action has a clear precondition, visible result, and tested error state.
 
-## P2-001 — Facility, capacity, staffing and maintenance (NEXT)
+## P2-001 — Facility, capacity, staffing and maintenance (IMPLEMENTED BASELINE; REVIEW CONTINUES)
 
-- **Goal:** enforce room occupancy/capacity invariants and machine/staff assignment consistency across every command path.
-- **Acceptance:** property-style invariant tests, explicit blocked-action messages, and multi-command regression scenarios; no action may leave negative occupancy or an active machine attached to a terminal batch.
+- **Implemented on this branch:** cross-entity invariant validation runs before every successful domain commit. It checks room capacity/occupancy, batch/plant/inventory links, QC state, terminal rejected batches, machine/job consistency, inventory reservation bounds, and ledger idempotency keys.
+- **Evidence:** unit tests validate the initial state, deliberately corrupted state, full queue → processing → QC → rejection progression, duplicate ledger keys, and rejection of commands that would preserve an invalid state. Same-revision CI run 38207727309 passed, including all 7 Chromium E2E tests.
+- **Remaining:** property-based/fuzz coverage, assignment/maintenance constraints, and broader command-by-command invariant coverage.
 
 ## Operating rule
 
