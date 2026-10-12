@@ -221,7 +221,7 @@ test('live status semantics and reduced-motion preferences are respected', async
 test('facility controls enforce staffing roles and complete abstract machine maintenance', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Spielstation warten' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Mara Weiss: Freigegebenes Lager zuweisen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mara Weiss: Verarbeitung zuweisen' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Mara Weiss: Freigegebenes Lager zuweisen' }).click();
   await expect(page.getByRole('button', { name: 'Mara Weiss: Pflanzenraum zuweisen' })).toBeVisible();

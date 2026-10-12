@@ -244,7 +244,7 @@ describe('botanical operations vertical slice', () => {
     }
   });
 
-  it('refuses to commit any command that would preserve an invalid facility state', () => {
+  it('refuses to commit a command when facility invariants are already invalid', () => {
     const initial = createInitialGameState();
     const invalid = {
       ...initial,
