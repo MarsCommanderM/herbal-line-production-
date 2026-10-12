@@ -99,12 +99,6 @@ describe('botanical operations vertical slice', () => {
     expect(repeated.state.revision).toBe(revision);
     expect(repeated.state.economy.ledger).toHaveLength(1);
 
-    const secondPurchase = dispatch(result.state, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-2' });
-    expect(secondPurchase.ok).toBe(true);
-    if (!secondPurchase.ok) throw new Error(secondPurchase.error.message);
-    expect(secondPurchase.state.upgrades.find((item) => item.id === 'energy-efficiency-2')?.purchasedAt).toBe(0);
-    expect(secondPurchase.state.economy.ledger).toHaveLength(2);
-    expect(getCampaignBalance(secondPurchase.state)).toBe(24_600_000);
   });
 
   it('rejects a stale command without changing the state', () => {
@@ -266,6 +260,13 @@ describe('botanical operations vertical slice', () => {
     if (repeated.ok) throw new Error('An upgrade cannot be purchased twice.');
     expect(repeated.error.code).toBe('INVALID_TRANSITION');
     expect(repeated.state.economy.ledger).toHaveLength(1);
+
+    const secondPurchase = dispatch(result.state, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-2' });
+    expect(secondPurchase.ok).toBe(true);
+    if (!secondPurchase.ok) throw new Error(secondPurchase.error.message);
+    expect(secondPurchase.state.upgrades.find((item) => item.id === 'energy-efficiency-2')?.purchasedAt).toBe(0);
+    expect(secondPurchase.state.economy.ledger).toHaveLength(2);
+    expect(getCampaignBalance(secondPurchase.state)).toBe(24_600_000);
   });
 
   it('rejects unaffordable or unknown upgrades without changing the campaign', () => {
