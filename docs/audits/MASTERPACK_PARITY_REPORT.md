@@ -28,6 +28,14 @@ Restoration must be performed on a dedicated branch while `main` remains untouch
 
 The audit compares repository Git tree blob IDs against the source archive manifest. It does not claim that different content is automatically wrong: the mismatches include intentional scope, contract, backlog, and implementation changes. The script is an audit tool whose restoration run must be executed against the verified ZIP and the exact restoration-branch commit. CI being green does not replace parity evidence, and generic-scope differences are not presumed intentional or approved.
 
+## Current restoration-branch result — 2026-10-12
+
+The original archive was rechecked directly: SHA-256 `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`; ZIP integrity passed; 42 files are present.
+
+On `restore/original-masterpack-product-scope-20261012`, the GitHub file API's returned blob SHA was compared individually with the expected archive manifest for all 42 paths. **All 42 of 42 paths matched exactly** after the final correction to `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md`. This is per-path evidence; a single clean-checkout execution of `scripts/verify_masterpack_parity.py` against the exact current commit has not yet been observed and remains a reproducibility follow-up.
+
+The historical `4/42` result above applies only to `main@6ddb8849886f35ece5f3d784d06714b4054f5116`; it must not be conflated with the current restoration-branch result. Full archive parity does not mean the game implementation is reconciled or tested.
+
 ## Decision
 
 - Preserve the archive hash and expected blob manifest.
