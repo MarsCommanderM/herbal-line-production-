@@ -33,12 +33,18 @@
 - **Evidence:** unit tests plus Chromium E2E tests for save/load, autosave across reload, corrupted-primary fallback to backup, and export/import round-trip.
 - **Remaining:** explicit migration chain when a new schema version is introduced, quota/interrupted-write recovery tests, and cross-browser coverage.
 
-## P1-003 — Operational Dashboard and Queue UX (IMPLEMENTED; ACCEPTANCE CONTINUES)
+## P1-003 — Operational Dashboard and Queue UX (FUNCTIONAL BASELINE; ACCESSIBILITY REVIEW OPEN)
 
-- **Implemented:** an accessible live campaign-status panel with state-derived guidance, recommended next step, quality-gate explanations, license/compliance restrictions, station availability, and delivered-goal completion. Reduced-motion preferences are respected.
-- **Evidence:** unit tests for active state, suspended-license restrictions, failed quality assessment and completion; Chromium E2E verifies the guidance changes as the campaign progresses. Run 38206406378 passed.
-- **Remaining:** broader keyboard-only walkthrough, viewport/responsive QA, accessibility audit, and domain/UI coverage for more terminal and blocked states.
+- **Implemented:** state-derived campaign guidance, recommended next step, quality/compliance blockers, station availability, and delivered-goal completion.
+- **Evidence:** Chromium E2E run 38207213170 passed 7 scenarios, including predictable keyboard tab order, focus-visible styling, 390×844 mobile layout without horizontal overflow, live-region semantics, and reduced-motion handling.
+- **Remaining:** full WCAG contrast/semantics review, broader assistive-technology testing, and more viewport coverage.
 - **Gate:** every primary action has a clear precondition, visible result, and tested error state.
+
+## P2-001 — Facility, capacity, staffing and maintenance (IMPLEMENTED BASELINE; REVIEW CONTINUES)
+
+- **Implemented on this branch:** cross-entity invariant validation runs before every successful domain commit. It checks room capacity/occupancy, batch/plant/inventory links, QC state, terminal rejected batches, machine/job consistency, inventory reservation bounds, and ledger idempotency keys.
+- **Evidence:** unit tests validate the initial state, deliberately corrupted state, full queue→processing→QC→rejection progression, and duplicate ledger keys. Same-revision CI run 38207581802 passed, including all 7 Chromium E2E tests.
+- **Remaining:** property-based/fuzz coverage, assignment/maintenance constraints, and broader command-by-command invariant coverage.
 
 ## Operating rule
 
