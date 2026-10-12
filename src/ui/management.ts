@@ -60,7 +60,7 @@ type QueueEntry = {
   title: string;
   status: string;
   detail: string;
-  level?: QueueLevel;
+  level?: QueueLevel | undefined;
   capacity?: { used: number; total: number; label: string };
 };
 
