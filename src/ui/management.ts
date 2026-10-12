@@ -1,5 +1,5 @@
 import type { EntityId, GameState } from '../../contracts/domain';
-import { calculateDailyOperatingCosts } from '../domain/finance';
+import { calculateDailyOperatingCosts, getCashRunwayDays, projectCampaignBalance } from '../domain/finance';
 import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
 import { roomSupportsStaffRole } from '../domain/facility';
 import { getCampaignGuidance } from './campaign-guidance';
@@ -155,11 +155,16 @@ export function renderManagementUI(
   const order = state.orders[0];
   const balance = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(getCampaignBalance(state) / 100);
   const dailyCosts = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(calculateDailyOperatingCosts(state).totalCents / 100);
+  const runwayDays = getCashRunwayDays(state);
+  const runway = runwayDays === null ? 'Kein Nettoverbrauch' : runwayDays + ' Tage';
+  const projectedBalance = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format((projectCampaignBalance(state, 30).at(-1)?.closingBalanceCents ?? getCampaignBalance(state)) / 100);
 
   metricsRoot.replaceChildren(
     metric('Spieltag', String(state.time.day)),
     metric('Kontostand', balance),
     metric('Tageskosten', dailyCosts),
+    metric('Reichweite (0 € Umsatz)', runway),
+    metric('30-Tage-Szenario (0 € Umsatz)', projectedBalance),
     metric('Lizenzstatus', state.compliance.licenseStatus.replaceAll('_', ' ')),
     metric('Einheitenstatus', plant ? plant.stage.replaceAll('_', ' ') : '—'),
     metric('Batchstatus', batch ? batch.status.replaceAll('_', ' ') : 'Kein Batch'),
