@@ -1,5 +1,5 @@
 import type { EconomyState, GameState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
-import { ENERGY_EFFICIENCY_UPGRADE_ID, isEconomyUpgradePurchased } from './upgrades';
+import { ENERGY_EFFICIENCY_UPGRADE_ID, getEconomyUpgradeDefinition, isEconomyUpgradePurchased } from './upgrades';
 
 export interface LedgerTotals {
   revenueCents: number;
@@ -100,9 +100,11 @@ export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'r
   }
 
   const baseUtilitiesCents = powerUnitsPerHour * OPERATING_HOURS_PER_CAMPAIGN_DAY * UTILITY_RATE_CENTS_PER_UNIT_HOUR;
-  const utilitiesCents = isEconomyUpgradePurchased(state, ENERGY_EFFICIENCY_UPGRADE_ID)
-    ? Math.floor(baseUtilitiesCents * 80 / 100)
-    : baseUtilitiesCents;
+  const efficiencyUpgrade = getEconomyUpgradeDefinition(ENERGY_EFFICIENCY_UPGRADE_ID);
+  const utilityReductionPercent = isEconomyUpgradePurchased(state, ENERGY_EFFICIENCY_UPGRADE_ID)
+    ? efficiencyUpgrade?.utilityReductionPercent ?? 0
+    : 0;
+  const utilitiesCents = Math.floor(baseUtilitiesCents * (100 - utilityReductionPercent) / 100);
   const totalCents = staffWagesCents + utilitiesCents;
   for (const [field, value] of Object.entries({ staffWagesCents, utilitiesCents, totalCents })) {
     assertNonNegativeSafeInteger(value, field);
