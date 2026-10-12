@@ -31,6 +31,8 @@ The audit compares repository Git tree blob IDs against the source archive manif
 ## Decision
 
 - Preserve the archive hash and expected blob manifest.
-- Preserve the current working app and its verified tests.
-- Do not claim 1:1 parity.
-- Track the intentional scope fork in project documentation and continue the generic simulation backlog.
+- The measured 4/42 match result is historical evidence for the named comparison target only; it is not a current-branch parity result.
+- Do not claim 1:1 parity until a fresh per-path comparison against the verified archive has run on the exact target commit.
+- Restore canonical Master-Pack files on the dedicated restoration branch, then reconcile the implementation against those files while preserving compatible code and tests.
+- The generic-botanical scope fork was not owner-approved and is not a valid product decision.
+- Keep `main` untouched until restoration has been reviewed and the required gates pass.
