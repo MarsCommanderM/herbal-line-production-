@@ -1,4 +1,5 @@
 import type { EntityId, GameState } from '../../contracts/domain';
+import { calculateDailyOperatingCosts } from '../domain/finance';
 import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
 import { roomSupportsStaffRole } from '../domain/facility';
 import { getCampaignGuidance } from './campaign-guidance';
@@ -88,6 +89,12 @@ function availableActions(state: GameState): Action[] {
     }
   }
 
+  actions.push({
+    label: 'Tag abschließen',
+    detail: 'Schließt den aktuellen Kampagnentag ab und bucht fiktive Tageslöhne sowie Betriebskosten genau einmal ins Finanz-Ledger.',
+    type: 'TIME/END_DAY',
+    payload: {},
+  });
   return actions;
 }
 
@@ -147,10 +154,12 @@ export function renderManagementUI(
   const batch = state.batches[state.batches.length - 1];
   const order = state.orders[0];
   const balance = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(getCampaignBalance(state) / 100);
+  const dailyCosts = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(calculateDailyOperatingCosts(state).totalCents / 100);
 
   metricsRoot.replaceChildren(
     metric('Spieltag', String(state.time.day)),
     metric('Kontostand', balance),
+    metric('Tageskosten', dailyCosts),
     metric('Lizenzstatus', state.compliance.licenseStatus.replaceAll('_', ' ')),
     metric('Einheitenstatus', plant ? plant.stage.replaceAll('_', ' ') : '—'),
     metric('Batchstatus', batch ? batch.status.replaceAll('_', ' ') : 'Kein Batch'),
