@@ -35,6 +35,17 @@ class BalanceSchemaValidationTests(unittest.TestCase):
         duplicate_item["upgrades"].append(copy.deepcopy(duplicate_item["upgrades"][0]))
         self.assertTrue(any("items must be unique" in error for error in validate_json_schema(duplicate_item, self.schema)))
 
+    def test_schema_rejects_values_above_javascript_safe_integer_precision(self) -> None:
+        too_large_rate = copy.deepcopy(self.balance)
+        too_large_rate["economy"]["utilityRateCentsPerUnitHour"] = 9007199254740992
+        rate_errors = validate_json_schema(too_large_rate, self.schema)
+        self.assertTrue(any("must be at most 9007199254740991" in error for error in rate_errors))
+
+        too_large_cost = copy.deepcopy(self.balance)
+        too_large_cost["upgrades"][0]["costCents"] = 9007199254740992
+        cost_errors = validate_json_schema(too_large_cost, self.schema)
+        self.assertTrue(any("must be at most 9007199254740991" in error for error in cost_errors))
+
     def test_relationships_reject_duplicate_ids_and_missing_prerequisites(self) -> None:
         duplicate_id = copy.deepcopy(self.balance)
         duplicate_id["upgrades"][1]["id"] = duplicate_id["upgrades"][0]["id"]

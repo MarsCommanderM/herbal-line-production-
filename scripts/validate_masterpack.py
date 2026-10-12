@@ -59,7 +59,10 @@ def validate_json_schema(instance: object, schema: object, path: str = "$") -> l
             "array": isinstance(instance, list),
             "string": isinstance(instance, str),
             "integer": isinstance(instance, int) and not isinstance(instance, bool),
-            "number": isinstance(instance, (int, float)) and not isinstance(instance, bool) and math.isfinite(instance),
+            "number": (
+                (isinstance(instance, int) and not isinstance(instance, bool))
+                or (isinstance(instance, float) and math.isfinite(instance))
+            ),
             "boolean": isinstance(instance, bool),
         }.get(expected)
         if type_matches is None:
@@ -78,7 +81,7 @@ def validate_json_schema(instance: object, schema: object, path: str = "$") -> l
             errors.append(f"{path}: length must be at least {min_length}")
 
     if isinstance(instance, (int, float)) and not isinstance(instance, bool):
-        if not math.isfinite(instance):
+        if isinstance(instance, float) and not math.isfinite(instance):
             errors.append(f"{path}: number must be finite")
         else:
             if "minimum" in schema and instance < schema["minimum"]:
@@ -118,7 +121,7 @@ def validate_json_schema(instance: object, schema: object, path: str = "$") -> l
                 errors.extend(validate_json_schema(item, item_schema, f"{path}[{index}]"))
         if schema.get("uniqueItems") is True:
             serialized = [
-                json.dumps(item, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+                json.dumps(item, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=True)
                 for item in instance
             ]
             if len(serialized) != len(set(serialized)):

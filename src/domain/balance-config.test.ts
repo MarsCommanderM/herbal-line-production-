@@ -55,6 +55,20 @@ describe('versioned fictional balance configuration', () => {
     expect(() => parseGameBalanceConfig(unexpected)).toThrow(/unexpected field silentDefault/);
   });
 
+  it('rejects unsafe integer values before they can affect game balance', () => {
+    const tooLargeRate = cloneConfig();
+    const economy = objectField(tooLargeRate, 'economy');
+    economy['utilityRateCentsPerUnitHour'] = Number.MAX_SAFE_INTEGER + 1;
+    expect(() => parseGameBalanceConfig(tooLargeRate)).toThrow(/utilityRateCentsPerUnitHour.*allowed range/);
+
+    const tooLargeCost = cloneConfig();
+    const upgrades = upgradeArray(tooLargeCost);
+    const first = upgrades[0];
+    if (!first) throw new Error('Baseline upgrade fixture is missing.');
+    first['costCents'] = Number.MAX_SAFE_INTEGER + 1;
+    expect(() => parseGameBalanceConfig(tooLargeCost)).toThrow(/costCents.*allowed range/);
+  });
+
   it('rejects invalid monetary values and inconsistent quality thresholds', () => {
     const badMoney = cloneConfig();
     const upgrades = upgradeArray(badMoney);
