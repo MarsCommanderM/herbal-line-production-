@@ -103,6 +103,10 @@ Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte S
 - Keine freigegebene Lieferung ohne freigegebenen Batch, passende Qualität, vorhandenen Bestand und vollständige Trace-Kette.
 - Kein negativer Bestand und keine Reservierung über verfügbare Menge.
 - Keine doppelten IDs innerhalb eines Entitätstyps.
+- Raumkapazität ist eine positive ganze Zahl; `occupied` bleibt ganzzahlig in `[0, capacity]` und wird niemals durch Clamping als Ersatz für eine gültige Transition verwendet.
+- Mitarbeiterzuordnung ist bidirektional: `StaffState.assignedRoomId` und `RoomState.assignedStaffIds` müssen übereinstimmen; Rollen-/Raumkompatibilität wird vor jeder Zuweisung geprüft.
+- Maschinenzuordnung ist bidirektional: `MachineState.roomId` und `RoomState.assignedMachineIds` müssen übereinstimmen.
+- Eine aktive Maschine hat genau einen aktiven Job, und dieser verweist auf einen `processing`-Batch im selben Raum. Maschinen in Wartung sind jobfrei; aktive Maschinen können weder verlegt noch in Wartung gesetzt werden.
 - Keine ungültigen Zahlen: alle Scores sind endlich und innerhalb definierter Grenzen.
 - Kein Auftrag wird doppelt erfüllt oder doppelt abgerechnet.
 - Kein suspendierter Betrieb führt kritische Freigaben/Versand durch.
