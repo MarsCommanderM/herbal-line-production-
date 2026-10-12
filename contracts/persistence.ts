@@ -7,7 +7,7 @@ export interface SaveEnvelopeV1 {
   savedAtRealTime: string;
   rngState: number;
   checksum: string;
-  payload: GameState;
+  payload: Omit<GameState, 'ui'>;
 }
 export interface SaveMetadata { slotId: string; revision: number; savedAtRealTime: string; gameVersion: string; byteLength: number; }
 export interface SaveRepository {
