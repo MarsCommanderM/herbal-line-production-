@@ -195,3 +195,17 @@ export function getCashRunwayDays(
   if (balance <= 0) return 0;
   return Math.floor(balance / dailyNetBurn);
 }
+
+export type FinancialHealth = 'stable' | 'watch' | 'critical';
+
+/** Game-only distress indicator based on current cash and zero-revenue runway. */
+export function getFinancialHealth(
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy' | 'upgrades'>,
+): FinancialHealth {
+  const balance = Number(getBalanceCents(state.economy));
+  if (balance < 0) return 'critical';
+  const runway = getCashRunwayDays(state);
+  if (runway !== null && runway < 7) return 'critical';
+  if (runway !== null && runway < 30) return 'watch';
+  return 'stable';
+}
