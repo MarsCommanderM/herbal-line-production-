@@ -36,8 +36,13 @@ The archive's expected Git blob SHA-1s were calculated from the actual file byte
 | `schemas/plant-profile.schema.json` | `a5f83e14f435f280b8c7662c51b92487d764e7bc` | Exact match restored |
 | `schemas/room-definition.schema.json` | `f633318f879ee2a816ba47d3bedf5abf71a5c18e` | Exact match restored |
 | `schemas/save-envelope-v1.schema.json` | `237354d33d8fc0c56d018175c755c1e46e5b0074` | Exact match restored |
+| `docs/00_MASTER_PRODUCTION_DOCUMENT.md` | `667c1f9fb8d4057e959bb4fd36b9dd50e420b139` | Exact match restored |
+| `docs/01_GAME_VISION_AND_GDD.md` | `1068f258d751787bfb415bee7d1d2cb77a3579fe` | Exact match restored |
+| `docs/02_FEATURE_SCOPE_AND_RELEASE_CONTENT.md` | `45897b7a9e02e8029b3ad640f7c857d7d7536065` | Exact match restored |
+| `docs/06_CANONICAL_CONTRACTS.md` | `836dbe1c2529c8414c6b8b1b30cfa61bb900f190` | Exact match restored |
+| `docs/07_DATA_AND_RULES_CATALOG.md` | `35b2f9611f47489cea1c2c50e3dab1c4d2e36ddb` | Exact match restored |
 
-Total currently verified exact archive files: **16 of 42**. This is a verified subset, not full parity.
+Total currently verified exact archive files: **21 of 42**. This is a verified subset, not full parity.
 
 The current parity report preserves the earlier `4/42` comparison as historical evidence for `main@6ddb8849886f35ece5f3d784d06714b4054f5116` only. It is not being represented as a fresh comparison of this restoration branch.
 
