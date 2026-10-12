@@ -1,6 +1,6 @@
 {
-  "projectId": "herbal-line-web-management-sim",
-  "title": "Herbal Line",
+  "projectId": "dr-green-dump-dopefarm-web-management-sim",
+  "title": "Dr. Green Dump / DopeFarm",
   "documentVersion": "1.0.0",
   "documentDate": "2026-10-11",
   "projectOwnerMetadata": "Michael Braunschweig",
@@ -15,7 +15,7 @@
   "stateSchemaVersion": 1,
   "saveSchemaVersion": 1,
   "simulationModel": "fixed-step deterministic pure TypeScript domain simulation",
-  "productDescription": "Ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion.",
+  "productDescription": "Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert Anbau, ausführliche Pflege, Verarbeitung, Qualitätssicherung, Lager, Logistik und Auslieferung an Apotheken. Pflanzen-, Qualitäts- und Prozesswerte sind ausschließlich simulierte, erfundene Spielangaben; keine realen Werte, Daten oder exakten Anbauanleitungen.",
   "simulationBoundary": "Fictional management simulation only; no real-world cultivation, preparation, extraction, or distribution instructions.",
   "releaseStandard": "production-grade; no prototypes, blockouts, fake functionality or placeholder assets represented as final",
   "workingTitleTrademarkStatus": "not cleared; trademark clearance required before public commercial release"
