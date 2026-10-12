@@ -8,13 +8,12 @@
 - Latest verified code revision: `bce2a0bd0edda036032be03e8dfea3033057ea52`.
 - Evidence: [GitHub Actions run 38182289439](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182289439) — install, lint, format, typecheck, 26 unit tests, production build, 3 Chromium E2E tests, production preview smoke, master-pack validator and `git diff --check` all passed.
 
-## P0-002 — Reconcile Project Truth (PARTIAL; PARITY OPEN)
+## P0-002 — Reconcile Project Truth (SCOPE DECISION RECORDED; EXACT MIRROR NOT CLAIMED)
 
-- **Goal:** Compare product scope, canonical contracts, schemas, simulation rules, and persistence ownership.
-- **Complete:** source-level contract decisions and an evidence-backed app/CI baseline.
-- **Acceptance still open:** compare all 42 supplied Master Pack files byte-for-byte against a dedicated synchronization baseline; document every intentional deviation before implementation edits are layered on top.
-- **Do not claim:** the current implementation branch is a 1:1 ZIP mirror.
-- **Next action:** produce a reproducible per-path hash comparison and reconcile the pack without overwriting valuable implementation work.
+- **Complete:** canonical contract conflicts are logged; the archive SHA-256 and expected Git blob IDs are retained; a reproducible per-path comparison records the exact drift.
+- **Evidence:** `docs/audits/MASTERPACK_PARITY_REPORT.md`; archive contains 42 paths, 4/42 exact matches, 38 content mismatches and 33 extra implementation/tooling paths at the recorded comparison revision.
+- **Decision:** the current deliverable is a fictional, generic botanical operations game. Exact ZIP mirroring is not a release gate because blindly restoring the historical product pack would overwrite the verified app and undo the deliberately generic scope. Do not claim 1:1 parity.
+- **Status:** source-of-truth ambiguity closed with a documented scope fork; archive parity remains historically measurable but intentionally not targeted.
 
 ## P0-003 — Reproducible Engineering Baseline (VERIFIED)
 
