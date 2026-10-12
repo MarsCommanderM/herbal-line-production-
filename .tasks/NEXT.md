@@ -37,9 +37,9 @@ The dashboard exposes process batches, room occupancy/capacity meters, machine s
 
 Accepted at `cc730e9fdca65d7c3bb1912faf1dbd053f047daf`; [full CI run #38251987389 passed](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38251987389). Fictional incident capture, operation-specific blocking, corrective-action completion, audit-derived license/risk state, audit and license-change events, and the management queue are covered by domain and browser tests. High/critical incidents suspend operations; corrective action alone cannot restore the license. The browser suite also confirms the campaign-completion message remains visible alongside the compliance action after delivery.
 
-## P2-001 — Facility, capacity, staffing and maintenance (IN PROGRESS — AUDIT)
+## P2-001 — Facility, capacity, staffing and maintenance (IN PROGRESS — IMPLEMENTATION)
 
-Audit existing `RoomState`, `StaffState`, `WorkAssignmentState`, `MachineState`, and command contracts before implementing. First establish invariants and negative-path tests for room capacity/occupancy, staff assignment uniqueness and role compatibility, machine-room consistency and maintenance/broken-state gating. Preserve save-v1 compatibility; do not add new persisted fields unless existing contracts cannot express a required invariant. Do not claim completion until implementation, tests, reviewed diff and full CI are green on one exact SHA.
+Read-only audit found the core primitives and several guards already exist. The first identified gap was that a degraded but actively running machine could receive a maintenance assignment that could never start; the assignment path now rejects machine states that are neither idle nor broken. Added negative-path coverage for this dead end and for machine/room mismatch, plus an end-to-end occupancy accounting assertion across queue → QC → storage → delivery. Save schema v1 remains unchanged. Acceptance remains pending until the exact implementation SHA passes the full CI workflow.
 
 ## Operating rule
 

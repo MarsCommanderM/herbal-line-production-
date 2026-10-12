@@ -233,6 +233,44 @@ describe('botanical operations vertical slice', () => {
     expect(result.state.machines[0]?.status).toBe('idle');
   });
 
+  it('keeps room occupancy balanced across queue, quality, storage, and delivery', () => {
+    let state = progressToCreatedBatch();
+    expect(state.rooms.find((room) => room.id === entity('room-processing-01'))?.occupied).toBe(0);
+    state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-001'), roomId: entity('room-processing-01') });
+    expect(state.rooms.find((room) => room.id === entity('room-processing-01'))?.occupied).toBe(1);
+    state = applyOk(state, 'BATCH/START_PROCESSING', { batchId: entity('batch-001'), machineId: entity('machine-processing-001') });
+    state = applyOk(state, 'BATCH/SUBMIT_QC', { batchId: entity('batch-001'), assessmentId: entity('assessment-occupancy-001') });
+    expect(state.rooms.find((room) => room.id === entity('room-processing-01'))?.occupied).toBe(0);
+    expect(state.rooms.find((room) => room.id === entity('room-quality-01'))?.occupied).toBe(1);
+    state = applyOk(state, 'BATCH/RELEASE', { batchId: entity('batch-001') });
+    expect(state.rooms.find((room) => room.id === entity('room-quality-01'))?.occupied).toBe(0);
+    expect(state.rooms.find((room) => room.id === entity('room-storage-01'))?.occupied).toBe(6);
+    state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-buyer-001') });
+    state = applyOk(state, 'ORDER/ALLOCATE', { orderId: entity('order-buyer-001'), lotIds: [entity('inventory-batch-001')] });
+    state = applyOk(state, 'DELIVERY/CREATE', { deliveryId: entity('delivery-occupancy-001'), orderId: entity('order-buyer-001'), routeId: 'route-occupancy' });
+    state = applyOk(state, 'DELIVERY/DISPATCH', { deliveryId: entity('delivery-occupancy-001') });
+    state = applyOk(state, 'DELIVERY/CONFIRM', { deliveryId: entity('delivery-occupancy-001'), proofCode: 'ACK-OCCUPANCY-001' });
+    expect(state.rooms.find((room) => room.id === entity('room-storage-01'))?.occupied).toBe(0);
+  });
+
+  it('rejects processing when the machine-room relationship is inconsistent', () => {
+    let state = progressToCreatedBatch();
+    state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-001'), roomId: entity('room-processing-01') });
+    const inconsistent = {
+      ...state,
+      machines: state.machines.map((machine) => machine.id === entity('machine-processing-001')
+        ? { ...machine, roomId: entity('room-production-01') }
+        : machine),
+    };
+    const result = dispatch(inconsistent, 'BATCH/START_PROCESSING', {
+      batchId: entity('batch-001'), machineId: entity('machine-processing-001'),
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('A machine in another room must not process this batch.');
+    expect(result.error.code).toBe('INVALID_TRANSITION');
+    expect(result.state).toBe(inconsistent);
+  });
+
   it('enforces maintenance role, exclusive assignment, and a complete maintenance lifecycle', () => {
     const initial = createInitialGameState();
     const wrongRole = dispatch(initial, 'STAFF/ASSIGN', {
@@ -278,6 +316,26 @@ describe('botanical operations vertical slice', () => {
     expect(completed.state.staff.find((item) => item.id === entity('staff-maintenance-001'))).toMatchObject({ energy: 85, activeAssignmentId: null });
     expect(completed.state.assignments[0]).toMatchObject({ status: 'completed', progress: 100 });
     expect(completed.events.map((event) => event.type)).toEqual(['machine.maintenance_completed', 'staff.assignment_completed']);
+  });
+
+  it('does not create a dead-end maintenance assignment for a machine already active', () => {
+    const initial = createInitialGameState();
+    const activeMachineState = {
+      ...initial,
+      machines: initial.machines.map((machine) => machine.id === entity('machine-processing-001')
+        ? { ...machine, condition: 50 as Score0To100, status: 'active' as const, activeJobId: entity('batch-active-001') }
+        : machine),
+    };
+    const result = dispatch(activeMachineState, 'STAFF/ASSIGN', {
+      assignmentId: entity('assignment-maintenance-active'), staffId: entity('staff-maintenance-001'),
+      taskCode: 'MACHINE/MAINTENANCE', entityId: entity('machine-processing-001'),
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('An active machine must not receive a maintenance assignment.');
+    expect(result.error.code).toBe('INVALID_TRANSITION');
+    expect(result.state).toBe(activeMachineState);
+    expect(result.state.assignments).toHaveLength(0);
+    expect(result.state.staff.find((item) => item.id === entity('staff-maintenance-001'))?.activeAssignmentId).toBeNull();
   });
 
   it('requires corrective action and a clean audit before clearing a severe compliance block', () => {

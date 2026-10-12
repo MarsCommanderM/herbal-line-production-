@@ -255,7 +255,10 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         case 'MACHINE/MAINTENANCE': {
           const machine = state.machines.find((item) => item.id === command.entityId);
           if (!machine) return failure(state, 'NOT_FOUND', 'Maschine für die Wartungszuweisung nicht gefunden.');
-          if (Number(machine.condition) >= 100 && machine.status !== 'broken') return failure(state, 'INVALID_TRANSITION', 'Die Maschine benötigt aktuell keine Wartung.');
+          if ((machine.status !== 'idle' && machine.status !== 'broken')
+            || (Number(machine.condition) >= 100 && machine.status !== 'broken')) {
+            return failure(state, 'INVALID_TRANSITION', 'Die Maschine ist nicht in einem wartungsfähigen Zustand.');
+          }
           targetRoomId = machine.roomId;
           requiredRole = 'maintenance';
           break;
