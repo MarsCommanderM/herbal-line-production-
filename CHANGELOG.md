@@ -1,5 +1,12 @@
 ## Unreleased
 
+- Fixed the browser export/import acceptance test to wait for manual-save completion, export status, completion of autosave after a later campaign action, and re-enabled import controls before continuing.
+- Exact-head push CI [#38283055593](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283055593) and PR CI [#38283061167](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283061167) passed after the change, including cross-browser E2E.
+
+- Added runtime validation for the versioned fictional balance config: exact field sets, safe integer bounds, value ranges, unique upgrade IDs, valid prerequisite references, and acyclic dependencies.
+- Added CI validation of src/data/balance.json against schemas/balance.schema.json plus negative tests for missing/unknown fields, out-of-range and unsafe integers, duplicate IDs/items, missing prerequisites, dependency cycles, and inconsistent QC thresholds.
+- Kept sensor_pack_1, drying_rack_1, and XP/level progression unresolved until authoritative design values are found; no costs, effects, or XP thresholds were invented.
+
 - Added an accessible, state-derived campaign guidance panel with next-step recommendations and explanations for quality, compliance, and availability blockers.
 - Added a terminal batch rejection path with documented reason codes, queue/room cleanup, and a UI recovery action for failed or unresolved quality checks.
 - Documented measured source-archive drift and the intentional generic-botanical scope fork; no exact 1:1 ZIP parity claim is made.

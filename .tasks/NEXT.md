@@ -21,11 +21,12 @@
 - **Evidence:** run 38208111520 on feature revision `64e29a6fe0165075b61914f296114294c2d3e981` passed all required workflow steps.
 - **Status:** pinned install, lint, format, strict typecheck, unit tests, production build, Chromium E2E, preview smoke, master-pack validation and diff check verified green.
 
-## P1-001 — Vertical Slice Domain (IMPLEMENTED; ACCEPTANCE CONTINUES)
+## P1-001 — Vertical Slice Domain (INTEGRATED; CROSS-BROWSER BASELINE VERIFIED)
 
 - **Goal:** Intake → fictional botanical stages → QC hold/release → inventory → generic customer dispatch.
 - **Evidence:** deterministic domain tests and Chromium E2E interaction coverage; the UI runs in the actual browser with a WebGL canvas.
-- **Remaining:** complete negative-path browser coverage, queue/empty/error UX, and accessibility review.
+- **Evidence:** the integrated candidate passed 71 unit tests and 36 Playwright E2E tests across Chromium, Firefox, and WebKit, including the full 12-command delivery loop, one-time ledger posting, reload restoration, and tutorial completion ([run #38280141532](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38280141532)). The current balance/schema hardening and synchronized export/import test also passed exact-head push and PR CI ([push #38283055593](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283055593), [PR #38283061167](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283061167)).
+- **Remaining:** broader negative-path browser coverage, queue/empty/error UX, and accessibility review.
 
 ## P1-002 — Save/Load and Recovery (FUNCTIONAL BASELINE; HARDENING OPEN)
 
@@ -40,28 +41,29 @@
 - **Remaining:** full WCAG contrast/semantics review, broader assistive-technology testing, and more viewport coverage.
 - **Gate:** every primary action has a clear precondition, visible result, and tested error state.
 
-## P2-001 — Facility, capacity, staffing and maintenance (IMPLEMENTATION INTEGRATED; CI PENDING)
+## P2-001 — Facility, capacity, staffing and maintenance (INTEGRATED; ACCEPTANCE BASELINE VERIFIED)
 
 - **Implemented:** cross-entity invariant validation runs before every successful domain commit. It checks room capacity/occupancy, batch/plant/inventory links, QC state, terminal rejected batches, machine/job consistency, inventory reservation bounds, ledger idempotency keys, bidirectional staff/machine room assignments, role-to-room compatibility, and maintenance/job consistency.
 - **Evidence:** unit tests validate the initial state, deliberately corrupted state, full queue → processing → QC → rejection progression, duplicate ledger keys, and rejection of commands that would preserve an invalid state. A deterministic corruption matrix and 100 generated room-occupancy mutations also pass. Same-revision CI run 38208111520 passed, including all 7 Chromium E2E tests.
-- **Added on the reconciled feature branch:** typed staff assignment/unassignment and machine movement commands, an abstract maintenance start/complete lifecycle, a live facility overview, unit tests, and Chromium E2E coverage. Same-revision CI verification is pending.
+- **Integrated behavior:** typed staff assignment/unassignment and machine movement commands, an abstract maintenance start/complete lifecycle, and a live facility overview are present in the current integration. The integrated candidate passed cross-browser acceptance in runs [#38280141532](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38280141532) and [#38280148208](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38280148208). The latest balance/schema hardening candidate also passed exact-head push and PR CI ([#38283055593](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283055593), [#38283061167](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283061167)).
 - **Remaining:** property-based command-sequence testing, machine movement edge cases, and broader command-by-command invariant coverage.
 
-## P2-002 — Economy and progression (DAILY SETTLEMENT + TIERED UPGRADES + RECOVERY IMPLEMENTED; CI PENDING)
+## P2-002 — Economy and progression (CONFIRMED BALANCE CENTRALIZED; EXACT-REVISION CI VERIFIED)
 
 - **Implemented:** pure fictional daily-cost calculation, explicit end-of-day transition to next-day 08:00, idempotent wage and utility expense postings, audit events, a 30-day zero-revenue balance projection, cash-runway estimate, negative-balance warning, two prerequisite-gated ledger-backed energy-efficiency tiers (20% then an additional 10% utility-cost reduction), a stable/watch/critical financial-health indicator, and one-time distress support that clears the deficit and restores at least seven days of operating-cost runway.
 - **Balance model:** wages sum each staff member's configured daily wage; utility costs use unlocked-room power units × 24 hours × 125 cents per unit-hour. These are game-balance constants, not real-world cost estimates.
 - **Acceptance:** finance unit tests cover deterministic cost totals, idempotency, multi-day zero-revenue and explicit-revenue projections, cash runway, and invalid assumptions; domain tests cover day/time progression, ledger entries, event emission, settlement uniqueness and negative balance; Chromium E2E checks day-end feedback, autosave, runway, and the 30-day forecast.
 - **Recovery guardrails:** support is unavailable while the balance is positive, posts an explicit `grant` ledger entry, uses a campaign-scoped idempotency key, and cannot be claimed twice.
-- **Remaining:** broader multi-day progression tuning, revenue/expense ratio scenarios, more upgrade categories, and economy balancing after recovery. The tiered-upgrade revision's same-revision CI is pending.
+- **Balance integrity:** the exact runtime parser rejects extra or missing fields, invalid ranges, unsafe integers, duplicate IDs, missing prerequisites, self-dependencies, and cycles. The master-pack validator checks `src/data/balance.json` against `schemas/balance.schema.json`; negative tests cover required fields, unknown fields, bounds, duplicate IDs, missing prerequisites, and dependency cycles. The complete schema/runtime and export/import hardening head passed all steps on push run [#38283055593](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283055593) and PR run [#38283061167](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283061167).
+- **Remaining:** broader multi-day progression tuning, revenue/expense ratio scenarios, and economy balancing after recovery. `sensor_pack_1`, `drying_rack_1`, and XP/level progression stay blocked until authoritative rules are located; no costs, effects, or XP thresholds are invented.
 
 ## Operating rule
 
 Do not mark a task complete without implementation evidence, relevant tests, reviewed diff and updated documentation. Preserve `main`; integrate through a reviewed pull request. Continue to the next unblocked task after acceptance. Paid or irreversible external actions require existing explicit authorization.
 
-## P2-003 — Content, tutorial and contextual notices (IMPLEMENTED; CI PENDING)
+## P2-003 — Content, tutorial and contextual notices (INTEGRATED; CROSS-BROWSER BASELINE VERIFIED)
 
 - Added a six-step, state-derived core-loop tutorial. It is a pure selector over existing game state; it does not grant permissions, mutate the campaign, or introduce a new save-schema field.
 - Added a content source register documenting the in-repository design sources and confirming that the tutorial uses only fictional gameplay rules, with no external operational claims.
-- Playwright assertions cover initial progress, tutorial progression after the first action, and completion after the full delivery flow. Exact-revision cross-browser CI is pending.
+- Playwright assertions cover initial progress, tutorial progression after the first action, and completion after the full delivery flow. The integrated baseline passed all 36 Chromium/Firefox/WebKit E2E tests in [run #38280141532](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38280141532); the later exact-head schema and export/import hardening also passed [push #38283055593](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283055593) and [PR #38283061167](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38283061167).
 - Remaining: content/design review, contextual notice coverage for empty/error states, and accessibility review of the combined management panel.

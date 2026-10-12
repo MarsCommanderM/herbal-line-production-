@@ -1,5 +1,6 @@
 import type { EconomyState, GameState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
 import { ECONOMY_UPGRADES, isEconomyUpgradePurchased } from './upgrades';
+import { GAME_BALANCE } from './balance-config';
 
 export interface LedgerTotals {
   revenueCents: number;
@@ -83,8 +84,8 @@ export interface DailyOperatingCosts {
   totalCents: number;
 }
 
-export const UTILITY_RATE_CENTS_PER_UNIT_HOUR = 125;
-export const OPERATING_HOURS_PER_CAMPAIGN_DAY = 24;
+export const UTILITY_RATE_CENTS_PER_UNIT_HOUR = GAME_BALANCE.economy.utilityRateCentsPerUnitHour;
+export const OPERATING_HOURS_PER_CAMPAIGN_DAY = GAME_BALANCE.economy.operatingHoursPerCampaignDay;
 
 /** Pure fictional game-balance model. Only unlocked rooms consume utility units. */
 export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'rooms' | 'upgrades'>): DailyOperatingCosts {
