@@ -49,3 +49,12 @@ Energie, Kapazität, Mitarbeitereffektivität, Wartung und Inventar sind abstrah
 ## 7. Datenvalidierung
 
 Beim Boot: JSON parse → Schema validieren → Referenzen/IDs auf Eindeutigkeit prüfen → Abhängigkeitsgraph validieren → Wertebereiche prüfen → erst dann Spiel starten. Ein ungültiger Content-Datensatz stoppt den Build oder zeigt beim Dev-Boot einen klaren Fehler mit Dateipfad und Feld. Keine stillen Defaults für fehlerhafte Produktionsdaten.
+
+
+## 4.1 Sichtbare Pflanzenpflege — fiktiver Balance-Contract
+
+Die Pflege wird direkt an erkennbaren Cannabis-Pflanzen bedient. Für Bewässerung, Licht, Temperatur, Luftfeuchtigkeit und Nährstoffversorgung verwendet die laufende Spielsimulation ausschließlich dimensionslose Stufen low, balanced und high. Beschneiden, Steckling schneiden und Steckling setzen sind explizite Commands mit nachvollziehbarem Zustand, Log/Event und visuellem Feedback.
+
+Der aktuelle Code liegt in src/domain/plant-care.ts. PLANT/CARE_ACTION wird in den Runtime-Contracts definiert und in src/domain/vertical-slice.ts validiert. Die Stufen stellen keine realen Messwerte oder agronomischen Empfehlungen dar. Es werden keine realen Temperaturen, Luftfeuchtigkeitsprozente, Bewässerungsmengen, Beleuchtungsleistungen, Nährstoffmengen oder realen Produktionspläne angegeben. Eine Pflegeaktion, die ungültigen Status, unbekannte Spielstufen oder unzureichende Raumkapazität verletzt, muss atomar fehlschlagen.
+
+Pflege-Baselines müssen nach Save/Load erhalten bleiben. Alte Saves ohne optionale Care-Felder erhalten zur Laufzeit definierte Default-Stufen, ohne während des Ladens den gespeicherten Payload still zu mutieren.

@@ -61,7 +61,7 @@ if (packageData.name !== 'dr-green-dump-dopefarm') failures.push('Package name i
 
 const requiredPhrases = new Map([
   ['README.md', ['Dr. Green Dump / DopeFarm', 'medizinischen Cannabis-Pflanzenproduktion', 'Stecklingen']],
-  ['AGENTS.md', ['Dr. Green Dump / DopeFarm', 'generische Kräuter', 'direkt sichtbare Pflege']],
+  ['AGENTS.md', ['Dr. Green Dump / DopeFarm', 'generische Kräuter', 'sichtbare Spielaktionen']],
   ['docs/PRODUCTION_POLICY.md', ['Dr. Green Dump / DopeFarm', 'Direkte Pflanzenpflege', 'Apotheken']],
   ['docs/00_MASTER_PRODUCTION_DOCUMENT.md', ['Dr. Green Dump / DopeFarm', 'direkt an erkennbaren Cannabis-Pflanzen']],
   ['docs/01_GAME_VISION_AND_GDD.md', ['Dr. Green Dump / DopeFarm', 'Cannabis-Pflanzen']],

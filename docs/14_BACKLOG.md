@@ -1,4 +1,4 @@
-# 14 — Priorisiertes Studio-Backlog
+# Dr. Green Dump / DopeFarm — Priorisiertes Studio-Backlog
 
 Priorität: **P0** Release-kritisch/Blocker; **P1** Kernprodukt; **P2** deutlicher Qualitäts-/Inhaltsschub; **P3** optional nach Freigabe. Story-Points sind relative Schätzungen, keine Kalenderzusagen. Dependencies beziehen sich auf IDs.
 
@@ -17,7 +17,8 @@ Priorität: **P0** Release-kritisch/Blocker; **P1** Kernprodukt; **P2** deutlich
 | HL-011 | PixiJS UI Shell und Navigation | P0 | 8 | HL-003, HL-009 | Alle Kernzustände lesbar, alle Hauptscreens navigierbar |
 | HL-012 | Rapier Interaction Adapter | P1 | 3 | HL-010 | Nur benötigte Kollision/Trigger; Interaktionen reproduzierbar |
 | HL-013 | Source Lot und Traceability Chain | P0 | 5 | HL-003, HL-008 | Jeder Batch/Liefervorgang rückverfolgbar |
-| HL-014 | Abstract Plant Lifecycle | P1 | 5 | HL-006, HL-013 | Fiktive, deterministische Stages mit Negativtests |
+| HL-014 | Medical-Cannabis Plant Lifecycle & Care | P1 | 5 | HL-006, HL-013 | Erkennbare Cannabis-Pflanzen, deterministische Care-Commands, sichtbare State-/3D-Änderung, Invalid-/Reload-Tests |
+| HL-031 | Visible Plant-Care UI and 3D Feedback | P1 | 8 | HL-005, HL-010, HL-011, HL-014 | Pflanzenauswahl in 3D/UI; Bewässerung, Licht, fiktives Klima, Nährstoffe, Beschneiden und Stecklingsaktionen wirken sichtbar; Save/Load- und E2E-Beweise |
 | HL-015 | Batch Queue und Inventory Ledger | P0 | 8 | HL-013, HL-014 | Mengeninvarianten und atomare Reservierungen |
 | HL-016 | QC Assessment und Release Gate | P0 | 5 | HL-015 | Versand nach fehlender/fehlgeschlagener QC unmöglich |
 | HL-017 | Licensing/Compliance/Audit | P0 | 8 | HL-013, HL-016 | Sperre blockt kritische Commands; Auditbericht vollständig |

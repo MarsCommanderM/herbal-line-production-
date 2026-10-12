@@ -6,6 +6,8 @@ Der Spielname lautet **Dr. Green Dump / DopeFarm**. Das gelieferte Archiv trägt
 
 ## Vertragseigentümerschaft
 
+Die aktuellen aktiven Runtime-Verträge liegen unter contracts/; die unveränderten ursprünglichen Contract-Dateien sind als Provenienz unter masterpack/canonical/contracts/ aufbewahrt. Care-State, PLANT/CARE_ACTION und plant.care_applied sind absichtliche Laufzeiterweiterungen für das vom Auftraggeber bestätigte sichtbare Pflanzenpflege-Gameplay. Diese Runtime-Erweiterungen dürfen nicht fälschlich als byte-identische Original-Contracts ausgegeben werden und müssen durch Contract-/Domain-/Save-/E2E-Tests abgesichert sein.
+
 - Laufzeitverträge unter `contracts/` müssen mit der laufenden Domain-Implementierung, Save-Formaten, UI und Tests konsistent sein.
 - Source-Pack-Verträge, die vom Runtime-Vertrag abweichen, dürfen nicht unbemerkt überschrieben oder als identisch ausgegeben werden.
 - Jede beabsichtigte Abweichung erhält einen Decision-Log-Eintrag mit Quelle, Grund, Migrationsauswirkung und Tests.

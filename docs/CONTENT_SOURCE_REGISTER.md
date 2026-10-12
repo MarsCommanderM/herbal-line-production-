@@ -8,6 +8,7 @@
 | Core-loop tutorial | `docs/03_CORE_LOOP_AND_USER_FLOWS.md`, `docs/02_FEATURE_SCOPE_AND_RELEASE_CONTENT.md`, `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md` | None used | Pure selector unit tests and Playwright UI flow | Pending same-revision CI and content review |
 | Contextual campaign guidance | `src/ui/campaign-guidance.ts` and the canonical domain state | None used | Existing domain-state assertions; broader empty/error-state review remains open | Partial |
 | Upgrade/economy descriptions | `docs/07_DATA_AND_RULES_CATALOG.md` | None used | Domain/Playwright tests; all prices and effects are fictional balance constants | Partial |
+| Visible plant-care gameplay | `docs/PRODUCTION_POLICY.md`, `docs/07_DATA_AND_RULES_CATALOG.md`, runtime care commands | No external factual sources; invented balance only | Domain tests, 3D state synchronization and save/reload E2E required | Implementation present; same-commit CI acceptance pending |
 
 ## Editorial and safety rules
 

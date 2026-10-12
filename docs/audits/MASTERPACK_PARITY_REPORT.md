@@ -37,11 +37,13 @@ Die historische ZIP-Prüfung und ihr Hash bleiben Provenienznachweis. Sie sind k
 
 ## Aktueller technischer Prüfstatus
 
+Die verbindliche operative Richtlinie liegt in docs/PRODUCTION_POLICY.md. Sie verlangt direkte, sichtbare Pflanzenpflege in 3D/UI einschließlich typisierter Commands, Logs/Events, Persistenz und E2E-Belegen. Pflegewerte bleiben erfundene Spielstufen.
+
 Auf dem vorherigen Integrationsstand `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38` wurden in GitHub Actions Install, Source-Lint, Formatprüfung, TypeScript-Typecheck, Domain-Unit-Tests und Produktionsbuild erfolgreich gemeldet. Die Browser-E2E-Prüfung lief bei der letzten Beobachtung noch; daraus folgt **kein** Gesamt-CI-PASS. Die separate Master-Pack-Validierung lief erfolgreich, prüft aber nicht die vollständige Spielabnahme.
 
 ## Abnahmebedingungen
 
-1. User-facing Namens-/Scope-Prüfung findet keine unerwünschte Verwendung von „Herbal Line“, „Botanical Operations“ oder generischer Kräuterproduktion.
+1. User-facing Namens-/Scope-Prüfung zeigt ausschließlich Dr. Green Dump / DopeFarm als aktiven Produktnamen; historische Archivdateinamen und alte Persistenz-IDs sind nur Provenienz-/Kompatibilitätshinweise, keine UI-Produktlabels.
 2. Cannabis-Pflanzen sind visuell eindeutig; Pflegeaktionen sind mit echtem State-Update, sichtbarer Reaktion, Log und Speicherverhalten verbunden.
 3. Wirtschaft, Progression, Save-/Load und Compliance stimmen mit dokumentierten, belegbaren Spielregeln überein.
 4. Frischer PR-Workflow besteht Typecheck, Unit-Tests, Build, Browser-E2E, Preview-Smoke, Pack-Validation und Whitespace-Check auf demselben Commit.
