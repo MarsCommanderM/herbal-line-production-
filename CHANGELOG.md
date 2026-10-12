@@ -24,3 +24,10 @@
 - Added atomic staff reassignment/unassignment and machine movement commands, with guards against moving active machines.
 - Added an abstract maintenance lifecycle with a fictional maintenance specialist, condition restoration, audit events, and live facility status cards.
 - Added unit and Chromium E2E coverage; integration CI remains pending.
+
+## Unreleased — Economy and progression
+
+- Added deterministic fictional daily wage and utility cost calculation.
+- Added an explicit campaign day-end command that advances the clock to the next 08:00 and posts idempotent expense entries to the canonical ledger.
+- Added day-end and ledger events, a daily-cost dashboard metric, negative-balance warning, and unit/Chromium acceptance coverage.
+- Utility pricing and wages are fictional balance constants; broader multi-day economy tuning remains open.
