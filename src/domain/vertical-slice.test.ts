@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CommandId, EntityId, Score0To100 } from '../../contracts/domain';
 import type { VerticalSliceCommand } from './vertical-slice';
 import { createInitialGameState } from './initial-state';
+import { validateGameStateInvariants } from './invariants';
 import { applyVerticalSliceCommand, getCampaignBalance } from './vertical-slice';
 
 const entity = (value: string): EntityId => value as EntityId;
