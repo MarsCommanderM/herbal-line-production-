@@ -91,6 +91,18 @@ function availableActions(state: GameState): Action[] {
     }
   }
 
+  if (
+    getCampaignBalance(state) <= 0
+    && !state.economy.ledger.some((entry) => entry.idempotencyKey === 'distress-support:campaign-1')
+  ) {
+    actions.push({
+      label: 'Krisenhilfe aktivieren',
+      detail: 'Einmalige fiktive Spielhilfe gleicht den Fehlbetrag aus und stellt mindestens sieben Tage Betriebskosten bereit.',
+      type: 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT',
+      payload: {},
+    });
+  }
+
   for (const upgrade of ECONOMY_UPGRADES) {
     const stateUpgrade = state.upgrades.find((item) => item.id === upgrade.id);
     if (!stateUpgrade || !stateUpgrade.unlocked || isEconomyUpgradePurchased(state, upgrade.id)) continue;
