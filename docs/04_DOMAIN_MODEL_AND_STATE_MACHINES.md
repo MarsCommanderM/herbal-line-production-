@@ -112,6 +112,9 @@ Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte S
 - Tageskosten werden über den Schlüssel `operating-costs:day:{day}:{wages|utilities}` idempotent gebucht; wiederholte Buchungen desselben Tages dürfen keine doppelten Aufwendungen erzeugen.
 - Der Kontostand wird ausschließlich aus Eröffnungsbestand und Ledger abgeleitet. Ein negativer Kontostand bleibt sichtbar und wird nicht stillschweigend auf null begrenzt.
 - Prognosen sind reine Spiel-Balance-Szenarien: erwarteter Tagesumsatz ist ein expliziter Parameter und standardmäßig null; die 30-Tage-Anzeige kennzeichnet diese Annahme sichtbar. Projektionen verändern weder Ledger noch Kampagnenzustand.
+- Ein Upgrade wird nur bei ausreichendem Kontostand gekauft; die einmalige Investition wird als `investment` im Ledger verbucht und über einen idempotency key gegen Doppelbuchung geschützt. Der Effekt wird ausschließlich aus dem gekauften Upgradezustand abgeleitet.
+- Der Finanzstatus wird aus Kontostand und prognostizierter Reichweite abgeleitet; ein kritischer Status darf nicht durch stilles Zurücksetzen des Kontostands verborgen werden.
+
 
 - Kein Auftrag wird doppelt erfüllt oder doppelt abgerechnet.
 - Kein suspendierter Betrieb führt kritische Freigaben/Versand durch.
