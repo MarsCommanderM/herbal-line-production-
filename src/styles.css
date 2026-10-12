@@ -95,3 +95,9 @@ body { min-width: 320px; min-height: 480px; }
 @media (prefers-reduced-motion: reduce) {
   .guidance-card { animation: none; }
 }
+
+#facility-overview { display: grid; gap: 7px; }
+.facility-room-card { min-width: 0; padding: 9px; border: 1px solid #2b3e54; border-radius: 8px; background: rgba(17, 29, 45, 0.82); }
+.facility-room-card h3 { margin: 0 0 5px; color: #e8eef8; font-size: 11px; line-height: 1.35; }
+.facility-room-capacity { margin: 0 0 4px; color: #a9d9c6; font-size: 10px; font-weight: 700; }
+.facility-room-detail { margin: 3px 0 0; color: #9fb1c8; font-size: 10px; line-height: 1.4; overflow-wrap: anywhere; }

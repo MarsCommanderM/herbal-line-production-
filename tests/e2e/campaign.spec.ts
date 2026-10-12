@@ -216,3 +216,26 @@ test('live status semantics and reduced-motion preferences are respected', async
   const animationName = await page.locator('#campaign-guidance .guidance-card').evaluate((element) => getComputedStyle(element).animationName);
   expect(animationName).toBe('none');
 });
+
+test('facility controls enforce staffing roles and complete abstract machine maintenance', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Spielstation warten' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mara Weiss: Verarbeitung zuweisen' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Mara Weiss: Verarbeitung zuweisen' }).click();
+  await expect(page.getByRole('button', { name: 'Mara Weiss: Pflanzenraum zuweisen' })).toBeVisible();
+  await expect(page.locator('#game-feedback')).toContainText('Mara Weiss wurde dem Raum');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
+
+  await page.getByRole('button', { name: 'Spielstation warten' }).click();
+  await expect(page.getByRole('button', { name: 'Wartung abschließen' })).toBeVisible();
+  await expect(page.locator('#game-feedback')).toContainText('Wartung gestartet');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
+
+  await page.getByRole('button', { name: 'Wartung abschließen' }).click();
+  await expect(page.getByRole('button', { name: 'Wartung abschließen' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Spielstation warten' })).toHaveCount(0);
+  await expect(page.locator('#facility-overview')).toContainText('Zustand 100/100');
+  await expect(page.locator('#game-feedback')).toContainText('Wartung abgeschlossen');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 3');
+});
