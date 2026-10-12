@@ -113,6 +113,21 @@ describe('botanical operations vertical slice', () => {
     expect(result).toEqual({ ok: false, state, error: { code: 'STALE_REVISION', message: 'Der Spielstand wurde zwischenzeitlich geändert.' } });
   });
 
+  it('refuses to commit a command that would preserve an invalid state invariant', () => {
+    const initial = createInitialGameState();
+    const invalidState = {
+      ...initial,
+      rooms: initial.rooms.map((room) => room.kind === 'storage' ? { ...room, occupied: room.capacity + 1 } : room),
+    };
+    const result = dispatch(invalidState, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('A command must not commit on top of an invalid state.');
+    expect(result.error.code).toBe('PRECONDITION_FAILED');
+    expect(result.state).toBe(invalidState);
+    expect(result.state.plants[0]?.stage).toBe('active');
+  });
+
   it('blocks release when the saved QC decision is review', () => {
     let state = createInitialGameState();
     state = {
