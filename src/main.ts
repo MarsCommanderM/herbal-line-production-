@@ -375,7 +375,7 @@ async function boot(): Promise<() => void> {
   // procedural placeholder; production character art and animation remain a separate asset task.
   const avatar = new THREE.Group();
   avatar.name = 'third-person-player';
-  avatar.position.set(0, 0, 6);
+  avatar.position.set(-7, 0, -6.2);
   avatar.userData.isPlayerAvatar = true;
   const avatarClothing = new THREE.MeshStandardMaterial({ color: '#2e8b78', roughness: 0.78 });
   const avatarTrim = new THREE.MeshStandardMaterial({ color: '#c4d6df', roughness: 0.62 });
@@ -755,6 +755,13 @@ async function boot(): Promise<() => void> {
     renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
     renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
     renderer.domElement.dataset.cameraTargetZ = controls.target.z.toFixed(3);
+    const primaryPlantId = gameState.plants[0]?.id;
+    const primaryPlantVisual = primaryPlantId ? plantVisuals.get(primaryPlantId)?.[0] : undefined;
+    if (primaryPlantVisual) {
+      const projectedPlant = primaryPlantVisual.getWorldPosition(new THREE.Vector3()).project(camera);
+      renderer.domElement.dataset.interactablePlantX = ((projectedPlant.x + 1) * 0.5 * renderer.domElement.clientWidth).toFixed(1);
+      renderer.domElement.dataset.interactablePlantY = ((1 - projectedPlant.y) * 0.5 * renderer.domElement.clientHeight).toFixed(1);
+    }
     renderer.render(scene, camera);
   });
 

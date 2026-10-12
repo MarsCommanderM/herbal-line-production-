@@ -39,6 +39,25 @@ test('third-person avatar moves with keyboard and camera target follows', async 
   expect(cameraTargetZ).toBe(playerZ);
 });
 
+test('nearby cannabis plant can be selected directly from the third-person world', async ({ page }) => {
+  await page.goto('/');
+  const canvas = page.locator('#world-root canvas');
+  await expect(canvas).toBeVisible();
+  await expect(canvas).toHaveAttribute('data-third-person', 'true');
+  await expect.poll(async () => await canvas.getAttribute('data-interactable-plant-x')).not.toBeNull();
+  const x = Number(await canvas.getAttribute('data-interactable-plant-x'));
+  const y = Number(await canvas.getAttribute('data-interactable-plant-y'));
+  const bounds = await canvas.boundingBox();
+  expect(bounds).not.toBeNull();
+  if (!bounds) throw new Error('3D canvas has no measurable bounds');
+  expect(x).toBeGreaterThanOrEqual(0);
+  expect(y).toBeGreaterThanOrEqual(0);
+  expect(x).toBeLessThan(bounds.width);
+  expect(y).toBeLessThan(bounds.height);
+  await page.mouse.click(bounds.x + x, bounds.y + y);
+  await expect(page.locator('#game-feedback')).toContainText('Pflanze ausgewählt');
+});
+
 test('campaign controls run a step and restore a saved state', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
