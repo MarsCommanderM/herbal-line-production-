@@ -28,6 +28,8 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'BATCH/SUBMIT_QC'
     | 'BATCH/RELEASE'
     | 'BATCH/REJECT'
+    | 'MACHINE/START_MAINTENANCE'
+    | 'MACHINE/COMPLETE_MAINTENANCE'
     | 'ORDER/ACCEPT'
     | 'ORDER/ALLOCATE'
     | 'DELIVERY/CREATE'
@@ -228,12 +230,13 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       const machine = state.machines.find((item) => item.id === command.machineId);
       if (!batch || !machine) return failure(state, 'NOT_FOUND', 'Batch oder Anlage nicht gefunden.');
       if (batch.status !== 'queued' || machine.status !== 'idle' || machine.roomId !== batch.currentRoomId) return failure(state, 'INVALID_TRANSITION', 'Batch und Anlage sind nicht startbereit.');
+      if (machine.condition < 10) return failure(state, 'PRECONDITION_FAILED', 'Der Anlagenzustand ist zu niedrig. Führe zuerst eine Wartung durch.');
       if (isBlocked(state, 'BATCH/START_PROCESSING')) return failure(state, 'COMPLIANCE_BLOCKED', 'Die Compliance-Regeln blockieren die Verarbeitung.');
       const event: DomainEvent = { ...eventBase(state, command, batch.id), type: 'batch.processing_started', batchId: batch.id };
       const updated = withTrace({ ...batch, status: 'processing', updatedAt: state.time.totalMinutes }, event, command.actorId, 'BATCH_PROCESSING_STARTED', [machine.id]);
       return commit(state, command, {
         batches: state.batches.map((item) => item.id === batch.id ? updated : item),
-        machines: state.machines.map((item) => item.id === machine.id ? { ...item, status: 'active', activeJobId: batch.id } : item),
+        machines: state.machines.map((item) => item.id === machine.id ? { ...item, status: 'active', condition: Math.max(0, item.condition - 10) as Score0To100, activeJobId: batch.id } : item),
       }, [event], 'BATCH_PROCESSING_STARTED', 'Fiktiver Verarbeitungsschritt gestartet.', [batch.id, machine.id]);
     }
     case 'BATCH/SUBMIT_QC': {
@@ -330,6 +333,40 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         rooms: state.rooms.map((room) => room.id === occupiedRoomId ? { ...room, occupied: Math.max(0, room.occupied - 1) } : room),
         machines: state.machines.map((machine) => machine.activeJobId === batch.id ? { ...machine, status: 'idle', activeJobId: null } : machine),
       }, [event], 'BATCH_REJECTED', 'Batch abgelehnt und aus der aktiven Queue entfernt.', [batch.id]);
+    }
+    case 'MACHINE/START_MAINTENANCE': {
+      const machine = state.machines.find((item) => item.id === command.machineId);
+      if (!machine) return failure(state, 'NOT_FOUND', 'Anlage nicht gefunden.');
+      if (!['idle', 'broken'].includes(machine.status) || machine.activeJobId !== null) {
+        return failure(state, 'INVALID_TRANSITION', 'Wartung kann nur bei einer inaktiven Anlage gestartet werden.');
+      }
+      if (machine.condition >= 100) return failure(state, 'PRECONDITION_FAILED', 'Die Anlage benötigt laut Spielzustand keine Wartung.');
+      const event: DomainEvent = {
+        ...eventBase(state, command, machine.id),
+        type: 'machine.maintenance_started',
+        machineId: machine.id,
+        condition: machine.condition,
+      };
+      return commit(state, command, {
+        machines: state.machines.map((item) => item.id === machine.id ? { ...item, status: 'maintenance', activeJobId: null } : item),
+      }, [event], 'MACHINE_MAINTENANCE_STARTED', 'Wartung der Anlage gestartet.', [machine.id]);
+    }
+    case 'MACHINE/COMPLETE_MAINTENANCE': {
+      const machine = state.machines.find((item) => item.id === command.machineId);
+      if (!machine) return failure(state, 'NOT_FOUND', 'Anlage nicht gefunden.');
+      if (machine.status !== 'maintenance' || machine.activeJobId !== null) {
+        return failure(state, 'INVALID_TRANSITION', 'Nur eine Anlage in Wartung kann wieder freigegeben werden.');
+      }
+      const condition = Math.min(100, machine.condition + 25) as Score0To100;
+      const event: DomainEvent = {
+        ...eventBase(state, command, machine.id),
+        type: 'machine.maintenance_completed',
+        machineId: machine.id,
+        condition,
+      };
+      return commit(state, command, {
+        machines: state.machines.map((item) => item.id === machine.id ? { ...item, status: condition > 0 ? 'idle' : 'broken', condition, activeJobId: null } : item),
+      }, [event], 'MACHINE_MAINTENANCE_COMPLETED', 'Wartung abgeschlossen; Anlagenzustand aktualisiert.', [machine.id]);
     }
     case 'ORDER/ACCEPT': {
       const order = state.orders.find((item) => item.id === command.orderId);
