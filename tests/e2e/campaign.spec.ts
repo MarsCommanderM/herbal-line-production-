@@ -115,7 +115,7 @@ test('facility purchase and machine maintenance preserve capacity, assignment, l
   await expect(page.locator('#operations-queues')).toContainText('Zustand 100 / 100');
 });
 
-test('management loop completes through QC release, dispatch, and revenue posting in the browser', async ({ page }) =>
+test('management loop completes through QC release, dispatch, and revenue posting in the browser', async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
