@@ -1,5 +1,5 @@
 import type { MoneyCents } from '../../contracts/domain';
-import balance from '../data/balance.json';
+import balance from '../data/balance.json' with { type: 'json' };
 
 export interface BalanceUpgradeConfig {
   id: string;
