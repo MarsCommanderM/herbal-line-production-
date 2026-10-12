@@ -33,12 +33,17 @@
 - **Evidence:** unit tests plus Chromium E2E tests for save/load, autosave across reload, corrupted-primary fallback to backup, and export/import round-trip.
 - **Remaining:** explicit migration chain when a new schema version is introduced, quota/interrupted-write recovery tests, and cross-browser coverage.
 
-## P1-003 — Operational Dashboard and Queue UX (IMPLEMENTED; ACCEPTANCE CONTINUES)
+## P1-003 — Operational Dashboard and Queue UX (FUNCTIONAL BASELINE; ACCESSIBILITY REVIEW OPEN)
 
-- **Implemented:** an accessible live campaign-status panel with state-derived guidance, recommended next step, quality-gate explanations, license/compliance restrictions, station availability, and delivered-goal completion. Reduced-motion preferences are respected.
-- **Evidence:** unit tests for active state, suspended-license restrictions, failed quality assessment and completion; Chromium E2E verifies the guidance changes as the campaign progresses. Run 38206406378 passed.
-- **Remaining:** broader keyboard-only walkthrough, viewport/responsive QA, accessibility audit, and domain/UI coverage for more terminal and blocked states.
+- **Implemented:** state-derived campaign guidance, recommended next step, quality/compliance blockers, station availability, and delivered-goal completion.
+- **Evidence:** Chromium E2E run 38207213170 passed 7 scenarios, including predictable keyboard tab order, focus-visible styling, 390×844 mobile layout without horizontal overflow, live-region semantics, and reduced-motion handling.
+- **Remaining:** full WCAG contrast/semantics review, broader assistive-technology testing, and more viewport coverage.
 - **Gate:** every primary action has a clear precondition, visible result, and tested error state.
+
+## P2-001 — Facility, capacity, staffing and maintenance (NEXT)
+
+- **Goal:** enforce room occupancy/capacity invariants and machine/staff assignment consistency across every command path.
+- **Acceptance:** property-style invariant tests, explicit blocked-action messages, and multi-command regression scenarios; no action may leave negative occupancy or an active machine attached to a terminal batch.
 
 ## Operating rule
 

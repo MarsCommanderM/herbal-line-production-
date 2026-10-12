@@ -159,3 +159,60 @@ test('failed or unresolved QC offers a documented terminal rejection instead of 
   await expect(page.getByRole('button', { name: 'Batch ablehnen' })).toHaveCount(0);
   await expect(page.locator('#game-log')).toContainText('BATCH REJECTED');
 });
+
+test('keyboard navigation reaches primary controls in a predictable order', async ({ page }) => {
+  await page.goto('/');
+  const expectedIds = ['reset-camera', 'save-game', 'load-game', 'export-game', 'import-game'];
+  for (const id of expectedIds) {
+    await page.keyboard.press('Tab');
+    await expect(page.locator(':focus')).toHaveAttribute('id', id);
+  }
+
+  await page.keyboard.press('Tab');
+  await expect(page.locator(':focus')).toHaveText('Simulationsschritt ausführen');
+  const focusStyle = await page.locator(':focus').evaluate((element) => getComputedStyle(element).outlineStyle);
+  expect(focusStyle).not.toBe('none');
+});
+
+test('mobile viewport keeps the management panel inside the screen without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
+  await expect(page.locator('#campaign-guidance')).toContainText('Produktionseinheit aktiv');
+
+  const geometry = await page.evaluate(() => {
+    const panel = document.querySelector<HTMLElement>('#game-panel');
+    if (!panel) throw new Error('Management panel is missing.');
+    const rect = panel.getBoundingClientRect();
+    return {
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+      width: rect.width,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      documentWidth: document.documentElement.scrollWidth,
+      panelScrollHeight: panel.scrollHeight,
+      panelClientHeight: panel.clientHeight,
+    };
+  });
+  expect(geometry.left).toBeGreaterThanOrEqual(0);
+  expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth);
+  expect(geometry.top).toBeGreaterThanOrEqual(0);
+  expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight);
+  expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+  expect(geometry.panelScrollHeight).toBeGreaterThanOrEqual(geometry.panelClientHeight);
+
+  await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
+  await expect(page.locator('#campaign-guidance')).toContainText('Nächster Prozessschritt bereit');
+});
+
+test('live status semantics and reduced-motion preferences are respected', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(page.locator('#campaign-guidance')).toHaveAttribute('aria-live', 'polite');
+  await expect(page.locator('#game-feedback')).toHaveAttribute('aria-live', 'polite');
+  const animationName = await page.locator('#campaign-guidance .guidance-card').evaluate((element) => getComputedStyle(element).animationName);
+  expect(animationName).toBe('none');
+});
