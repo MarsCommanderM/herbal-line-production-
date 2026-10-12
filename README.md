@@ -1,14 +1,18 @@
 # Herbal Line — Final Production Master Pack
 
 **Dokumentstand:** 11. Oktober 2026  
-**Projekt-/Spielname:** Herbal Line  
+**Projekt-/Spielname:** Dr. Green Dump / DopeFarm
 **Vom Projektauftrag benannter Projektverantwortlicher:** Michael Braunschweig  
 **Plattform:** Browser/Web  
 **Status:** verbindliche Produktionsspezifikation und agentenfähiges Arbeitsbriefing — kein bereits fertig implementierter oder veröffentlichter Spiel-Build.
 
 ## Produktdefinition
 
-Herbal Line ist ein hochwertiges Web-Managementspiel über den Betrieb einer fiktiven, streng regulierten botanischen Anlage. Im Mittelpunkt stehen Planung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lager, generische Kundenaufträge, Personal, Ressourcen, Compliance und nachhaltige Expansion.
+Dr. Green Dump / DopeFarm : ist ein hochwertiges Web-Managementspiel über den legalen, kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. In dem der spieler die Leitung führt für einen legalen Produktions- und Lieferprozess für ein reguliertes medizinisches Cannabis Arznei-/Naturprodukt. Es simuliert — Cannabis-Anbau- und  Vertriebsanleitung. 
+Spielwelt: klar erkennbare Cannabis-Pflanzen, professionelle Anbauräume, Lampen, Bewässerung, Klima- und Lüftungstechnik, Arbeitsbereiche, Lager und Verarbeitung.
+Spieleraktionen: Pflege und Betreuung der Pflanzen müssen direkt sichtbar an den Pflanzen stattfinden – nicht nur als abstrakte Schaltflächen in einem Verwaltungsmenü.
+Geschäftsablauf: Pflanzenpflege, simulierte Verarbeitung, Qualitätssicherung, Lager, Logistik und Auslieferung an Apotheken. Die internen Abläufe der Apotheken selbst gehören nicht zum Spielumfang.
+Die Simulationswerte sind fiktive Spielwerte. Das schränkt die Cannabis-Thematik nicht ein: Die Pflanzen dürfen erkennbar sein und die Aktionen müssen visuell verständlich umgesetzt werden.
 
 **Darstellungs- und Simulationsgrenze:** Pflanzen-, Qualitäts- und Prozesswerte sind abstrahierte, erfundene Spielmechaniken. Das Paket enthält keine realen Anbauparameter, Rezepturen, Extraktionsverfahren oder operativen Anleitungen zur Herstellung oder Distribution kontrollierter Substanzen.
 
