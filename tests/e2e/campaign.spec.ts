@@ -158,6 +158,13 @@ test('failed or unresolved QC offers a documented terminal rejection instead of 
   await expect(page.locator('#game-metrics')).toContainText('rejected');
   await expect(page.getByRole('button', { name: 'Batch ablehnen' })).toHaveCount(0);
   await expect(page.locator('#game-log')).toContainText('BATCH REJECTED');
+
+  await expect(page.getByRole('button', { name: 'Wartung starten' })).toBeVisible();
+  await page.getByRole('button', { name: 'Wartung starten' }).click();
+  await expect(page.locator('#game-log')).toContainText('MACHINE MAINTENANCE STARTED');
+  await expect(page.getByRole('button', { name: 'Wartung abschließen' })).toBeVisible();
+  await page.getByRole('button', { name: 'Wartung abschließen' }).click();
+  await expect(page.locator('#game-log')).toContainText('MACHINE MAINTENANCE COMPLETED');
 });
 
 test('keyboard navigation reaches primary controls in a predictable order', async ({ page }) => {
