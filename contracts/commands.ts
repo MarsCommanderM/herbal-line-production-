@@ -22,6 +22,7 @@ export type DomainCommand =
   | (CommandBase & { type: 'DELIVERY/DISPATCH'; deliveryId: EntityId })
   | (CommandBase & { type: 'DELIVERY/CONFIRM'; deliveryId: EntityId; proofCode: string })
   | (CommandBase & { type: 'ROOM/PURCHASE'; roomId: EntityId; definitionId: string })
+  | (CommandBase & { type: 'MACHINE/START_MAINTENANCE' | 'MACHINE/COMPLETE_MAINTENANCE'; machineId: EntityId })
   | (CommandBase & { type: 'STAFF/ASSIGN'; assignmentId: EntityId; staffId: EntityId; taskCode: string; entityId: EntityId | null })
   | (CommandBase & { type: 'UPGRADE/PURCHASE'; upgradeId: string })
   | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId })
