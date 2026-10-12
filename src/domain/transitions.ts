@@ -52,7 +52,7 @@ export function transitionBatch(
 export interface InventoryReservation {
   quantityAvailable: number;
   quantityReserved: number;
-  status: 'held' | 'released' | 'depleted' | 'expired' | 'rejected';
+  status: 'held' | 'released' | 'reserved' | 'depleted' | 'expired' | 'rejected';
 }
 
 export type ReservationResult =
@@ -65,7 +65,7 @@ export function reserveInventory(
   quantity: number,
 ): ReservationResult {
   if (!Number.isSafeInteger(quantity) || quantity <= 0) return { ok: false, error: 'INVALID_QUANTITY' };
-  if (lot.status !== 'released') return { ok: false, error: 'LOT_NOT_RELEASED' };
+  if (lot.status !== 'released' && lot.status !== 'reserved') return { ok: false, error: 'LOT_NOT_RELEASED' };
   if (
     !Number.isSafeInteger(lot.quantityAvailable) ||
     !Number.isSafeInteger(lot.quantityReserved) ||
