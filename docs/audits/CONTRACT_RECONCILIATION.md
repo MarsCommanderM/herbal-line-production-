@@ -2,7 +2,7 @@
 
 ## Authority
 
-The supplied Herbal Line Master Pack is the reference for product requirements, domain concepts, schemas and production gates. The implementation branch currently keeps the playable simulation fictional and generic: abstract botanical units, QC/inventory/compliance states and generic customer orders. No real-world controlled-substance production or distribution instructions are implemented.
+The supplied Herbal Line Master Pack is the binding reference for product requirements, domain concepts, schemas and production gates. The agreed product is a fictional, strictly regulated medical-cannabis production management simulation. Current implementation details must be reconciled against the canonical archive; a generic botanical rescope is not an approved product decision. The simulation remains fictional and must not provide real-world controlled-substance production or distribution instructions.
 
 ## Decisions recorded
 
