@@ -26,7 +26,7 @@
 - **Goal:** Intake → fictional botanical stages → QC hold/release → inventory → generic customer dispatch.
 - **Evidence:** deterministic domain tests and Chromium E2E interaction coverage; the UI runs in the actual browser with a WebGL canvas.
 - **Verified on main:** the 12-command delivery E2E, exactly-once revenue posting, reload restoration, and cross-browser campaign flow passed on `287f3fcf`.
-- **In progress on `production/p1-001-acceptance-hardening-20261012`:** one canonical domain compliance gate now drives disabled UI actions; tests cover suspended licenses, operation-specific blocks, immutable state on rejection, and the visible reason. Same-revision CI is pending.
+- **Implemented and branch-CI verified:** one canonical domain compliance gate now drives disabled UI actions; tests cover suspended licenses, operation-specific blocks, immutable state on rejection, and the visible reason. Code and task-status snapshot passed Herbal Line CI on `d6850c5f` (run `38275069235`); PR/master-pack validation for this follow-up remains pending.
 - **Remaining after this gate:** empty-state reachability review, save quota/interrupted-write tests, full WCAG contrast/semantics review, and broader viewport/assistive-technology coverage.
 
 ## P1-002 — Save/Load and Recovery (CROSS-BROWSER BASELINE VERIFIED; HARDENING OPEN)
