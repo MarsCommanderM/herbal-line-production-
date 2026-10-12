@@ -8,6 +8,7 @@ The supplied `Herbal-Line-Production-Master-Pack.zip` was inspected directly.
 - ZIP integrity check: passed (`ZipFile.testzip()` returned no damaged member).
 - Archive members: 49 total entries, including directories; 42 files.
 - Canonical product statement in `PROJECT_MANIFEST.json`: a high-quality browser management game about a strictly regulated medical-cannabis plant production operation.
+- Archive validator: `python scripts/validate_masterpack.py` exited 0 and reported `PASS (20 required files checked)`. This validates pack completeness/basic metadata only, not app implementation or full parity.
 - Canonical phase plan: phases 0–19; the backlog explicitly includes economy/progression, final visual quality, QA/security/rights, release and post-launch operations.
 
 The generic botanical rescope in the previous repository documentation was not owner-approved. This restoration branch is the work area; `main` has not been modified by the restoration edits recorded here.
@@ -23,6 +24,20 @@ The archive's expected Git blob SHA-1s were calculated from the actual file byte
 | `.tasks/NEXT.md` | `816d1ffa7f4ee7a697aa8da7499870091fd86b71` | Exact match restored |
 | `.tasks/BACKLOG.md` | `e002ab4884f12242916b15c193792b93e1e39cb0` | Exact match restored |
 | `AGENTS.md` | `a20ef5de0f140885cd4838be62e667f0a5ebc126` | Scope wording restored, but blob hash does not match; exact parity remains open |
+| `README.md` | `2aff771b3bf6b98f0e5316c8c10c2a12a74e761c` | Exact match restored |
+| `PROJECT_MANIFEST.json` | `8eed2b619449b24f0a3a23cd5aef2b7cc5a79e1c` | Exact match restored |
+| `RIGHTS_NOTICE.md` | `2c9fa96f93ebc7596beaa8b9ad7dded411bf0f65` | Exact match restored |
+| `START_HERE.md` | `744e8d73e4d54c199a188433dac93548ae14afe4` | Exact match restored |
+| `CHANGELOG.md` | `188e409aff29baccab0b4d25354d8e01c230f185` | Exact match restored |
+| `CONTRIBUTING.md` | `1864387a31b98cd0deb1cf4666dc2d42f8d893c0` | Exact match restored |
+| `rights/LICENSE_REGISTER.md` | `879a31af00fc4f6f3e4217f39b36876589ab5434` | Exact match restored |
+| `schemas/content-manifest.schema.json` | `5794455b9497d44f729e52f6cbf8cad7642de0dd` | Exact match restored |
+| `schemas/order-template.schema.json` | `df0273e09ba9dcd1cc3fe3ec394462fea8ca3bb9` | Exact match restored |
+| `schemas/plant-profile.schema.json` | `a5f83e14f435f280b8c7662c51b92487d764e7bc` | Exact match restored |
+| `schemas/room-definition.schema.json` | `f633318f879ee2a816ba47d3bedf5abf71a5c18e` | Exact match restored |
+| `schemas/save-envelope-v1.schema.json` | `237354d33d8fc0c56d018175c755c1e46e5b0074` | Exact match restored |
+
+Total currently verified exact archive files: **16 of 42**. This is a verified subset, not full parity.
 
 The current parity report preserves the earlier `4/42` comparison as historical evidence for `main@6ddb8849886f35ece5f3d784d06714b4054f5116` only. It is not being represented as a fresh comparison of this restoration branch.
 
