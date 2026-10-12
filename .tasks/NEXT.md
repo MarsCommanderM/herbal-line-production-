@@ -6,7 +6,7 @@
 - P0-002 contract decisions are recorded in `docs/audits/CONTRACT_RECONCILIATION.md`; exact byte-for-byte parity with the supplied Master Pack remains open.
 - P0-003 reproducible Vite/TypeScript baseline is verified on the current integration revision.
 - Latest verified integration revision before the current facility work: `11fdccf9a19d46b963ecac9d0f034803a6af3ffc`.
-- Current facility work is on `production/facility-capacity-staffing-20261012`; do not mark it accepted until the branch CI and browser E2E pass.
+- Facility implementation is on `production/facility-capacity-staffing-20261012`; code acceptance passed on `2aa9a3caa1099dc3f400a52195265cf2e1b21d9e` (run 38208171192). The documentation-integrated revision is being revalidated.
 - Evidence: [GitHub Actions run 38182289439](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182289439) — install, lint, format, typecheck, 26 unit tests, production build, 3 Chromium E2E tests, production preview smoke, master-pack validator and `git diff --check` all passed.
 
 ## P0-002 — Reconcile Project Truth (SCOPE DECISION RECORDED; EXACT MIRROR NOT CLAIMED)
@@ -46,12 +46,12 @@
 - **Goal:** enforce room occupancy/capacity invariants and machine/staff assignment consistency across every command path.
 - **Acceptance:** property-style invariant tests, explicit blocked-action messages, and multi-command regression scenarios; no action may leave negative occupancy or an active machine attached to a terminal batch.
 
-## P2-001 — Facility, capacity, staffing and maintenance (IN PROGRESS)
+## P2-001 — Facility, capacity, staffing and maintenance (IMPLEMENTED; ACCEPTANCE PASSED)
 
 - **Scope:** bidirectional room/staff/machine assignments, role-to-room compatibility, room capacity/occupancy bounds, safe machine maintenance lifecycle, and post-command invariant validation.
 - **Implemented on branch:** pure facility invariant checker; typed staffing/machine commands and audit events; consistent initial staffing including a maintenance specialist; UI controls for role-valid staff reassignment and abstract machine maintenance; unit and browser acceptance tests.
-- **Acceptance pending:** same-revision lint, formatting, strict typecheck, unit tests, production build, Chromium E2E, preview smoke and master-pack validation.
-- **Required regression cases:** no out-of-range room occupancy; no one-sided staff/machine links; no active machine move or maintenance; no machine active job attached to a non-processing/terminal batch; failed commands preserve the input state.
+- **Evidence:** [GitHub Actions run 38208171192](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38208171192) passed on code revision `2aa9a3caa1099dc3f400a52195265cf2e1b21d9e`: lint, format, typecheck, domain tests, production build, Chromium E2E, production preview smoke, master-pack validation and whitespace check. Documentation-integrated head is re-running the same gates.
+- **Covered regression cases:** no out-of-range room occupancy; no one-sided staff/machine links; no active machine move or maintenance; no machine active job attached to a non-processing/terminal batch; failed commands preserve the input state. Browser coverage also proves role-valid reassignment, maintenance lifecycle, and visible facility status.
 
 ## Operating rule
 

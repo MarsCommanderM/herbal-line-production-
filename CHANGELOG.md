@@ -21,4 +21,4 @@
 - Added pure facility invariants for room capacity/occupancy and bidirectional staff/machine assignments.
 - Added role-checked staff reassignment, machine movement guards, and an abstract maintenance start/complete lifecycle.
 - Added initial maintenance staffing, unit tests, and Chromium UI acceptance coverage.
-- Acceptance remains pending same-revision CI; no release-ready claim is made.
+- Code acceptance passed in [run 38208171192](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38208171192) on `2aa9a3caa1099dc3f400a52195265cf2e1b21d9e`; the documentation-integrated revision is undergoing final CI revalidation. This milestone is not a release-ready claim.

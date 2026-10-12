@@ -92,3 +92,11 @@ The initial save/load implementation was merged via [PR #5](https://github.com/M
 - Added: stable JSON serialization, SHA-256 save checksums, envelope validation, IndexedDB save/load/list/delete/export/import, transient UI reconstruction, manual save/load controls, and tests for checksum corruption and repository lifecycle.
 
 **Remaining persistence acceptance:** real-browser IndexedDB round-trip, schema migration beyond v1, quota exhaustion, interrupted transaction recovery, and browser E2E.
+
+
+## Facility systems milestone — 2026-10-12
+
+- Code revision: `2aa9a3caa1099dc3f400a52195265cf2e1b21d9e`
+- Evidence: [GitHub Actions run 38208171192](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38208171192) — lint, format, strict typecheck, domain unit tests, production build, Chromium E2E, production preview smoke, master-pack validation, and whitespace check passed.
+- Added: room capacity/occupancy bounds, bidirectional staff and machine assignment invariants, role-valid staff reassignment, active-machine movement/maintenance guards, a fictional maintenance lifecycle, and a live facility status panel.
+- The app's browser E2E verifies the staff reassignment and maintenance workflow. This is a functional milestone, not final visual or release acceptance.
