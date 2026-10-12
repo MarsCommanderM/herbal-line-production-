@@ -1,4 +1,4 @@
-# Herbal Line — Final Production Master Pack
+# Dr. Green Dump / DopeFarm — Final Production Master Pack
 
 **Dokumentstand:** 11. Oktober 2026  
 **Projekt-/Spielname:** Dr. Green Dump / DopeFarm
