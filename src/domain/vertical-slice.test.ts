@@ -97,6 +97,41 @@ describe('botanical operations vertical slice', () => {
     expect(getCampaignBalance(state)).toBe(25_850_000);
   });
 
+  it('posts one late-delivery penalty atomically with revenue and inventory settlement', () => {
+    let state = progressToReleasedInventory();
+    state = {
+      ...state,
+      orders: state.orders.map((order) => order.id === entity('order-buyer-001')
+        ? { ...order, dueAt: -1 as typeof order.dueAt }
+        : order),
+    };
+    state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-buyer-001') });
+    state = applyOk(state, 'ORDER/ALLOCATE', { orderId: entity('order-buyer-001'), lotIds: [entity('inventory-batch-001')] });
+    state = applyOk(state, 'DELIVERY/CREATE', { deliveryId: entity('delivery-late-001'), orderId: entity('order-buyer-001'), routeId: 'route-late-01' });
+    state = applyOk(state, 'DELIVERY/DISPATCH', { deliveryId: entity('delivery-late-001') });
+
+    const delivered = dispatch(state, 'DELIVERY/CONFIRM', {
+      deliveryId: entity('delivery-late-001'), proofCode: 'ACK-LATE-001',
+    });
+    expect(delivered.ok).toBe(true);
+    if (!delivered.ok) throw new Error(delivered.error.message);
+    expect(delivered.state.economy.ledger).toHaveLength(2);
+    expect(delivered.state.economy.ledger.map((entry) => ({ account: entry.account, amountCents: Number(entry.amountCents), reasonCode: entry.reasonCode }))).toEqual([
+      { account: 'revenue', amountCents: 850_000, reasonCode: 'order.fulfilled' },
+      { account: 'penalty', amountCents: 50_000, reasonCode: 'order.late_delivery' },
+    ]);
+    expect(getCampaignBalance(delivered.state)).toBe(25_800_000);
+    expect(delivered.events.filter((event) => event.type === 'finance.ledger_posted').map((event) => event.type === 'finance.ledger_posted' ? event.account : '')).toEqual(['revenue', 'penalty']);
+
+    const repeated = dispatch(delivered.state, 'DELIVERY/CONFIRM', {
+      deliveryId: entity('delivery-late-001'), proofCode: 'ACK-LATE-001',
+    });
+    expect(repeated.ok).toBe(true);
+    if (!repeated.ok) throw new Error(repeated.error.message);
+    expect(repeated.state.economy.ledger).toHaveLength(2);
+    expect(getCampaignBalance(repeated.state)).toBe(25_800_000);
+  });
+
   it('does not post revenue twice when delivery confirmation is repeated', () => {
     let state = progressToReleasedInventory();
     state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-buyer-001') });

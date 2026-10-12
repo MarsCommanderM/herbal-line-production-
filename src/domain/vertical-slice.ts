@@ -603,7 +603,12 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       const order = state.orders.find((item) => item.id === delivery.orderId);
       if (!order) return failure(state, 'NOT_FOUND', 'Zugehöriger Auftrag nicht gefunden.');
       const ledgerKey = 'delivery:' + delivery.id + ':revenue';
-      if (state.economy.ledger.some((entry) => entry.idempotencyKey === ledgerKey)) return failure(state, 'DUPLICATE_COMMAND', 'Umsatz wurde bereits verbucht.');
+      const latePenaltyKey = 'delivery:' + delivery.id + ':late-penalty';
+      const isLate = Number(state.time.totalMinutes) > Number(order.dueAt);
+      if (state.economy.ledger.some((entry) => entry.idempotencyKey === ledgerKey)
+        || (isLate && Number(order.latePenaltyCents) > 0 && state.economy.ledger.some((entry) => entry.idempotencyKey === latePenaltyKey))) {
+        return failure(state, 'DUPLICATE_COMMAND', 'Finanzbuchung für diese Lieferung wurde bereits vorgenommen.');
+      }
       let remaining = delivery.quantity;
       const updatedLots = new Map<EntityId, InventoryLotState>();
       for (const lotId of delivery.lotIds) {
@@ -632,7 +637,29 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         idempotencyKey: ledgerKey,
       };
       const deliveryEvent: DomainEvent = { ...eventBase(state, command, delivery.id, 1), type: 'delivery.delivered', deliveryId: delivery.id, orderId: order.id };
-      const financeEvent: DomainEvent = { ...eventBase(state, command, order.id, 2), type: 'finance.ledger_posted', ledgerEntryId: ledgerEntry.id, amountCents: Number(order.contractValueCents), account: 'revenue' };
+      const financeEvents: DomainEvent[] = [
+        { ...eventBase(state, command, order.id, 2), type: 'finance.ledger_posted', ledgerEntryId: ledgerEntry.id, amountCents: Number(order.contractValueCents), account: 'revenue' },
+      ];
+      const ledgerEntries: LedgerEntry[] = [ledgerEntry];
+      if (isLate && Number(order.latePenaltyCents) > 0) {
+        const penaltyEntry: LedgerEntry = {
+          id: entityId('ledger-' + delivery.id + '-late-penalty'),
+          simulationMinute: state.time.totalMinutes,
+          account: 'penalty',
+          amountCents: order.latePenaltyCents,
+          referenceId: order.id,
+          reasonCode: 'order.late_delivery',
+          idempotencyKey: latePenaltyKey,
+        };
+        ledgerEntries.push(penaltyEntry);
+        financeEvents.push({
+          ...eventBase(state, command, order.id, 3),
+          type: 'finance.ledger_posted',
+          ledgerEntryId: penaltyEntry.id,
+          amountCents: Number(order.latePenaltyCents),
+          account: 'penalty',
+        });
+      }
       const roomDeltas = new Map<EntityId, number>();
       for (const [lotId, updatedLot] of updatedLots) {
         const originalLot = state.inventoryLots.find((lot) => lot.id === lotId);
@@ -648,9 +675,9 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
           const consumed = roomDeltas.get(room.id) ?? 0;
           return consumed > 0 ? { ...room, occupied: Math.max(0, room.occupied - consumed) } : room;
         }),
-        economy: { ...state.economy, ledger: [...state.economy.ledger, ledgerEntry] },
+        economy: { ...state.economy, ledger: [...state.economy.ledger, ...ledgerEntries] },
         reputation: Math.min(1000, Number(state.reputation) + 5) as GameState['reputation'],
-      }, [deliveryEvent, financeEvent], 'DELIVERY_CONFIRMED', 'Wareneingang bestätigt; Umsatz einmalig gebucht.', [delivery.id, order.id, ...delivery.lotIds]);
+      }, [deliveryEvent, ...financeEvents], 'DELIVERY_CONFIRMED', 'Wareneingang bestätigt; Umsatz einmalig gebucht.', [delivery.id, order.id, ...delivery.lotIds]);
     }
     case 'COMPLIANCE/RECORD_VIOLATION': {
       const code = command.code.trim();

@@ -41,9 +41,9 @@ Accepted at `cc730e9fdca65d7c3bb1912faf1dbd053f047daf`; [full CI run #3825198738
 
 Accepted at `a0325cf5a941dabbc0c4683919e7c0bca5ca860f`; [full CI run #38257706542 passed](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38257706542). Review confirmed room capacity checks, occupancy transfer/release accounting, exclusive staff assignment, role compatibility, machine-room consistency, and the maintenance lifecycle. A degraded active machine can no longer receive a maintenance assignment that cannot start. New domain tests cover occupancy across queue → QC → storage → delivery, mismatched machine/room rejection, and rejection of the active-machine maintenance dead end. Existing browser E2E verifies facility purchase, capacity display, maintenance assignment/start/completion, condition restoration, ledger entry and save persistence. Save schema v1 is unchanged.
 
-## P2-002 — Economy and progression (IN PROGRESS — AUDIT)
+## P2-002 — Economy and progression (IN PROGRESS — IMPLEMENTATION)
 
-Audit balance derivation, ledger idempotency, investment/expense/revenue/penalty/refund entries, affordability gates, upgrade purchasing, and progression/reputation effects before implementation. Add invariant and negative-path tests first. Never mutate a cached balance independently of the ledger; preserve save-v1 compatibility. Completion requires a reviewed diff and full CI green on one exact SHA.
+Audit confirmed that balances/totals are ledger-derived, room investments and delivery revenue are posted, and duplicate room purchases and revenue settlement are guarded. The existing order contract also carries `dueAt` and `latePenaltyCents`, but those fields were unused; late delivery now posts one penalty ledger entry atomically with revenue and stock settlement, with an explicit idempotency key and event. New tests cover penalty amount, derived balance, event, and repeated confirmation. Remaining audited gaps: `UPGRADE/PURCHASE` is declared but has no domain handler; player experience/level never advance; no canonical upgrade catalog or versioned `src/data/balance.json` exists despite the domain spec referencing one. Do not invent progression costs/effects; establish those rules from the authoritative Master Pack before implementing those subgates. Save schema v1 remains unchanged.
 
 ## Operating rule
 
