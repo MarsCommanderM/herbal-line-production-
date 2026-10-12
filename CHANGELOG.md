@@ -43,3 +43,9 @@
 - Added a one-time, ledger-backed energy-efficiency upgrade that reduces fictional utility expenses by 20 percent.
 - Added duplicate-purchase and insufficient-funds guards, purchase audit events, and UI feedback; the purchase changes the derived balance through an `investment` ledger entry.
 - Added a financial-health indicator based on current balance and zero-revenue runway, plus finance/domain and Chromium E2E coverage. Exact-revision CI pending.
+
+## Unreleased — Economy distress recovery
+
+- Added a one-time, ledger-backed fictional support grant available only when campaign funds are exhausted.
+- The grant clears the current deficit and provides at least seven days of current operating costs, using a campaign-scoped idempotency key and explicit `grant` account.
+- Added recovery event/notification and tests for premature use, recovery amount, balance derivation and duplicate-claim prevention. Exact-revision CI pending.
