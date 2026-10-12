@@ -16,6 +16,7 @@ import type { CommandBase, CommandFailureCode, DomainCommand, CommandResult } fr
 import type { DomainEvent } from '../../contracts/events';
 import { getBalanceCents } from './finance';
 import { reserveInventory, transitionBatch } from './transitions';
+import { clampScore, roomSupportsStaffRole, validateFacilityInvariants } from './facility';
 
 export type VerticalSliceCommand = Extract<DomainCommand, {
   type:
@@ -32,6 +33,11 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'DELIVERY/CREATE'
     | 'DELIVERY/DISPATCH'
     | 'DELIVERY/CONFIRM'
+    | 'FACILITY/ASSIGN_STAFF'
+    | 'FACILITY/UNASSIGN_STAFF'
+    | 'FACILITY/MOVE_MACHINE'
+    | 'MACHINE/START_MAINTENANCE'
+    | 'MACHINE/COMPLETE_MAINTENANCE'
 }>;
 
 const entityId = (value: string): EntityId => value as EntityId;
@@ -78,6 +84,11 @@ function commit(
     revision: state.revision + 1,
     logs: [...state.logs, logEntry(state, command, code, message, relatedEntityIds)],
   };
+  const violations = validateFacilityInvariants(next);
+  if (violations.length > 0) {
+    const first = violations[0];
+    return failure(state, 'PRECONDITION_FAILED', 'Aktion verletzt die Anlageninvarianten: ' + first.message);
+  }
   return { ok: true, state: next, events };
 }
 
@@ -453,6 +464,80 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         economy: { ...state.economy, ledger: [...state.economy.ledger, ledgerEntry] },
         reputation: Math.min(1000, Number(state.reputation) + 5) as GameState['reputation'],
       }, [deliveryEvent, financeEvent], 'DELIVERY_CONFIRMED', 'Wareneingang bestätigt; Umsatz einmalig gebucht.', [delivery.id, order.id, ...delivery.lotIds]);
+    }
+    case 'FACILITY/ASSIGN_STAFF': {
+      const staff = state.staff.find((item) => item.id === command.staffId);
+      const room = state.rooms.find((item) => item.id === command.roomId);
+      if (!staff || !room) return failure(state, 'NOT_FOUND', 'Mitarbeiter oder Raum nicht gefunden.');
+      if (!room.unlocked) return failure(state, 'PRECONDITION_FAILED', 'Der Zielraum ist noch nicht freigeschaltet.');
+      if (staff.activeAssignmentId !== null) return failure(state, 'PRECONDITION_FAILED', 'Mitarbeiter mit aktiver Aufgabe kann nicht umverteilt werden.');
+      if (!roomSupportsStaffRole(room.kind, staff.role)) return failure(state, 'PRECONDITION_FAILED', 'Die Rolle passt nicht zum gewählten Raumtyp.');
+      if (staff.assignedRoomId === room.id) return failure(state, 'INVALID_TRANSITION', 'Mitarbeiter ist diesem Raum bereits zugeordnet.');
+      const previousRoomId = staff.assignedRoomId;
+      const event: DomainEvent = { ...eventBase(state, command, staff.id), type: 'facility.staff_assigned', staffId: staff.id, roomId: room.id };
+      return commit(state, command, {
+        staff: state.staff.map((item) => item.id === staff.id ? { ...item, assignedRoomId: room.id } : item),
+        rooms: state.rooms.map((item) => {
+          if (item.id === previousRoomId) return { ...item, assignedStaffIds: item.assignedStaffIds.filter((id) => id !== staff.id) };
+          if (item.id === room.id) return { ...item, assignedStaffIds: [...item.assignedStaffIds, staff.id] };
+          return item;
+        }),
+      }, [event], 'STAFF_ASSIGNED_TO_ROOM', staff.displayName + ' wurde dem Raum „' + room.displayName + '“ zugewiesen.', [staff.id, room.id, ...(previousRoomId ? [previousRoomId] : [])]);
+    }
+    case 'FACILITY/UNASSIGN_STAFF': {
+      const staff = state.staff.find((item) => item.id === command.staffId);
+      if (!staff) return failure(state, 'NOT_FOUND', 'Mitarbeiter nicht gefunden.');
+      if (staff.assignedRoomId === null) return failure(state, 'INVALID_TRANSITION', 'Mitarbeiter ist keinem Raum zugewiesen.');
+      if (staff.activeAssignmentId !== null) return failure(state, 'PRECONDITION_FAILED', 'Mitarbeiter mit aktiver Aufgabe kann nicht freigestellt werden.');
+      const roomId = staff.assignedRoomId;
+      const event: DomainEvent = { ...eventBase(state, command, staff.id), type: 'facility.staff_unassigned', staffId: staff.id, roomId };
+      return commit(state, command, {
+        staff: state.staff.map((item) => item.id === staff.id ? { ...item, assignedRoomId: null } : item),
+        rooms: state.rooms.map((room) => room.id === roomId ? { ...room, assignedStaffIds: room.assignedStaffIds.filter((id) => id !== staff.id) } : room),
+      }, [event], 'STAFF_UNASSIGNED_FROM_ROOM', staff.displayName + ' wurde aus der Raumzuordnung genommen.', [staff.id, roomId]);
+    }
+    case 'FACILITY/MOVE_MACHINE': {
+      const machine = state.machines.find((item) => item.id === command.machineId);
+      const room = state.rooms.find((item) => item.id === command.roomId);
+      if (!machine || !room) return failure(state, 'NOT_FOUND', 'Maschine oder Zielraum nicht gefunden.');
+      if (!room.unlocked) return failure(state, 'PRECONDITION_FAILED', 'Der Zielraum ist noch nicht freigeschaltet.');
+      if (machine.status !== 'idle' || machine.activeJobId !== null) return failure(state, 'PRECONDITION_FAILED', 'Nur eine inaktive Maschine kann verlegt werden.');
+      if (machine.roomId === room.id) return failure(state, 'INVALID_TRANSITION', 'Maschine befindet sich bereits in diesem Raum.');
+      if (room.kind !== 'processing') return failure(state, 'PRECONDITION_FAILED', 'Diese Spielstation benötigt einen freigeschalteten Verarbeitungsraum.');
+      const previousRoomId = machine.roomId;
+      const event: DomainEvent = { ...eventBase(state, command, machine.id), type: 'facility.machine_moved', machineId: machine.id, previousRoomId, nextRoomId: room.id };
+      return commit(state, command, {
+        machines: state.machines.map((item) => item.id === machine.id ? { ...item, roomId: room.id } : item),
+        rooms: state.rooms.map((item) => {
+          if (item.id === previousRoomId) return { ...item, assignedMachineIds: item.assignedMachineIds.filter((id) => id !== machine.id) };
+          if (item.id === room.id) return { ...item, assignedMachineIds: [...item.assignedMachineIds, machine.id] };
+          return item;
+        }),
+      }, [event], 'MACHINE_MOVED', 'Spielstation wurde in den Zielraum verlegt.', [machine.id, previousRoomId, room.id]);
+    }
+    case 'MACHINE/START_MAINTENANCE': {
+      const machine = state.machines.find((item) => item.id === command.machineId);
+      if (!machine) return failure(state, 'NOT_FOUND', 'Maschine nicht gefunden.');
+      if (machine.status !== 'idle' || machine.activeJobId !== null) return failure(state, 'PRECONDITION_FAILED', 'Wartung kann nur an einer inaktiven Maschine beginnen.');
+      if (machine.condition >= 100) return failure(state, 'INVALID_TRANSITION', 'Die Maschine benötigt aktuell keine Spielwartung.');
+      const technician = state.staff.find((staff) => staff.role === 'maintenance' && staff.assignedRoomId === machine.roomId && staff.energy > 0);
+      if (!technician) return failure(state, 'PRECONDITION_FAILED', 'Keine verfügbare Wartungsfachkraft ist diesem Raum zugewiesen.');
+      const event: DomainEvent = { ...eventBase(state, command, machine.id), type: 'machine.maintenance_started', machineId: machine.id, roomId: machine.roomId, condition: Number(machine.condition) };
+      return commit(state, command, {
+        machines: state.machines.map((item) => item.id === machine.id ? { ...item, status: 'maintenance', activeJobId: null } : item),
+      }, [event], 'MACHINE_MAINTENANCE_STARTED', 'Fiktive Wartung gestartet; die Spielstation ist vorübergehend nicht verfügbar.', [machine.id, technician.id, machine.roomId]);
+    }
+    case 'MACHINE/COMPLETE_MAINTENANCE': {
+      const machine = state.machines.find((item) => item.id === command.machineId);
+      if (!machine) return failure(state, 'NOT_FOUND', 'Maschine nicht gefunden.');
+      if (machine.status !== 'maintenance' || machine.activeJobId !== null) return failure(state, 'INVALID_TRANSITION', 'Für diese Maschine läuft keine Wartung.');
+      const technician = state.staff.find((staff) => staff.role === 'maintenance' && staff.assignedRoomId === machine.roomId && staff.energy > 0);
+      if (!technician) return failure(state, 'PRECONDITION_FAILED', 'Eine verfügbare Wartungsfachkraft muss der Maschine zugewiesen sein.');
+      const condition = clampScore(Number(machine.condition) + 30);
+      const event: DomainEvent = { ...eventBase(state, command, machine.id), type: 'machine.maintenance_completed', machineId: machine.id, roomId: machine.roomId, condition: Number(condition) };
+      return commit(state, command, {
+        machines: state.machines.map((item) => item.id === machine.id ? { ...item, status: 'idle', condition, activeJobId: null } : item),
+      }, [event], 'MACHINE_MAINTENANCE_COMPLETED', 'Wartung abgeschlossen; die Spielstation ist wieder verfügbar.', [machine.id, technician.id, machine.roomId]);
     }
     default: {
       const unsupported: never = command;
