@@ -114,6 +114,8 @@ Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte S
 - Prognosen sind reine Spiel-Balance-Szenarien: erwarteter Tagesumsatz ist ein expliziter Parameter und standardmäßig null; die 30-Tage-Anzeige kennzeichnet diese Annahme sichtbar. Projektionen verändern weder Ledger noch Kampagnenzustand.
 - Ein Upgrade wird nur bei ausreichendem Kontostand gekauft; die einmalige Investition wird als `investment` im Ledger verbucht und über einen idempotency key gegen Doppelbuchung geschützt. Der Effekt wird ausschließlich aus dem gekauften Upgradezustand abgeleitet.
 - Der Finanzstatus wird aus Kontostand und prognostizierter Reichweite abgeleitet; ein kritischer Status darf nicht durch stilles Zurücksetzen des Kontostands verborgen werden.
+- Die Krisenhilfe ist nur bei Kontostand `<= 0` verfügbar und darf pro Kampagne höchstens einmal gebucht werden. Der `grant`-Ledger-Eintrag gleicht den Fehlbetrag aus und stellt mindestens sieben Tage der aktuell berechneten Betriebskosten bereit.
+
 
 
 - Kein Auftrag wird doppelt erfüllt oder doppelt abgerechnet.
