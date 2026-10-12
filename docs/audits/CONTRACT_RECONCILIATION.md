@@ -61,3 +61,12 @@ The intended authority is the supplied Herbal Line Master Pack: `AGENTS.md`, `PR
 - Added guards and tests for maintenance assignment eligibility, room occupancy accounting, and machine/room consistency. Existing browser E2E verifies room purchase, capacity display, the maintenance lifecycle, ledger entry, and persisted state.
 - No save contract or schema version changed.
 - P2-002 is the next task: audit ledger-derived balances, transaction idempotency, affordability gates and progression side effects before making changes.
+
+
+## P2-002 partial acceptance record — 2026-10-12
+
+- Exact accepted subgate commit: `80f451784298ae853f1a42cdc0d6b6ee7115385f`.
+- Workflow: [#38258523640 — success](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38258523640); all workflow steps passed.
+- Late delivery posts the contract revenue and configured late penalty in one domain transition with stock settlement; the penalty uses a stable idempotency key and emits a second ledger-posted event only when late and the penalty is positive.
+- Unit coverage asserts the exact ledger postings, ledger-derived balance, event accounts, and repeat-confirmation idempotency. The existing on-time campaign still posts revenue only.
+- P2-002 remains open: `UPGRADE/PURCHASE` has no reducer handler, player XP/level are unchanged, and the specified versioned balance data/catalog is absent from the current branch. Do not invent costs/effects before reconciling the authoritative Master Pack; archive parity is still blocked by unavailable archive bytes.

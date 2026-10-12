@@ -4,7 +4,7 @@
 
 - Working branch: `production/herbal-line-baseline-20261012`
 - Historical verified baseline: `a9ff0d8cf481529baab73b62d1d1526402cfa169` (full CI run #38210853633).
-- Latest accepted revision: `a0325cf5a941dabbc0c4683919e7c0bca5ca860f` — [Run #38257706542 succeeded](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38257706542) across every workflow step, including browser E2E, production smoke, document/JSON validation and whitespace.
+- Latest accepted revision: `80f451784298ae853f1a42cdc0d6b6ee7115385f` — [Run #38258523640 succeeded](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38258523640) across every workflow step, including browser E2E, production smoke, document/JSON validation and whitespace.
 - CI evidence: [Run #38210853633 — success](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38210853633). This exact revision passed locked install, lint, format, strict typecheck, domain tests, production build, Playwright browser E2E, production-preview smoke, Master-Pack document/JSON validation, and whitespace checks.
 - Default branch observed during this update: `main@4a1e2724dcce32d4b5a2516bb5a3df651884fc37`, 98 tracked paths. Recovery-branch commits in this task were not pushed to `main`.
 - **Still blocked:** byte-for-byte comparison with `Herbal-Line-Production-Master-Pack.zip`. The archive bytes are not available in the current working surface, so the historical path/hash record is not a fresh parity proof.
@@ -41,9 +41,11 @@ Accepted at `cc730e9fdca65d7c3bb1912faf1dbd053f047daf`; [full CI run #3825198738
 
 Accepted at `a0325cf5a941dabbc0c4683919e7c0bca5ca860f`; [full CI run #38257706542 passed](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38257706542). Review confirmed room capacity checks, occupancy transfer/release accounting, exclusive staff assignment, role compatibility, machine-room consistency, and the maintenance lifecycle. A degraded active machine can no longer receive a maintenance assignment that cannot start. New domain tests cover occupancy across queue → QC → storage → delivery, mismatched machine/room rejection, and rejection of the active-machine maintenance dead end. Existing browser E2E verifies facility purchase, capacity display, maintenance assignment/start/completion, condition restoration, ledger entry and save persistence. Save schema v1 is unchanged.
 
-## P2-002 — Economy and progression (IN PROGRESS — IMPLEMENTATION)
+## P2-002 — Economy and progression (PARTIAL — IMPLEMENTATION VERIFIED, PROGRESSION OPEN)
 
-Audit confirmed that balances/totals are ledger-derived, room investments and delivery revenue are posted, and duplicate room purchases and revenue settlement are guarded. The existing order contract also carries `dueAt` and `latePenaltyCents`, but those fields were unused; late delivery now posts one penalty ledger entry atomically with revenue and stock settlement, with an explicit idempotency key and event. New tests cover penalty amount, derived balance, event, and repeated confirmation. Remaining audited gaps: `UPGRADE/PURCHASE` is declared but has no domain handler; player experience/level never advance; no canonical upgrade catalog or versioned `src/data/balance.json` exists despite the domain spec referencing one. Do not invent progression costs/effects; establish those rules from the authoritative Master Pack before implementing those subgates. Save schema v1 remains unchanged.
+The late-delivery-penalty subgate is accepted at `80f451784298ae853f1a42cdc0d6b6ee7115385f`; [full CI run #38258523640 passed](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38258523640). Balances/totals remain ledger-derived, room investments and delivery revenue are posted, and duplicate room purchases and revenue settlement are guarded. Late delivery now posts one penalty ledger entry atomically with revenue and stock settlement, with an explicit idempotency key and event. Tests verify penalty amount, derived balance, event emission, and repeat-confirmation idempotency.
+
+Remaining audited gaps: `UPGRADE/PURCHASE` is declared but has no domain handler; player experience/level never advance; no canonical upgrade catalog or versioned `src/data/balance.json` exists despite the domain spec referencing one. Do not invent progression costs/effects; establish those rules from the authoritative Master Pack before implementing those subgates. Save schema v1 remains unchanged.
 
 ## Operating rule
 
