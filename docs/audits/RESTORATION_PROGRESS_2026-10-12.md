@@ -40,6 +40,7 @@ The archive's expected Git blob SHA-1s were calculated from the actual file byte
 | `docs/01_GAME_VISION_AND_GDD.md` | `1068f258d751787bfb415bee7d1d2cb77a3579fe` | Exact match restored |
 | `docs/02_FEATURE_SCOPE_AND_RELEASE_CONTENT.md` | `45897b7a9e02e8029b3ad640f7c857d7d7536065` | Exact match restored |
 | `docs/03_CORE_LOOP_AND_USER_FLOWS.md` | `32050770c46c550b65eeffefb3d362e01b7b2c6d` | Exact match restored |
+| `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md` | `ed80a25f54b407b2842e84002c7734e6f7a39d84` | Exact match restored |
 | `docs/06_CANONICAL_CONTRACTS.md` | `836dbe1c2529c8414c6b8b1b30cfa61bb900f190` | Exact match restored |
 | `docs/05_TECH_ARCHITECTURE.md` | `99d3860a7096937d666cefa64bf429c2f6ece941` | Exact match restored |
 | `docs/08_MODULE_CONTRACTS.md` | `4e45dda0e6b751700ecf8b8c7b054558a25c3bee` | Exact match restored |
@@ -62,14 +63,14 @@ The archive's expected Git blob SHA-1s were calculated from the actual file byte
 | `scripts/validate_masterpack.py` | `76d27059c3dbbccd19704adc4a4a29fc5e2ff44f` | Exact match restored |
 | `docs/13_PRODUCTION_PHASE_PLAN.md` | `68f50765410ed4cff85c05e944297613b53fbb6a` | Exact match restored |
 
-Total currently verified exact archive files: **41 of 42**. This is a verified subset, not full parity.
+Total currently verified exact archive files: **42 of 42**. This is a verified subset, not full parity.
 
 The current parity report preserves the earlier `4/42` comparison as historical evidence for `main@6ddb8849886f35ece5f3d784d06714b4054f5116` only. It is not being represented as a fresh comparison of this restoration branch.
 
 ## Current verified limitations
 
-- The full 42-path comparison has **not** yet been rerun as one end-to-end command against the latest restoration-branch commit. Forty-one individual archive blob matches are verified; the remaining canonical file is `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md`, whose current blob still differs.
-- Canonical restoration of all 42 archive files is **not complete**.
+- All 42 canonical archive paths have individually verified exact Git blob matches against the source archive manifest. A single end-to-end parity-verifier run against a clean checkout of the latest GitHub commit remains to be executed; the exact per-path results are recorded in this report.
+- Canonical restoration of all 42 archive files is complete by per-path Git blob SHA verification. The clean-checkout aggregate parity run and implementation reconciliation remain open.
 - The application HTML title/description, package description, and initial campaign's source/customer labels have been corrected toward the original medical-cannabis identity. These are implementation edits, not archive files.
 - The current application implementation has not yet been reconciled end-to-end against the restored canonical docs.
 - Latest observed CI after restoring the canonical contracts: [run 38290153329](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153329) failed at strict TypeScript typecheck; tests, build and browser E2E were skipped. The separate [Master Pack Validation run 38290153248](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153248) passed only the pack-file/metadata gate. No application CI pass is claimed.
