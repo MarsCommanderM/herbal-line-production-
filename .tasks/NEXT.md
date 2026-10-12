@@ -3,7 +3,8 @@
 ## Verified baseline — 2026-10-12
 
 - Working branch: `production/herbal-line-baseline-20261012`
-- Verified revision: `a9ff0d8cf481529baab73b62d1d1526402cfa169`
+- Historical verified baseline: `a9ff0d8cf481529baab73b62d1d1526402cfa169` (full CI run #38210853633).
+- Latest accepted revision: `cc730e9fdca65d7c3bb1912faf1dbd053f047daf` — [Run #38251987389 succeeded](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38251987389) across every workflow step, including browser E2E, production smoke, document/JSON validation and whitespace.
 - CI evidence: [Run #38210853633 — success](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38210853633). This exact revision passed locked install, lint, format, strict typecheck, domain tests, production build, Playwright browser E2E, production-preview smoke, Master-Pack document/JSON validation, and whitespace checks.
 - Default branch observed during this update: `main@4a1e2724dcce32d4b5a2516bb5a3df651884fc37`, 98 tracked paths. Recovery-branch commits in this task were not pushed to `main`.
 - **Still blocked:** byte-for-byte comparison with `Herbal-Line-Production-Master-Pack.zip`. The archive bytes are not available in the current working surface, so the historical path/hash record is not a fresh parity proof.
@@ -32,13 +33,13 @@ Verified capabilities: versioned v1 envelope validation, SHA-256 checksum vector
 
 The dashboard exposes process batches, room occupancy/capacity meters, machine status, and order/delivery state. Playwright checks the queue semantics and activates manual save with Enter from keyboard focus.
 
-## P1-004 — Quality, audit and incident systems (IMPLEMENTED; CI ACCEPTANCE PENDING)
+## P1-004 — Quality, audit and incident systems (VERIFIED)
 
-Added fictional compliance-incident capture, operation-specific blocking, corrective-action completion, audit-derived license/risk state, audit and license-change events, and a dashboard queue. High/critical incidents suspend operations; corrective action alone cannot restore the license. Unit and Playwright tests cover negative and recovery paths. Do not mark verified until the complete CI run passes on the resulting commit.
+Accepted at `cc730e9fdca65d7c3bb1912faf1dbd053f047daf`; [full CI run #38251987389 passed](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38251987389). Fictional incident capture, operation-specific blocking, corrective-action completion, audit-derived license/risk state, audit and license-change events, and the management queue are covered by domain and browser tests. High/critical incidents suspend operations; corrective action alone cannot restore the license. The browser suite also confirms the campaign-completion message remains visible alongside the compliance action after delivery.
 
-## Next task after P1-004 acceptance — P2-001: Facility, capacity, staffing and maintenance
+## P2-001 — Facility, capacity, staffing and maintenance (IN PROGRESS — AUDIT)
 
-Inspect existing domain primitives first; add invariant and negative-path coverage before introducing new mechanics. Keep scope narrow and preserve save-v1 compatibility.
+Audit existing `RoomState`, `StaffState`, `WorkAssignmentState`, `MachineState`, and command contracts before implementing. First establish invariants and negative-path tests for room capacity/occupancy, staff assignment uniqueness and role compatibility, machine-room consistency and maintenance/broken-state gating. Preserve save-v1 compatibility; do not add new persisted fields unless existing contracts cannot express a required invariant. Do not claim completion until implementation, tests, reviewed diff and full CI are green on one exact SHA.
 
 ## Operating rule
 

@@ -19,7 +19,8 @@ The intended authority is the supplied Herbal Line Master Pack: `AGENTS.md`, `PR
 ## Validation evidence
 
 - The historical Master-Pack validator run is recorded in the original baseline. The current branch's CI validator also passed on `a9ff0d8cf481529baab73b62d1d1526402cfa169`.
-- Exact CI result: [Run #38210853633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38210853633) — success for locked install, source-policy lint, format, strict typecheck, unit tests, production build, browser E2E, served preview smoke, document/JSON validation, and whitespace.
+- Historical baseline CI result: [Run #38210853633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38210853633) — success for locked install, source-policy lint, format, strict typecheck, unit tests, production build, browser E2E, served preview smoke, document/JSON validation, and whitespace.
+- P1-004 acceptance CI result: [Run #38251987389](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38251987389) on `cc730e9fdca65d7c3bb1912faf1dbd053f047daf` — every workflow step passed.
 - Domain tests cover the fictional intake/stage → batch → QC → released inventory → order allocation → dispatch → delivery loop; reject stale commands, failed QC release and insufficient allocation; confirm revenue idempotency.
 - Browser E2E completed the 12-command workflow, verified a delivered order and delivery, one matching revenue ledger entry, SHA-256 checksum, and persistence after a full reload.
 - Persistence E2E covers corruption with a valid backup, corruption without a valid backup, export/import, invalid import, and manual save/load.
@@ -30,8 +31,8 @@ The intended authority is the supplied Herbal Line Master Pack: `AGENTS.md`, `PR
 
 1. Exact byte-for-byte synchronization with the supplied archive is not verified; the archive bytes are not available in the current working surface. P0-001 and final P0-002 review remain open.
 2. Save schema v1 and recovery are verified. A schema migration from pre-v1 is not claimed: the current canonical contract specifies v1 but does not provide a pre-v1 envelope to migrate. Unsupported versions are explicitly rejected until an authoritative legacy schema exists.
-3. P1-004 corrective-action workflow and end-to-end acceptance remain open. The next implementation task is quality, audit and incident hardening.
-4. The later P2/P3/P4 backlogs remain open; the project is not a release candidate.
+3. P1-004 is accepted on `cc730e9fdca65d7c3bb1912faf1dbd053f047daf` after full CI. The management UI now keeps the campaign-completion status visible when compliance actions remain available.
+4. P2/P3/P4 backlogs remain open; the project is not a release candidate.
 
 
 ## P1-004 implementation — compliance incident, corrective action and audit
@@ -42,3 +43,12 @@ The intended authority is the supplied Herbal Line Master Pack: `AGENTS.md`, `PR
 - `COMPLIANCE/START_AUDIT` derives license status, risk and blocked operation codes from unresolved incidents, records audit timestamps and emits audit/license-change events.
 - Acceptance tests cover severe violation → suspension/block, corrective action alone not restoring the license, a clean audit restoring valid status, unresolved severe findings remaining suspended, invalid corrective codes being rejected, and state persistence after reload.
 - This is an in-game simulation audit trail, not a claim of regulatory compliance for a real facility.
+
+
+## P1-004 acceptance record — 2026-10-12
+
+- Exact accepted commit: `cc730e9fdca65d7c3bb1912faf1dbd053f047daf`.
+- Workflow: [#38251987389 — success](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38251987389).
+- Verified: locked dependency install, policy lint, formatting, strict typecheck, domain unit tests, production build, Chromium install, Playwright E2E, production preview smoke, Master-Pack document/JSON validation and whitespace.
+- The prior failed browser assertion exposed a UI-state regression, not a domain failure. The completion message is now rendered independently of available compliance actions; the original end-to-end assertion remains intact and passed on the accepted commit.
+- P2-001 starts with a read-only audit of facility/capacity/staffing/maintenance primitives; implementation must preserve save schema v1 unless evidence proves a contract change is unavoidable.
