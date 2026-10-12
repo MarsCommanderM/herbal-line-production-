@@ -15,6 +15,7 @@ import type {
 import type { CommandBase, CommandFailureCode, DomainCommand, CommandResult } from '../../contracts/commands';
 import type { DomainEvent } from '../../contracts/events';
 import { getBalanceCents } from './finance';
+import { validateGameStateInvariants } from './invariants';
 import { reserveInventory, transitionBatch } from './transitions';
 
 export type VerticalSliceCommand = Extract<DomainCommand, {
@@ -78,6 +79,11 @@ function commit(
     revision: state.revision + 1,
     logs: [...state.logs, logEntry(state, command, code, message, relatedEntityIds)],
   };
+  const violations = validateGameStateInvariants(next);
+  if (violations.length > 0) {
+    const first = violations[0];
+    return failure(state, 'PRECONDITION_FAILED', 'Die Aktion verletzt eine Zustandsinvariante (' + first.code + '): ' + first.message);
+  }
   return { ok: true, state: next, events };
 }
 
