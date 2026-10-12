@@ -1,4 +1,4 @@
-# Herbal Line — Master Production Document
+# Dr. Green Dump / DopeFarm — Master Production Document
 
 **Version:** 1.0.0 | **Stand:** 11.10.2026 | **Verantwortungsmetadaten:** Michael Braunschweig
 
