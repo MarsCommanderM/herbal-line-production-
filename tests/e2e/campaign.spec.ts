@@ -244,6 +244,9 @@ test('facility controls enforce staffing roles and complete abstract machine mai
 test('end-of-day settlement updates the campaign clock, ledger and autosave', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#game-metrics')).toContainText('Tageskosten');
+  await expect(page.locator('#game-metrics')).toContainText('Reichweite (0 € Umsatz)');
+  await expect(page.locator('#game-metrics')).toContainText('30-Tage-Szenario (0 € Umsatz)');
+  await expect(page.locator('#game-metrics')).toContainText('223.600,00');
   await expect(page.getByRole('button', { name: 'Tag abschließen' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Tag abschließen' }).click();
@@ -252,4 +255,5 @@ test('end-of-day settlement updates the campaign clock, ledger and autosave', as
   await expect(page.locator('#game-feedback')).toContainText('Tag 1 abgeschlossen');
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
   await expect(page.locator('#game-metrics')).toContainText('880,00');
+  await expect(page.locator('#game-metrics')).toContainText('222.720,00');
 });
