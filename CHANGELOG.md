@@ -49,3 +49,9 @@
 - Added a one-time, ledger-backed fictional support grant available only when campaign funds are exhausted.
 - The grant clears the current deficit and provides at least seven days of current operating costs, using a campaign-scoped idempotency key and explicit `grant` account.
 - Added recovery event/notification and tests for premature use, recovery amount, balance derivation and duplicate-claim prevention. Exact-revision CI pending.
+
+## Unreleased — Economy upgrade progression
+
+- Added a second energy-efficiency tier, unlocked only after the first tier is purchased.
+- The second tier applies an additional 10% reduction to remaining fictional utility costs and posts a separate investment ledger entry.
+- Added prerequisite/duplicate guards, deterministic cent-rounding tests, and Chromium E2E coverage for unlocking, purchasing and compound savings. Exact-revision CI pending.
