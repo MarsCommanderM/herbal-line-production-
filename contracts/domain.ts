@@ -95,6 +95,8 @@ export interface MachineState {
 export interface ComplianceViolation {
   id: EntityId; code: string; severity: ViolationSeverity; occurredAt: SimulationMinute;
   relatedEntityIds: EntityId[]; resolvedAt: SimulationMinute | null; resolutionCode: string | null;
+  /** Optional for compatibility with existing v1 save records. */
+  operationCodes?: string[];
 }
 export interface ComplianceState {
   risk: Risk0To100; licenseStatus: LicenseStatus; violations: ComplianceViolation[];

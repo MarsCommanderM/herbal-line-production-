@@ -24,6 +24,8 @@ export type DomainCommand =
   | (CommandBase & { type: 'ROOM/PURCHASE'; roomId: EntityId; definitionId: string })
   | (CommandBase & { type: 'STAFF/ASSIGN'; assignmentId: EntityId; staffId: EntityId; taskCode: string; entityId: EntityId | null })
   | (CommandBase & { type: 'UPGRADE/PURCHASE'; upgradeId: string })
+  | (CommandBase & { type: 'COMPLIANCE/RECORD_VIOLATION'; violationId: EntityId; code: string; severity: import('./domain').ViolationSeverity; relatedEntityIds: EntityId[]; operationCodes: string[] })
+  | (CommandBase & { type: 'COMPLIANCE/RESOLVE_VIOLATION'; violationId: EntityId; resolutionCode: string })
   | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId })
 ;
 

@@ -31,6 +31,9 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'DELIVERY/CREATE'
     | 'DELIVERY/DISPATCH'
     | 'DELIVERY/CONFIRM'
+    | 'COMPLIANCE/RECORD_VIOLATION'
+    | 'COMPLIANCE/RESOLVE_VIOLATION'
+    | 'COMPLIANCE/START_AUDIT'
 }>;
 
 const entityId = (value: string): EntityId => value as EntityId;
@@ -424,6 +427,66 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         economy: { ...state.economy, ledger: [...state.economy.ledger, ledgerEntry] },
         reputation: Math.min(1000, Number(state.reputation) + 5) as GameState['reputation'],
       }, [deliveryEvent, financeEvent], 'DELIVERY_CONFIRMED', 'Wareneingang bestätigt; Umsatz einmalig gebucht.', [delivery.id, order.id, ...delivery.lotIds]);
+    }
+    case 'COMPLIANCE/RECORD_VIOLATION': {
+      const code = command.code.trim();
+      const operationCodes = [...new Set(command.operationCodes.map((item) => item.trim()).filter(Boolean))];
+      if (!code || code.length > 100 || operationCodes.length !== command.operationCodes.length
+        || command.relatedEntityIds.some((id) => !id.trim())) {
+        return failure(state, 'INVALID_PAYLOAD', 'Vorfallscode, betroffene Entitäten und eindeutige Operationscodes sind erforderlich.');
+      }
+      if (state.compliance.violations.some((item) => item.id === command.violationId)) return failure(state, 'DUPLICATE_COMMAND', 'Diese Vorfall-ID existiert bereits.');
+      const violation = {
+        id: command.violationId, code, severity: command.severity, occurredAt: state.time.totalMinutes,
+        relatedEntityIds: [...new Set(command.relatedEntityIds)], resolvedAt: null, resolutionCode: null, operationCodes,
+      };
+      const severe = command.severity === 'high' || command.severity === 'critical';
+      const licenseStatus = state.compliance.licenseStatus === 'suspended' || severe
+        ? 'suspended' as const
+        : state.compliance.licenseStatus === 'recovery_review' ? 'recovery_review' as const : 'warning' as const;
+      const addedRisk = command.severity === 'critical' ? 35 : command.severity === 'high' ? 20 : command.severity === 'medium' ? 10 : 3;
+      const event: DomainEvent = { ...eventBase(state, command, command.violationId), type: 'compliance.violation_recorded', code, status: licenseStatus };
+      return commit(state, command, {
+        compliance: {
+          ...state.compliance, licenseStatus,
+          risk: Math.min(100, Number(state.compliance.risk) + addedRisk) as GameState['compliance']['risk'],
+          violations: [...state.compliance.violations, violation],
+          blockedOperationCodes: [...new Set([...state.compliance.blockedOperationCodes, ...operationCodes])],
+        },
+      }, [event], 'COMPLIANCE_VIOLATION_RECORDED', 'Fiktiven Compliance-Vorfall erfasst; betroffene Aktionen sind bis zur Prüfung gesperrt.', [command.violationId, ...violation.relatedEntityIds]);
+    }
+    case 'COMPLIANCE/RESOLVE_VIOLATION': {
+      const violation = state.compliance.violations.find((item) => item.id === command.violationId);
+      if (!violation) return failure(state, 'NOT_FOUND', 'Compliance-Vorfall nicht gefunden.');
+      if (violation.resolvedAt !== null) return failure(state, 'DUPLICATE_COMMAND', 'Für diesen Vorfall wurde bereits eine Korrekturmaßnahme bestätigt.');
+      const resolutionCode = command.resolutionCode.trim();
+      if (resolutionCode.length < 4 || resolutionCode.length > 100) return failure(state, 'INVALID_PAYLOAD', 'Der Korrekturcode muss zwischen 4 und 100 Zeichen lang sein.');
+      const event: DomainEvent = { ...eventBase(state, command, violation.id), type: 'compliance.corrective_action_completed', code: resolutionCode, status: 'corrective_action_completed' };
+      return commit(state, command, {
+        compliance: {
+          ...state.compliance,
+          violations: state.compliance.violations.map((item) => item.id === violation.id ? { ...item, resolvedAt: state.time.totalMinutes, resolutionCode } : item),
+        },
+      }, [event], 'COMPLIANCE_CORRECTIVE_ACTION_COMPLETED', 'Korrekturmaßnahme protokolliert; Lizenzstatus bleibt bis zum Audit unverändert.', [violation.id, ...violation.relatedEntityIds]);
+    }
+    case 'COMPLIANCE/START_AUDIT': {
+      const unresolved = state.compliance.violations.filter((item) => item.resolvedAt === null);
+      const severeOpen = unresolved.some((item) => item.severity === 'high' || item.severity === 'critical');
+      const nextStatus = severeOpen ? 'suspended' as const : unresolved.length > 0 ? 'warning' as const : 'valid' as const;
+      const blockedOperationCodes = [...new Set(unresolved.flatMap((item) => item.operationCodes ?? []))];
+      const auditEvent: DomainEvent = { ...eventBase(state, command, command.auditId, 1), type: 'compliance.audit_completed', code: 'audit.completed', status: nextStatus };
+      const events: DomainEvent[] = [auditEvent];
+      if (nextStatus !== state.compliance.licenseStatus) events.push({ ...eventBase(state, command, command.auditId, 2), type: 'compliance.license_changed', code: 'license.' + nextStatus, status: nextStatus });
+      const risk = unresolved.reduce((sum, item) => sum + (item.severity === 'critical' ? 35 : item.severity === 'high' ? 20 : item.severity === 'medium' ? 10 : 3), 0);
+      return commit(state, command, {
+        compliance: {
+          ...state.compliance, licenseStatus: nextStatus,
+          risk: Math.min(100, risk) as GameState['compliance']['risk'],
+          lastAuditAt: state.time.totalMinutes,
+          auditDueAt: minute(Number(state.time.totalMinutes) + 1440),
+          blockedOperationCodes,
+        },
+      }, events, 'COMPLIANCE_AUDIT_COMPLETED', 'Compliance-Audit abgeschlossen; Lizenz- und Sperrstatus wurden aus offenen Vorfällen abgeleitet.', [command.auditId, ...unresolved.map((item) => item.id)]);
     }
     default: {
       const unsupported: never = command;

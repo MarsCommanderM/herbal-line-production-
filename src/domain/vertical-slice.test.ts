@@ -147,4 +147,61 @@ describe('botanical operations vertical slice', () => {
     expect(result.state.inventoryLots[0]?.quantityReserved).toBe(0);
     expect(result.state.orders[0]?.status).toBe('accepted');
   });
+  it('requires corrective action and a clean audit before clearing a severe compliance block', () => {
+    const recorded = dispatch(createInitialGameState(), 'COMPLIANCE/RECORD_VIOLATION', {
+      violationId: entity('violation-simulated-001'), code: 'SIMULATED_TRACE_GAP', severity: 'high',
+      relatedEntityIds: [entity('plant-001')], operationCodes: ['BATCH/RELEASE'],
+    });
+    expect(recorded.ok).toBe(true);
+    if (!recorded.ok) throw new Error(recorded.error.message);
+    expect(recorded.state.compliance.licenseStatus).toBe('suspended');
+    expect(recorded.state.compliance.blockedOperationCodes).toContain('BATCH/RELEASE');
+    const corrective = dispatch(recorded.state, 'COMPLIANCE/RESOLVE_VIOLATION', {
+      violationId: entity('violation-simulated-001'), resolutionCode: 'CORRECTIVE_ACTION_VERIFIED',
+    });
+    expect(corrective.ok).toBe(true);
+    if (!corrective.ok) throw new Error(corrective.error.message);
+    expect(corrective.state.compliance.licenseStatus).toBe('suspended');
+    expect(corrective.state.compliance.violations[0]?.resolvedAt).toBe(0);
+    const audited = dispatch(corrective.state, 'COMPLIANCE/START_AUDIT', { auditId: entity('audit-simulated-001') });
+    expect(audited.ok).toBe(true);
+    if (!audited.ok) throw new Error(audited.error.message);
+    expect(audited.state.compliance.licenseStatus).toBe('valid');
+    expect(audited.state.compliance.blockedOperationCodes).toEqual([]);
+    expect(audited.state.compliance.risk).toBe(0);
+    expect(audited.state.compliance.auditDueAt).toBe(1440);
+    expect(audited.events.map((event) => event.type)).toEqual(['compliance.audit_completed', 'compliance.license_changed']);
+  });
+
+  it('keeps unresolved severe findings suspended after an audit', () => {
+    const recorded = dispatch(createInitialGameState(), 'COMPLIANCE/RECORD_VIOLATION', {
+      violationId: entity('violation-open-001'), code: 'SIMULATED_UNRESOLVED_GAP', severity: 'critical',
+      relatedEntityIds: [entity('plant-001')], operationCodes: ['BATCH/RELEASE', 'DELIVERY/DISPATCH'],
+    });
+    expect(recorded.ok).toBe(true);
+    if (!recorded.ok) throw new Error(recorded.error.message);
+    const audited = dispatch(recorded.state, 'COMPLIANCE/START_AUDIT', { auditId: entity('audit-open-001') });
+    expect(audited.ok).toBe(true);
+    if (!audited.ok) throw new Error(audited.error.message);
+    expect(audited.state.compliance.licenseStatus).toBe('suspended');
+    expect(audited.state.compliance.blockedOperationCodes).toEqual(['BATCH/RELEASE', 'DELIVERY/DISPATCH']);
+    expect(audited.state.compliance.risk).toBe(35);
+  });
+
+  it('rejects an invalid corrective-action code without mutating state', () => {
+    const recorded = dispatch(createInitialGameState(), 'COMPLIANCE/RECORD_VIOLATION', {
+      violationId: entity('violation-code-001'), code: 'SIMULATED_MINOR_GAP', severity: 'medium',
+      relatedEntityIds: [entity('plant-001')], operationCodes: ['BATCH/RELEASE'],
+    });
+    expect(recorded.ok).toBe(true);
+    if (!recorded.ok) throw new Error(recorded.error.message);
+    const result = dispatch(recorded.state, 'COMPLIANCE/RESOLVE_VIOLATION', {
+      violationId: entity('violation-code-001'), resolutionCode: 'no',
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Invalid corrective action should be rejected.');
+    expect(result.error.code).toBe('INVALID_PAYLOAD');
+    expect(result.state).toBe(recorded.state);
+  });
+
 });

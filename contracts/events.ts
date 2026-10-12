@@ -9,7 +9,7 @@ export type DomainEvent =
   | (EventBase & { type: 'order.accepted' | 'order.allocated' | 'order.blocked' | 'order.expired'; orderId: EntityId; reasonCode?: string })
   | (EventBase & { type: 'delivery.created'; deliveryId: EntityId; orderId: EntityId })
   | (EventBase & { type: 'delivery.dispatched' | 'delivery.delivered' | 'delivery.exception'; deliveryId: EntityId; orderId: EntityId; reasonCode?: string })
-  | (EventBase & { type: 'compliance.violation_recorded' | 'compliance.license_changed' | 'compliance.audit_completed'; code: string; status?: string })
+  | (EventBase & { type: 'compliance.violation_recorded' | 'compliance.corrective_action_completed' | 'compliance.license_changed' | 'compliance.audit_completed'; code: string; status?: string })
   | (EventBase & { type: 'finance.ledger_posted'; ledgerEntryId: EntityId; amountCents: number; account: string })
   | (EventBase & { type: 'persistence.save_succeeded' | 'persistence.save_failed'; slotId: string; reasonCode?: string });
 export type DomainEventType = DomainEvent['type'];
