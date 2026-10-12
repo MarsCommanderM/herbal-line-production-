@@ -72,7 +72,7 @@ The current parity report preserves the earlier `4/42` comparison as historical 
 - Canonical restoration of all 42 archive files is **not complete**.
 - The application HTML title/description, package description, and initial campaign's source/customer labels have been corrected toward the original medical-cannabis identity. These are implementation edits, not archive files.
 - The current application implementation has not yet been reconciled end-to-end against the restored canonical docs.
-- The latest queried GitHub combined-status endpoint returned no status entries for the restoration commit queried. This is not evidence that CI passed.
+- Latest observed CI after restoring the canonical contracts: [run 38290153329](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153329) failed at strict TypeScript typecheck; tests, build and browser E2E were skipped. The separate [Master Pack Validation run 38290153248](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153248) passed only the pack-file/metadata gate. No application CI pass is claimed.
 - No local clean checkout of the current GitHub branch was available in the container. The local repository ZIP is a separate snapshot and is not treated as the current GitHub checkout. Its dependency install, typecheck, tests and build were not run.
 
 ## Required next sequence
