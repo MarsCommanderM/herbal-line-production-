@@ -40,10 +40,10 @@ export function getCampaignGuidance(state: GameState): CampaignGuidance {
       return {
         title: 'Freigabe blockiert',
         detail: assessment.decision === 'fail'
-          ? 'Die letzte Spiel-QA ist nicht bestanden. Der Batch bleibt gesperrt; die Freigabeaktion wird nicht angeboten.'
-          : 'Die letzte Spiel-QA verlangt eine manuelle Prüfung. Der Batch bleibt bis zur Klärung gesperrt.',
+          ? 'Die letzte Spiel-QA ist nicht bestanden. Eine Freigabe ist gesperrt; du kannst den Batch mit dokumentiertem Grund ablehnen.'
+          : 'Die letzte Spiel-QA verlangt eine manuelle Prüfung. Ohne geklärtes positives Ergebnis bleibt die Freigabe gesperrt; eine dokumentierte Ablehnung ist möglich.',
         tone: 'warning',
-        nextStep: 'Prüfergebnis und Befunde prüfen',
+        nextStep: 'Batch ablehnen und Grund dokumentieren',
       };
     }
     return {

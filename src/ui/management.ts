@@ -37,6 +37,8 @@ function availableActions(state: GameState): Action[] {
     const assessment = [...state.qualityAssessments].reverse().find((item) => item.batchId === batch.id);
     if (assessment && assessment.decision === 'pass') {
       actions.push({ label: 'Batch freigeben', detail: 'Nur bestandene Spiel-QA, vollständige Rückverfolgbarkeit und Compliance erlauben die Freigabe.', type: 'BATCH/RELEASE', payload: { batchId: batch.id } });
+    } else if (assessment && (assessment.decision === 'fail' || assessment.decision === 'review')) {
+      actions.push({ label: 'Batch ablehnen', detail: 'Die Qualitätsprüfung ist nicht bestanden oder ungeklärt. Dokumentiere die Ablehnung; der Batch wird terminal gesperrt und aus der aktiven Queue entfernt.', type: 'BATCH/REJECT', payload: { batchId: batch.id, reasonCode: assessment.decision === 'fail' ? 'QUALITY_GATE_FAILED' : 'QUALITY_REVIEW_NOT_ACCEPTED' } });
     }
   }
 

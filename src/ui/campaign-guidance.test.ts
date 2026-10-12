@@ -65,7 +65,7 @@ describe('campaign guidance', () => {
     expect(guidance.title).toBe('Freigabe blockiert');
     expect(guidance.tone).toBe('warning');
     expect(guidance.detail).toContain('nicht bestanden');
-    expect(guidance.nextStep).toBe('Prüfergebnis und Befunde prüfen');
+    expect(guidance.nextStep).toBe('Batch ablehnen und Grund dokumentieren');
   });
 
   it('reports successful campaign completion after delivery', () => {

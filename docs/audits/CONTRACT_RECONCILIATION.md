@@ -53,3 +53,10 @@ Latest verified revision: `bce2a0bd0edda036032be03e8dfea3033057ea52`.
 ## Decision rule
 
 Do not rewrite canonical documents to fit the current implementation silently. Record any intentional deviation, explain why it is needed, add a migration or compatibility plan where applicable, and verify the resulting contract and implementation on the same commit.
+
+
+## Source archive provenance and scope decision
+
+The source archive is preserved as historical input, but the current app is intentionally a fictional generic botanical operations simulator. A measured per-path comparison is documented in `docs/audits/MASTERPACK_PARITY_REPORT.md`; expected source hashes remain in `docs/audits/MASTERPACK_EXPECTED_BLOBS.json`. Do not claim exact 1:1 ZIP parity and do not overwrite the working app with the historical pack as a bulk operation.
+
+The implementation has also closed the QC review/failure dead end with a terminal `BATCH/REJECT` command. It requires a documented reason, releases room occupancy, clears any active machine assignment, removes the batch from the active queue, and prevents later release. The management UI exposes this action only when a stored QC decision is `fail` or `review`; domain guards remain authoritative.

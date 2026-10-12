@@ -1,0 +1,175 @@
+{
+  "archive": "Herbal-Line-Production-Master-Pack.zip",
+  "archiveSha256": "4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972",
+  "gitBlobSha1Definition": "SHA-1 of UTF-8 bytes prefixed with `blob ${byteLength}\\0`, matching Git blob object identity.",
+  "files": [
+    {
+      "path": ".editorconfig",
+      "gitBlobSha1": "192c070cf03df5d7af0521a1073c0919cb46f742"
+    },
+    {
+      "path": ".gitignore",
+      "gitBlobSha1": "a0907890dae45d04d5a0af32fdbc01c6d0440cff"
+    },
+    {
+      "path": ".tasks/BACKLOG.md",
+      "gitBlobSha1": "e002ab4884f12242916b15c193792b93e1e39cb0"
+    },
+    {
+      "path": ".tasks/NEXT.md",
+      "gitBlobSha1": "816d1ffa7f4ee7a697aa8da7499870091fd86b71"
+    },
+    {
+      "path": "AGENTS.md",
+      "gitBlobSha1": "a20ef5de0f140885cd4838be62e667f0a5ebc126"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "gitBlobSha1": "188e409aff29baccab0b4d25354d8e01c230f185"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "gitBlobSha1": "1864387a31b98cd0deb1cf4666dc2d42f8d893c0"
+    },
+    {
+      "path": "PROJECT_MANIFEST.json",
+      "gitBlobSha1": "8eed2b619449b24f0a3a23cd5aef2b7cc5a79e1c"
+    },
+    {
+      "path": "README.md",
+      "gitBlobSha1": "2aff771b3bf6b98f0e5316c8c10c2a12a74e761c"
+    },
+    {
+      "path": "RIGHTS_NOTICE.md",
+      "gitBlobSha1": "2c9fa96f93ebc7596beaa8b9ad7dded411bf0f65"
+    },
+    {
+      "path": "START_HERE.md",
+      "gitBlobSha1": "744e8d73e4d54c199a188433dac93548ae14afe4"
+    },
+    {
+      "path": "contracts/commands.ts",
+      "gitBlobSha1": "16222e841d7859269317c88bb7b957ac8612eb31"
+    },
+    {
+      "path": "contracts/domain.ts",
+      "gitBlobSha1": "7b1d1e87856ab2aa780e5565113249f4a2e286e9"
+    },
+    {
+      "path": "contracts/events.ts",
+      "gitBlobSha1": "a04be4aac528d74541434aa2153b0d937b20d670"
+    },
+    {
+      "path": "contracts/persistence.ts",
+      "gitBlobSha1": "336389e87a6fdb3d3b5086d22ed8c34acd41eea5"
+    },
+    {
+      "path": "docs/00_MASTER_PRODUCTION_DOCUMENT.md",
+      "gitBlobSha1": "667c1f9fb8d4057e959bb4fd36b9dd50e420b139"
+    },
+    {
+      "path": "docs/01_GAME_VISION_AND_GDD.md",
+      "gitBlobSha1": "1068f258d751787bfb415bee7d1d2cb77a3579fe"
+    },
+    {
+      "path": "docs/02_FEATURE_SCOPE_AND_RELEASE_CONTENT.md",
+      "gitBlobSha1": "45897b7a9e02e8029b3ad640f7c857d7d7536065"
+    },
+    {
+      "path": "docs/03_CORE_LOOP_AND_USER_FLOWS.md",
+      "gitBlobSha1": "32050770c46c550b65eeffefb3d362e01b7b2c6d"
+    },
+    {
+      "path": "docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md",
+      "gitBlobSha1": "ed80a25f54b407b2842e84002c7734e6f7a39d84"
+    },
+    {
+      "path": "docs/05_TECH_ARCHITECTURE.md",
+      "gitBlobSha1": "99d3860a7096937d666cefa64bf429c2f6ece941"
+    },
+    {
+      "path": "docs/06_CANONICAL_CONTRACTS.md",
+      "gitBlobSha1": "836dbe1c2529c8414c6b8b1b30cfa61bb900f190"
+    },
+    {
+      "path": "docs/07_DATA_AND_RULES_CATALOG.md",
+      "gitBlobSha1": "35b2f9611f47489cea1c2c50e3dab1c4d2e36ddb"
+    },
+    {
+      "path": "docs/08_MODULE_CONTRACTS.md",
+      "gitBlobSha1": "4e45dda0e6b751700ecf8b8c7b054558a25c3bee"
+    },
+    {
+      "path": "docs/09_VISUAL_ART_AUDIO_UX.md",
+      "gitBlobSha1": "b2c22d8f8ef6436eae05f6019f68e3002c36693e"
+    },
+    {
+      "path": "docs/10_ASSET_PIPELINE_AND_LICENSE_GATE.md",
+      "gitBlobSha1": "c6de9683e8132a55ef184199e16a8243b3a94739"
+    },
+    {
+      "path": "docs/11_AUTONOMOUS_AGENT_PLAYBOOK.md",
+      "gitBlobSha1": "3b6885da9d4f571d9466d43f1a3afd677ea1e935"
+    },
+    {
+      "path": "docs/12_SUBAGENT_BOUNDARIES.md",
+      "gitBlobSha1": "9e4ca0a5213a4f49b7996407dc8e2acecfbca594"
+    },
+    {
+      "path": "docs/13_PRODUCTION_PHASE_PLAN.md",
+      "gitBlobSha1": "68f50765410ed4cff85c05e944297613b53fbb6a"
+    },
+    {
+      "path": "docs/14_BACKLOG.md",
+      "gitBlobSha1": "b3de2091d77529613d7745c76b448917fa705769"
+    },
+    {
+      "path": "docs/15_TEST_AND_QA_STRATEGY.md",
+      "gitBlobSha1": "59955df22b2ebdb515192a46d47a87d3073ea783"
+    },
+    {
+      "path": "docs/16_SECURITY_PRIVACY_AND_RELIABILITY.md",
+      "gitBlobSha1": "a77f550554d24f6de0564d6a4f2beecadcd49dcb"
+    },
+    {
+      "path": "docs/17_IP_RIGHTS_AND_COMPLIANCE.md",
+      "gitBlobSha1": "270e0391ecd4d66d486c3001aeb2e34fe2e69403"
+    },
+    {
+      "path": "docs/18_CI_CD_RELEASE_RUNBOOK.md",
+      "gitBlobSha1": "136694bf87b18b16ba10f5c7f32f541d890ca17b"
+    },
+    {
+      "path": "docs/19_RISK_REGISTER.md",
+      "gitBlobSha1": "f067ce33fa5646a5d7dabdf8e4027e8cdbc7cfa9"
+    },
+    {
+      "path": "rights/LICENSE_REGISTER.md",
+      "gitBlobSha1": "879a31af00fc4f6f3e4217f39b36876589ab5434"
+    },
+    {
+      "path": "schemas/content-manifest.schema.json",
+      "gitBlobSha1": "5794455b9497d44f729e52f6cbf8cad7642de0dd"
+    },
+    {
+      "path": "schemas/order-template.schema.json",
+      "gitBlobSha1": "df0273e09ba9dcd1cc3fe3ec394462fea8ca3bb9"
+    },
+    {
+      "path": "schemas/plant-profile.schema.json",
+      "gitBlobSha1": "a5f83e14f435f280b8c7662c51b92487d764e7bc"
+    },
+    {
+      "path": "schemas/room-definition.schema.json",
+      "gitBlobSha1": "f633318f879ee2a816ba47d3bedf5abf71a5c18e"
+    },
+    {
+      "path": "schemas/save-envelope-v1.schema.json",
+      "gitBlobSha1": "237354d33d8fc0c56d018175c755c1e46e5b0074"
+    },
+    {
+      "path": "scripts/validate_masterpack.py",
+      "gitBlobSha1": "76d27059c3dbbccd19704adc4a4a29fc5e2ff44f"
+    }
+  ]
+}

@@ -133,6 +133,51 @@ describe('botanical operations vertical slice', () => {
     expect(result.state.inventoryLots).toHaveLength(0);
   });
 
+  it('rejects a batch after unresolved QC and frees its room occupancy', () => {
+    let state = createInitialGameState();
+    state = {
+      ...state,
+      plants: state.plants.map((plant) => ({ ...plant, qualityPotential: 62 as Score0To100 })),
+    };
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', { batchId: entity('batch-reject'), plantIds: [entity('plant-001')], profileId: 'fictional-profile' });
+    state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-reject'), roomId: entity('room-processing-01') });
+    state = applyOk(state, 'BATCH/START_PROCESSING', { batchId: entity('batch-reject'), machineId: entity('machine-processing-001') });
+    state = applyOk(state, 'BATCH/SUBMIT_QC', { batchId: entity('batch-reject'), assessmentId: entity('assessment-reject') });
+
+    const qualityRoomBefore = state.rooms.find((room) => room.kind === 'quality')?.occupied;
+    const rejected = applyOk(state, 'BATCH/REJECT', { batchId: entity('batch-reject'), reasonCode: 'QUALITY_REVIEW_NOT_ACCEPTED' });
+    const batch = rejected.batches.find((item) => item.id === entity('batch-reject'));
+    expect(batch?.status).toBe('rejected');
+    expect(batch?.currentRoomId).toBeNull();
+    expect(batch?.holdReason).toBe('QUALITY_REVIEW_NOT_ACCEPTED');
+    expect(rejected.inventoryLots).toHaveLength(0);
+    expect(rejected.rooms.find((room) => room.kind === 'quality')?.occupied).toBe(Math.max(0, (qualityRoomBefore ?? 0) - 1));
+
+    const release = dispatch(rejected, 'BATCH/RELEASE', { batchId: entity('batch-reject') });
+    expect(release.ok).toBe(false);
+    if (release.ok) throw new Error('Rejected batch must not be released.');
+    expect(release.error.code).toBe('INVALID_TRANSITION');
+
+    const duplicate = dispatch(rejected, 'BATCH/REJECT', { batchId: entity('batch-reject'), reasonCode: 'SECOND_ATTEMPT' });
+    expect(duplicate.ok).toBe(false);
+    if (duplicate.ok) throw new Error('Rejected batch must be terminal.');
+    expect(duplicate.error.code).toBe('INVALID_TRANSITION');
+  });
+
+  it('requires a documented reason for batch rejection', () => {
+    let state = createInitialGameState();
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', { batchId: entity('batch-reason'), plantIds: [entity('plant-001')], profileId: 'fictional-profile' });
+    const result = dispatch(state, 'BATCH/REJECT', { batchId: entity('batch-reason'), reasonCode: 'x' });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('A short rejection reason must be rejected.');
+    expect(result.error.code).toBe('INVALID_PAYLOAD');
+    expect(result.state).toEqual(state);
+  });
+
   it('keeps inventory and order unchanged when allocation is insufficient', () => {
     let state = progressToReleasedInventory();
     state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-buyer-001') });
