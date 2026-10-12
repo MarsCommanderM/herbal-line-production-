@@ -54,6 +54,27 @@ function availableActions(state: GameState): Action[] {
   } else if (order && order.status === 'shipped' && order.deliveryId) {
     actions.push({ label: 'Wareneingang bestätigen', detail: 'Den Empfang idempotent bestätigen und den Umsatz einmalig verbuchen.', type: 'DELIVERY/CONFIRM', payload: { deliveryId: order.deliveryId, proofCode: 'RX-ACK-001' } });
   }
+  const machineInMaintenance = state.machines.find((machine) => machine.status === 'maintenance');
+  if (machineInMaintenance) {
+    actions.push({
+      label: 'Wartung abschließen',
+      detail: 'Die Wartung abschließen und den abstrakten Anlagenzustand um 25 Punkte bis maximal 100 verbessern.',
+      type: 'MACHINE/COMPLETE_MAINTENANCE',
+      payload: { machineId: machineInMaintenance.id },
+    });
+  } else {
+    const serviceableMachine = state.machines.find((machine) =>
+      (machine.status === 'idle' || machine.status === 'broken') && machine.condition < 100,
+    );
+    if (serviceableMachine) {
+      actions.push({
+        label: 'Wartung starten',
+        detail: 'Eine inaktive Anlage mit reduziertem Zustand in Wartung versetzen. Laufende Jobs können nicht unterbrochen werden.',
+        type: 'MACHINE/START_MAINTENANCE',
+        payload: { machineId: serviceableMachine.id },
+      });
+    }
+  }
   return actions;
 }
 
