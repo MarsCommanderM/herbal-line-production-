@@ -47,6 +47,13 @@
 - **Added on the reconciled feature branch:** typed staff assignment/unassignment and machine movement commands, an abstract maintenance start/complete lifecycle, a live facility overview, unit tests, and Chromium E2E coverage. Same-revision CI verification is pending.
 - **Remaining:** property-based command-sequence testing, machine movement edge cases, and broader command-by-command invariant coverage.
 
+## P2-002 — Economy and progression (DAILY SETTLEMENT IMPLEMENTED; CI PENDING)
+
+- **Implemented:** pure fictional daily-cost calculation, explicit end-of-day transition to next-day 08:00, idempotent wage and utility expense postings, audit events, a daily-cost dashboard metric, and a negative-balance warning.
+- **Balance model:** wages sum each staff member's configured daily wage; utility costs use unlocked-room power units × 24 hours × 125 cents per unit-hour. These are game-balance constants, not real-world cost estimates.
+- **Acceptance:** finance unit tests cover deterministic cost totals and idempotency; domain tests cover day/time progression, ledger entries, event emission, autosettlement uniqueness and negative balance; Chromium E2E checks visible day-end feedback and autosave.
+- **Remaining:** progression tuning over multiple campaign days, revenue/expense ratio scenarios, wage/utility upgrades, and financial distress recovery. Same-revision CI pending.
+
 ## Operating rule
 
 Do not mark a task complete without implementation evidence, relevant tests, reviewed diff and updated documentation. Preserve `main`; integrate through a reviewed pull request. Continue to the next unblocked task after acceptance. Paid or irreversible external actions require existing explicit authorization.
