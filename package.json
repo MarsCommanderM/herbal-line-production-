@@ -1,9 +1,9 @@
 {
-  "name": "herbal-line",
+  "name": "dr-green-dump-dopefarm",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Herbal Line — a fictional, strictly regulated medical-cannabis production management game with abstract non-operational mechanics.",
+  "description": "Dr. Green Dump / DopeFarm — a fictional, strictly regulated medical-cannabis production management game with visible plant-care gameplay and abstract non-operational mechanics.",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
