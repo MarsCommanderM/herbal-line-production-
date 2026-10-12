@@ -321,6 +321,14 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
 
 async function boot(): Promise<() => void> {
   if (!worldRoot || !uiRoot) throw new Error('Required application roots are missing.');
+  // Bind persistence controls before the first asynchronous save lookup. Keep them disabled
+  // until restore completes so an early click cannot race past an unbound handler or stale state.
+  setPersistenceControlsDisabled(true);
+  saveGameButton?.addEventListener('click', saveCampaign);
+  loadGameButton?.addEventListener('click', loadCampaign);
+  exportGameButton?.addEventListener('click', exportCampaign);
+  importGameButton?.addEventListener('click', handleImportClick);
+  importSaveInput?.addEventListener('change', handleImportChange);
   // Keep the playable management UI independent from WebGL/Pixi initialization.
   // Graphics failures must not prevent campaign controls and persistence from starting.
   try {
@@ -337,12 +345,7 @@ async function boot(): Promise<() => void> {
   } catch (error) {
     setSaveStatus('error', 'Spielstand konnte nicht automatisch geladen werden: ' + (error instanceof Error ? error.message : String(error)));
   }
-  // Bind static controls before rendering the ready state so no visible control can race its handler.
-  saveGameButton?.addEventListener('click', saveCampaign);
-  loadGameButton?.addEventListener('click', loadCampaign);
-  exportGameButton?.addEventListener('click', exportCampaign);
-  importGameButton?.addEventListener('click', handleImportClick);
-  importSaveInput?.addEventListener('change', handleImportChange);
+  setPersistenceControlsDisabled(false);
   renderManagementUI(gameState, runGameCommand, selectPlant);
 
   const scene = new THREE.Scene();
