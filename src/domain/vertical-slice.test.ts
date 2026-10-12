@@ -98,6 +98,13 @@ describe('botanical operations vertical slice', () => {
     if (!repeated.ok) throw new Error(repeated.error.message);
     expect(repeated.state.revision).toBe(revision);
     expect(repeated.state.economy.ledger).toHaveLength(1);
+
+    const secondPurchase = dispatch(result.state, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-2' });
+    expect(secondPurchase.ok).toBe(true);
+    if (!secondPurchase.ok) throw new Error(secondPurchase.error.message);
+    expect(secondPurchase.state.upgrades.find((item) => item.id === 'energy-efficiency-2')?.purchasedAt).toBe(0);
+    expect(secondPurchase.state.economy.ledger).toHaveLength(2);
+    expect(getCampaignBalance(secondPurchase.state)).toBe(24_600_000);
   });
 
   it('rejects a stale command without changing the state', () => {
@@ -247,6 +254,7 @@ describe('botanical operations vertical slice', () => {
     if (!result.ok) throw new Error(result.error.message);
 
     expect(result.state.upgrades.find((item) => item.id === 'energy-efficiency-1')?.purchasedAt).toBe(0);
+    expect(result.state.upgrades.find((item) => item.id === 'energy-efficiency-2')?.unlocked).toBe(true);
     expect(result.state.economy.ledger).toHaveLength(1);
     expect(result.state.economy.ledger[0]?.account).toBe('investment');
     expect(result.state.economy.ledger[0]?.amountCents).toBe(250_000);
@@ -268,6 +276,12 @@ describe('botanical operations vertical slice', () => {
     if (unaffordable.ok) throw new Error('Insufficient funds must block an upgrade purchase.');
     expect(unaffordable.error.code).toBe('INSUFFICIENT_FUNDS');
     expect(unaffordable.state).toBe(lowFunds);
+
+    const locked = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-2' });
+    expect(locked.ok).toBe(false);
+    if (locked.ok) throw new Error('A dependent upgrade must remain locked until its prerequisite is purchased.');
+    expect(locked.error.code).toBe('PRECONDITION_FAILED');
+    expect(locked.state).toBe(initial);
 
     const unknown = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: '__proto__' });
     expect(unknown.ok).toBe(false);
