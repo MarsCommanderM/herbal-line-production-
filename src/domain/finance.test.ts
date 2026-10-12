@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EconomyState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
-import { calculateDailyOperatingCosts, createDailyOperatingLedgerEntries, getBalanceCents, getCashRunwayDays, getLedgerTotals, projectCampaignBalance } from './finance';
+import { calculateDailyOperatingCosts, createDailyOperatingLedgerEntries, getBalanceCents, getCashRunwayDays, getFinancialHealth, getLedgerTotals, projectCampaignBalance } from './finance';
+import { ENERGY_EFFICIENCY_UPGRADE_ID } from './upgrades';
 import { createInitialGameState } from './initial-state';
 
 const id = (value: string) => value as EntityId;
@@ -72,6 +73,30 @@ describe('ledger-derived finance', () => {
     const withPostings = { ...state, economy: { ...state.economy, ledger: postings } };
     expect(createDailyOperatingLedgerEntries(withPostings, 1, minute(1440))).toEqual([]);
     expect(createDailyOperatingLedgerEntries(withPostings, 2, minute(2880))).toHaveLength(2);
+  });
+
+  it('applies the purchased energy-efficiency upgrade to utility costs only', () => {
+    const state = createInitialGameState();
+    const upgrade = {
+      ...state,
+      upgrades: state.upgrades.map((item) => item.id === ENERGY_EFFICIENCY_UPGRADE_ID
+        ? { ...item, purchasedAt: minute(0) }
+        : item),
+    };
+    expect(calculateDailyOperatingCosts(upgrade)).toEqual({
+      staffWagesCents: 64_000,
+      utilitiesCents: 19_200,
+      totalCents: 83_200,
+    });
+  });
+
+  it('classifies campaign financial health using balance and runway', () => {
+    const state = createInitialGameState();
+    expect(getFinancialHealth(state)).toBe('stable');
+    const lowRunway = { ...state, economy: { ...state.economy, openingBalanceCents: cents(1_000_000) } };
+    expect(getFinancialHealth(lowRunway)).toBe('watch');
+    const negative = { ...state, economy: { ...state.economy, openingBalanceCents: cents(0) } };
+    expect(getFinancialHealth(negative)).toBe('critical');
   });
 
   it('projects a 30-day zero-revenue scenario without mutating the live ledger', () => {
