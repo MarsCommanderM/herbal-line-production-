@@ -69,3 +69,8 @@ Erfolg misst sich an stabiler Auslastung, QC-Erstbestehensquote, vollständiger 
 ## Tonalität
 
 Professionell, präzise, ruhig und leicht futuristisch. Die Spielwelt ist eine fiktive lizenzierte medizinische Einrichtung; sie belohnt Planung, Qualität und nachvollziehbare Abläufe.
+
+
+## Verbindliche Pflanzenpflege und Sichtbarkeit
+
+Die Pflanzenwelt ist eindeutig als medizinische Cannabis-Pflanzenproduktion erkennbar. Der Spieler führt Pflegehandlungen sichtbar an einzelnen Pflanzen oder Pflanzengruppen aus; Aktionen dürfen nicht ausschließlich in abstrakten Menüs stattfinden. Die Interaktionen umfassen im Spiel Bewässerung, Beleuchtung, Klima-/Luftfeuchtigkeitsmanagement, Nährstoffversorgung, Beschneiden und Stecklingsmanagement. Jeder Vorgang besitzt sichtbares Feedback am Pflanzenzustand, eine nachvollziehbare Spielwirkung und fiktive, ausdrücklich nicht reale Balancewerte. Es werden keine realen Anbau-Sollwerte oder Produktionsrezepte verwendet.
