@@ -63,7 +63,7 @@ const requiredPhrases = new Map([
   ['README.md', ['Dr. Green Dump / DopeFarm', 'medizinischen Cannabis-Pflanzenproduktion', 'Stecklingen']],
   ['AGENTS.md', ['Dr. Green Dump / DopeFarm', 'generische Kräuter', 'sichtbare Spielaktionen']],
   ['docs/PRODUCTION_POLICY.md', ['Dr. Green Dump / DopeFarm', 'Direkte Pflanzenpflege', 'Apotheken']],
-  ['docs/00_MASTER_PRODUCTION_DOCUMENT.md', ['Dr. Green Dump / DopeFarm', 'direkt an erkennbaren Cannabis-Pflanzen']],
+  ['docs/00_MASTER_PRODUCTION_DOCUMENT.md', ['Dr. Green Dump / DopeFarm', 'erkennbaren Cannabis-Pflanzen ausgeführte Pflege']],
   ['docs/01_GAME_VISION_AND_GDD.md', ['Dr. Green Dump / DopeFarm', 'Cannabis-Pflanzen']],
   ['docs/02_FEATURE_SCOPE_AND_RELEASE_CONTENT.md', ['Dr. Green Dump / DopeFarm', 'Cannabis-Pflege']],
   ['docs/03_CORE_LOOP_AND_USER_FLOWS.md', ['Dr. Green Dump / DopeFarm', 'Pflanzenpflege']],
@@ -105,7 +105,7 @@ for (const file of uiFiles) {
 }
 
 const upgradeSource = read('src/domain/upgrades.ts');
-if (!/ECONOMY_UPGRADES:\\s*readonly EconomyUpgradeDefinition\\[\\]\\s*=\\s*\\[\\]/.test(upgradeSource)) {
+if (!/ECONOMY_UPGRADES:\s*readonly EconomyUpgradeDefinition\[\]\s*=\s*\[\]/.test(upgradeSource)) {
   failures.push('Unapproved upgrade prices/effects must not be active in the economy catalog.');
 }
 if (/energy-efficiency-[12]/i.test(upgradeSource)) {
