@@ -223,7 +223,7 @@ test('facility controls enforce staffing roles and complete abstract machine mai
   await expect(page.getByRole('button', { name: 'Spielstation warten' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Mara Weiss: Verarbeitung zuweisen' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Mara Weiss: Freigegebenes Lager zuweisen' }).click();
+  await page.getByRole('button', { name: 'Mara Weiss: Verarbeitung zuweisen' }).click();
   await expect(page.getByRole('button', { name: 'Mara Weiss: Pflanzenraum zuweisen' })).toBeVisible();
   await expect(page.locator('#game-feedback')).toContainText('Mara Weiss wurde dem Raum');
 
