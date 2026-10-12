@@ -11,7 +11,7 @@ export type Score0To100 = Brand<number, 'Score0To100'>;
 export type Risk0To100 = Brand<number, 'Risk0To100'>;
 export type Reputation0To1000 = Brand<number, 'Reputation0To1000'>;
 
-export type LicenseStatus = 'valid' | 'warning' | 'suspended' | 'recovery_review';
+export type LicenseStatus = 'valid' | 'warning' | 'suspended';
 export type SourceLotStatus = 'pending_receipt' | 'received' | 'inspected' | 'accepted' | 'quarantined' | 'rejected';
 export type PlantStage = 'planned' | 'active' | 'ready_for_harvest' | 'harvested' | 'rejected';
 export type BatchStatus = 'created' | 'queued' | 'processing' | 'awaiting_qc' | 'released' | 'rejected' | 'quarantined';
@@ -20,7 +20,13 @@ export type RoomKind = 'production' | 'processing' | 'quality' | 'storage' | 'lo
 export type StaffRole = 'operations' | 'quality' | 'compliance' | 'logistics' | 'maintenance' | 'management';
 export type ViolationSeverity = 'low' | 'medium' | 'high' | 'critical';
 
-export interface TimeState { day: number; minuteOfDay: number; totalMinutes: SimulationMinute; speed: 0 | 1 | 2 | 4; paused: boolean; }
+export interface TimeState {
+  day: number;
+  minuteOfDay: number; // integer 0..1439
+  totalMinutes: SimulationMinute;
+  speed: 0 | 1 | 2 | 4;
+  paused: boolean;
+}
 export interface PlayerState { id: EntityId; callsign: string; level: number; experience: number; }
 export interface EnvironmentIndex { stability: number; cleanliness: number; availability: number; }
 export interface RoomState {
@@ -46,7 +52,7 @@ export interface TraceEntry {
 }
 export interface QualityAssessment {
   id: EntityId; batchId: EntityId; ruleSetVersion: string; performedAt: SimulationMinute;
-  score: Score0To100; findings: string[]; decision: 'pass' | 'fail' | 'review';
+  score: Score0To100; passed: boolean; findings: string[]; decision: 'pass' | 'fail' | 'review';
   assessorId: EntityId; traceComplete: boolean;
 }
 export interface BatchState {
@@ -58,7 +64,7 @@ export interface BatchState {
 }
 export interface InventoryLotState {
   id: EntityId; batchId: EntityId; itemDefinitionId: string; quantityAvailable: number;
-  quantityReserved: number; qualityScore: Score0To100; status: 'held' | 'released' | 'depleted' | 'expired' | 'rejected';
+  quantityReserved: number; qualityScore: Score0To100; status: 'held' | 'released' | 'reserved' | 'depleted' | 'expired' | 'rejected';
   createdAt: SimulationMinute; expiresAt: SimulationMinute | null; storageRoomId: EntityId;
 }
 export interface OrderState {
@@ -68,7 +74,7 @@ export interface OrderState {
   allocatedLotIds: EntityId[]; deliveryId: EntityId | null;
 }
 export interface CustomerState {
-  id: EntityId; name: string; kind: 'licensed_buyer' | 'institutional_buyer' | 'botanical_retailer';
+  id: EntityId; name: string; kind: 'pharmacy' | 'clinic' | 'licensed_buyer';
   reliabilityScore: Score0To100; minimumReputation: Reputation0To1000; preferredQuality: Score0To100;
   paymentDelayDays: number; unlocked: boolean;
 }
@@ -102,10 +108,14 @@ export interface ComplianceState {
   blockedOperationCodes: string[];
 }
 export interface LedgerEntry {
-  id: EntityId; simulationMinute: SimulationMinute; account: 'revenue' | 'expense' | 'penalty' | 'investment' | 'refund' | 'grant';
+  id: EntityId; simulationMinute: SimulationMinute; account: 'revenue' | 'expense' | 'penalty' | 'investment' | 'refund';
   amountCents: MoneyCents; referenceId: EntityId | null; reasonCode: string; idempotencyKey: string;
 }
-export interface EconomyState { openingBalanceCents: MoneyCents; ledger: LedgerEntry[]; }
+export interface EconomyState {
+  openingBalanceCents: MoneyCents; ledger: LedgerEntry[];
+  revenueTodayCents: MoneyCents; expensesTodayCents: MoneyCents;
+  lifetimeRevenueCents: MoneyCents; lifetimeExpensesCents: MoneyCents;
+}
 export interface UpgradeState { id: string; unlocked: boolean; purchasedAt: SimulationMinute | null; }
 export interface NotificationState {
   id: EntityId; code: string; level: 'info' | 'success' | 'warning' | 'danger';
@@ -118,13 +128,14 @@ export interface GameLogEntry {
 export interface UIState { selectedEntityId: EntityId | null; activeScreen: string; notifications: NotificationState[]; }
 export interface GameState {
   schemaVersion: 1; gameVersion: string; revision: number; rngState: number; time: TimeState;
-  player: PlayerState; reputation: Reputation0To1000;
+  player: PlayerState; moneyCents: MoneyCents; reputation: Reputation0To1000;
   rooms: RoomState[]; sourceLots: SourceLotState[]; plants: PlantState[]; batches: BatchState[];
-  inventoryLots: InventoryLotState[]; qualityAssessments: QualityAssessment[]; orders: OrderState[]; customers: CustomerState[];
+  inventoryLots: InventoryLotState[]; orders: OrderState[]; customers: CustomerState[];
   deliveries: DeliveryState[]; staff: StaffState[]; assignments: WorkAssignmentState[]; machines: MachineState[];
   upgrades: UpgradeState[]; compliance: ComplianceState; economy: EconomyState;
   logs: GameLogEntry[]; ui: UIState;
 }
+
 export interface GameBalanceConfig {
   version: string; qcPassThreshold: number; licenseWarningRisk: number; licenseSuspendedRisk: number;
   reputationMin: number; reputationMax: number; initialMoneyCents: number;
