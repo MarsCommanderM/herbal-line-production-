@@ -4,6 +4,33 @@ import { expect, test } from '@playwright/test';
 const unitStage = (page: import('@playwright/test').Page) =>
   page.locator('#game-metrics .metric-card').nth(3).locator('.metric-value');
 
+test('compliance incident requires corrective action and clean audit before reopening operations', async ({ page }) => {
+  await page.goto('/');
+  const runAction = async (label: string, revision: number): Promise<void> => {
+    await page.getByRole('button', { name: label, exact: true }).click();
+    await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision ' + revision);
+  };
+
+  await runAction('Simulierten Compliance-Vorfall erfassen', 1);
+  await expect(page.locator('#game-metrics .metric-card').nth(2).locator('.metric-value')).toHaveText('suspended');
+  await expect(page.locator('#operations-queues')).toContainText('SIMULATED_TRACE_GAP');
+  await expect(page.getByRole('button', { name: 'Korrekturmaßnahme bestätigen', exact: true })).toBeVisible();
+
+  await runAction('Korrekturmaßnahme bestätigen', 2);
+  await expect(page.locator('#game-metrics .metric-card').nth(2).locator('.metric-value')).toHaveText('suspended');
+  await expect(page.getByRole('button', { name: 'Compliance-Audit ausführen', exact: true })).toBeVisible();
+
+  await runAction('Compliance-Audit ausführen', 3);
+  await expect(page.locator('#game-metrics .metric-card').nth(2).locator('.metric-value')).toHaveText('valid');
+  await expect(page.locator('#operations-queues')).toContainText('korrigiert');
+  await expect(page.locator('#game-log')).toContainText('COMPLIANCE AUDIT COMPLETED');
+
+  await page.reload();
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision 3');
+  await expect(page.locator('#game-metrics .metric-card').nth(2).locator('.metric-value')).toHaveText('valid');
+  await expect(page.locator('#operations-queues')).toContainText('SIMULATED_TRACE_GAP');
+});
+
 test('operations dashboard exposes queues, room capacity, and keyboard-usable actions', async ({ page }) => {
   await page.goto('/');
   const queues = page.locator('#operations-queues');

@@ -51,6 +51,35 @@ function availableActions(state: GameState): Action[] {
   } else if (order && order.status === 'shipped' && order.deliveryId) {
     actions.push({ label: 'Wareneingang bestätigen', detail: 'Den Empfang idempotent bestätigen und den Umsatz einmalig verbuchen.', type: 'DELIVERY/CONFIRM', payload: { deliveryId: order.deliveryId, proofCode: 'RX-ACK-001' } });
   }
+  const openViolation = state.compliance.violations.find((item) => item.resolvedAt === null);
+  if (openViolation) {
+    actions.push({
+      label: 'Korrekturmaßnahme bestätigen',
+      detail: 'Die Maßnahme wird protokolliert; Wiederfreigabe ist erst nach dem Audit zulässig.',
+      type: 'COMPLIANCE/RESOLVE_VIOLATION',
+      payload: { violationId: openViolation.id, resolutionCode: 'CORRECTIVE_ACTION_VERIFIED' },
+    });
+  } else if (state.compliance.licenseStatus !== 'valid') {
+    actions.push({
+      label: 'Compliance-Audit ausführen',
+      detail: 'Offene Vorfälle, Lizenzstatus und Operationssperren erneut prüfen.',
+      type: 'COMPLIANCE/START_AUDIT',
+      payload: { auditId: entityId('audit-' + (state.revision + 1)) },
+    });
+  } else if (state.compliance.violations.length === 0) {
+    actions.push({
+      label: 'Simulierten Compliance-Vorfall erfassen',
+      detail: 'Fiktiven schweren Rückverfolgbarkeitsvorfall erfassen, um Sperrung, Korrekturmaßnahme und Audit zu demonstrieren.',
+      type: 'COMPLIANCE/RECORD_VIOLATION',
+      payload: {
+        violationId: entityId('violation-' + (state.revision + 1)),
+        code: 'SIMULATED_TRACE_GAP',
+        severity: 'high',
+        relatedEntityIds: plant ? [plant.id] : [],
+        operationCodes: ['BATCH/RELEASE'],
+      },
+    });
+  }
   return actions;
 }
 
@@ -224,6 +253,17 @@ export function renderManagementUI(
         };
       }),
       'Keine Anlagen registriert.',
+    ),
+    queueGroup(
+      'Compliance & Korrekturmaßnahmen',
+      state.compliance.violations.map((item) => ({
+        title: 'Vorfall ' + item.id,
+        status: item.resolvedAt === null ? 'offen' : 'korrigiert',
+        detail: item.code + ' · ' + item.severity + ' · ' + (item.resolutionCode ?? 'Korrekturmaßnahme ausstehend')
+          + ' · ' + (item.operationCodes ?? []).join(', '),
+        level: item.resolvedAt === null ? 'warning' as const : undefined,
+      })),
+      'Keine Compliance-Vorfälle protokolliert.',
     ),
     queueGroup(
       'Aufträge & Auslieferung',

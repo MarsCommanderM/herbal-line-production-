@@ -32,9 +32,13 @@ Verified capabilities: versioned v1 envelope validation, SHA-256 checksum vector
 
 The dashboard exposes process batches, room occupancy/capacity meters, machine status, and order/delivery state. Playwright checks the queue semantics and activates manual save with Enter from keyboard focus.
 
-## Next unblocked task — P1-004: Quality, audit and incident systems
+## P1-004 — Quality, audit and incident systems (IMPLEMENTED; CI ACCEPTANCE PENDING)
 
-Close any remaining QA/audit gaps with evidence, focusing on traceable holds/releases, incident/corrective-action state transitions and negative-path tests. Do not downgrade acceptance requirements to make CI pass.
+Added fictional compliance-incident capture, operation-specific blocking, corrective-action completion, audit-derived license/risk state, audit and license-change events, and a dashboard queue. High/critical incidents suspend operations; corrective action alone cannot restore the license. Unit and Playwright tests cover negative and recovery paths. Do not mark verified until the complete CI run passes on the resulting commit.
+
+## Next task after P1-004 acceptance — P2-001: Facility, capacity, staffing and maintenance
+
+Inspect existing domain primitives first; add invariant and negative-path coverage before introducing new mechanics. Keep scope narrow and preserve save-v1 compatibility.
 
 ## Operating rule
 

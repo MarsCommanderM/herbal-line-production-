@@ -8,7 +8,7 @@
 | P1-001 | P1 | Botanical operations vertical slice | P0-003 | Positive/negative state transition tests, QC release guard, traceability, order→delivery→single ledger posting, browser end-to-end | Verified green at `a9ff0d8cf481529baab73b62d1d1526402cfa169`; domain and browser acceptance pass |
 | P1-002 | P1 | Save/load, validation and recovery | P0-003 | V1 envelope, checksum validation, legacy checksum compatibility, corrupt-save recovery, failed-write/retry tests; migration policy | Core validation/recovery verified; pre-v1 schema migration remains open because no canonical legacy schema is supplied |
 | P1-003 | P1 | Operational dashboard and queue UX | P1-001 | Accessible process, room-capacity, machine, order/delivery queues; error/empty states; keyboard core flow | Verified green at `a9ff0d8cf481529baab73b62d1d1526402cfa169`; Playwright dashboard and keyboard test pass |
-| P1-004 | P1 | Quality, audit and incident systems | P1-001 | Hold/release gates, durable audit trail, incident and corrective-action transition tests | Next task; source-level primitives exist, end-to-end acceptance still open |
+| P1-004 | P1 | Quality, audit and incident systems | P1-001 | Hold/release gates, durable audit trail, incident and corrective-action transition tests | Implementation added; acceptance pending CI run |
 | P2-001 | P2 | Facility, capacity, staffing and maintenance | P1-001 | Capacity/assignment invariants and scenario tests | Pending |
 | P2-002 | P2 | Economy and progression | P2-001 | Ledger invariants and multi-stage balancing simulation | Pending on this branch |
 | P2-003 | P2 | Content, tutorial and contextual research notices | P1-003 | Content review, source register, UX tests | Pending |

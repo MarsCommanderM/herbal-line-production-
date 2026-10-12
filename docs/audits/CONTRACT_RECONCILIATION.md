@@ -32,3 +32,13 @@ The intended authority is the supplied Herbal Line Master Pack: `AGENTS.md`, `PR
 2. Save schema v1 and recovery are verified. A schema migration from pre-v1 is not claimed: the current canonical contract specifies v1 but does not provide a pre-v1 envelope to migrate. Unsupported versions are explicitly rejected until an authoritative legacy schema exists.
 3. P1-004 corrective-action workflow and end-to-end acceptance remain open. The next implementation task is quality, audit and incident hardening.
 4. The later P2/P3/P4 backlogs remain open; the project is not a release candidate.
+
+
+## P1-004 implementation — compliance incident, corrective action and audit
+
+- Compliance violations optionally carry operation codes, preserving compatibility with existing v1 save records that omit the field.
+- `COMPLIANCE/RECORD_VIOLATION` records a fictional incident and immediately suspends the license for high/critical severity, adding operation-specific blocks.
+- `COMPLIANCE/RESOLVE_VIOLATION` records a corrective-action code and timestamp; it deliberately does not clear a suspension.
+- `COMPLIANCE/START_AUDIT` derives license status, risk and blocked operation codes from unresolved incidents, records audit timestamps and emits audit/license-change events.
+- Acceptance tests cover severe violation → suspension/block, corrective action alone not restoring the license, a clean audit restoring valid status, unresolved severe findings remaining suspended, invalid corrective codes being rejected, and state persistence after reload.
+- This is an in-game simulation audit trail, not a claim of regulatory compliance for a real facility.
