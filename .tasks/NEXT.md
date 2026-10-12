@@ -58,3 +58,10 @@
 ## Operating rule
 
 Do not mark a task complete without implementation evidence, relevant tests, reviewed diff and updated documentation. Preserve `main`; integrate through a reviewed pull request. Continue to the next unblocked task after acceptance. Paid or irreversible external actions require existing explicit authorization.
+
+## P2-003 — Content, tutorial and contextual notices (IMPLEMENTED; CI PENDING)
+
+- Added a six-step, state-derived core-loop tutorial. It is a pure selector over existing game state; it does not grant permissions, mutate the campaign, or introduce a new save-schema field.
+- Added a content source register documenting the in-repository design sources and confirming that the tutorial uses only fictional gameplay rules, with no external operational claims.
+- Playwright assertions cover initial progress, tutorial progression after the first action, and completion after the full delivery flow. Exact-revision cross-browser CI is pending.
+- Remaining: content/design review, contextual notice coverage for empty/error states, and accessibility review of the combined management panel.

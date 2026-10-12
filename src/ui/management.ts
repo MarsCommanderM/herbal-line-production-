@@ -4,6 +4,7 @@ import { ECONOMY_UPGRADES, isEconomyUpgradePurchased } from '../domain/upgrades'
 import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
 import { roomSupportsStaffRole } from '../domain/facility';
 import { getCampaignGuidance } from './campaign-guidance';
+import { getTutorialProgress } from './tutorial';
 
 type Action = {
   label: string;
@@ -174,8 +175,9 @@ export function renderManagementUI(
   const actionsRoot = document.querySelector<HTMLDivElement>('#game-actions');
   const logRoot = document.querySelector<HTMLDivElement>('#game-log');
   const guidanceRoot = document.querySelector<HTMLDivElement>('#campaign-guidance');
+  const tutorialRoot = document.querySelector<HTMLDivElement>('#campaign-tutorial');
   const facilityRoot = document.querySelector<HTMLDivElement>('#facility-overview');
-  if (!metricsRoot || !actionsRoot || !logRoot || !guidanceRoot || !facilityRoot) return;
+  if (!metricsRoot || !actionsRoot || !logRoot || !guidanceRoot || !tutorialRoot || !facilityRoot) return;
 
   const plant = state.plants[0];
   const batch = state.batches[state.batches.length - 1];
@@ -220,6 +222,27 @@ export function renderManagementUI(
   guidanceNext.append(nextLabel, nextValue);
   guidanceCard.append(guidanceTitle, guidanceDetail, guidanceNext);
   guidanceRoot.append(guidanceCard);
+
+  const tutorial = getTutorialProgress(state);
+  tutorialRoot.dataset.status = tutorial.status;
+  const tutorialCard = document.createElement('article');
+  tutorialCard.className = 'tutorial-card';
+  const tutorialStep = document.createElement('p');
+  tutorialStep.className = 'tutorial-step';
+  tutorialStep.textContent = 'Schritt ' + tutorial.step + ' von ' + tutorial.total;
+  const tutorialProgress = document.createElement('progress');
+  tutorialProgress.id = 'tutorial-progress';
+  tutorialProgress.max = tutorial.total;
+  tutorialProgress.value = tutorial.step;
+  tutorialProgress.setAttribute('aria-label', 'Einführungsfortschritt');
+  tutorialProgress.setAttribute('aria-valuetext', 'Schritt ' + tutorial.step + ' von ' + tutorial.total);
+  const tutorialTitle = document.createElement('h3');
+  tutorialTitle.id = 'tutorial-heading';
+  tutorialTitle.textContent = tutorial.title;
+  const tutorialDetail = document.createElement('p');
+  tutorialDetail.textContent = tutorial.detail;
+  tutorialCard.append(tutorialStep, tutorialProgress, tutorialTitle, tutorialDetail);
+  tutorialRoot.replaceChildren(tutorialCard);
 
   actionsRoot.replaceChildren();
   const actions = availableActions(state);

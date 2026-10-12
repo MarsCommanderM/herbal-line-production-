@@ -38,6 +38,8 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   }
   await expect(page.getByRole('heading', { name: 'Kampagnenstatus' })).toBeVisible();
   await expect(page.locator('#campaign-guidance')).toContainText('Produktionseinheit aktiv');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 1 von 6');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Simulation und Zustand');
 
   await page.getByRole('button', { name: 'Spielstand speichern' }).click();
   await expect(page.locator('#game-feedback')).toContainText('Spielstand gespeichert');
@@ -45,6 +47,7 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
   await expect(page.locator('#campaign-guidance')).toContainText('Nächster Prozessschritt bereit');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 2 von 6');
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
 
   await page.getByRole('button', { name: 'Spielstand laden' }).click();
@@ -309,4 +312,68 @@ test('second efficiency tier unlocks after the first and compounds utility savin
   await expect(page.locator('#game-metrics')).toContainText('812,80');
   await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toHaveCount(0);
+});
+
+
+test('full browser campaign loop delivers once and restores the ledger after reload', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto('/');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 1 von 6');
+
+  const actions = [
+    'Simulationsschritt ausführen',
+    'Einheit in Batch überführen',
+    'Batch erstellen',
+    'Verarbeitung einplanen',
+    'Spielprozess starten',
+    'Qualitätsprüfung ausführen',
+    'Batch freigeben',
+    'Abnehmerauftrag annehmen',
+    'Freigegebenen Bestand reservieren',
+    'Lieferung vorbereiten',
+    'Lieferung versenden',
+    'Wareneingang bestätigen',
+  ];
+
+  for (const [index, label] of actions.entries()) {
+    await page.getByRole('button', { name: label, exact: true }).click();
+    await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision ' + (index + 1));
+    if (index === 0) {
+      await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 2 von 6');
+    }
+  }
+
+  await expect(page.locator('#campaign-guidance')).toContainText('Kampagnenziel erreicht');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 6 von 6');
+  await expect(page.locator('#game-metrics')).toContainText('delivered');
+
+  const countRevenuePostings = async (): Promise<number> => page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const record = await new Promise<{ envelope: { payload: { economy: { ledger: { account: string }[] } } } }>((resolve, reject) => {
+        const request = database.transaction('saves', 'readonly').objectStore('saves').get('campaign-01');
+        request.onsuccess = () => {
+          if (!request.result) {
+            reject(new Error('Autosaved campaign record is missing.'));
+            return;
+          }
+          resolve(request.result as { envelope: { payload: { economy: { ledger: { account: string }[] } } } });
+        };
+        request.onerror = () => reject(request.error);
+      });
+      return record.envelope.payload.economy.ledger.filter((entry) => entry.account === 'revenue').length;
+    } finally {
+      database.close();
+    }
+  });
+
+  expect(await countRevenuePostings()).toBe(1);
+  await page.reload();
+  await expect(page.locator('#campaign-guidance')).toContainText('Kampagnenziel erreicht');
+  await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 6 von 6');
+  expect(await countRevenuePostings()).toBe(1);
 });
