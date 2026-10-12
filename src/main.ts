@@ -225,7 +225,7 @@ function showFatalError(error: unknown): void {
   if (!fatalError) return;
   const detail = error instanceof Error ? error.message : String(error);
   fatalError.hidden = false;
-  fatalError.textContent = `Die Anlagenansicht konnte nicht gestartet werden. Lade die Seite neu oder prüfe die Entwicklerkonsole.\n${detail}`;
+  fatalError.textContent = `Die 3D-Ansicht ist nicht verfügbar. Die Management-Oberfläche bleibt nutzbar. Prüfe die WebGL-Unterstützung oder lade die Seite neu.\n${detail}`;
 }
 
 
