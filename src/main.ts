@@ -280,7 +280,7 @@ async function boot(): Promise<() => void> {
   renderManagementUI(gameState, runGameCommand);
   saveGameButton?.addEventListener('click', saveCampaign);
   loadGameButton?.addEventListener('click', loadCampaign);
-  exportGameButton?.addEventListener('click', exportGame);
+  exportGameButton?.addEventListener('click', exportCampaign);
   importGameButton?.addEventListener('click', handleImportClick);
   importSaveInput?.addEventListener('change', handleImportChange);
 
