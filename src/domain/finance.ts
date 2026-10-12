@@ -1,4 +1,5 @@
 import type { EconomyState, GameState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
+import { ENERGY_EFFICIENCY_UPGRADE_ID, isEconomyUpgradePurchased } from './upgrades';
 
 export interface LedgerTotals {
   revenueCents: number;
@@ -82,7 +83,7 @@ export const UTILITY_RATE_CENTS_PER_UNIT_HOUR = 125;
 export const OPERATING_HOURS_PER_CAMPAIGN_DAY = 24;
 
 /** Pure fictional game-balance model. Only unlocked rooms consume utility units. */
-export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'rooms'>): DailyOperatingCosts {
+export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'rooms' | 'upgrades'>): DailyOperatingCosts {
   let staffWagesCents = 0;
   for (const staff of state.staff) {
     assertNonNegativeSafeInteger(Number(staff.wageCentsPerDay), 'staff.wageCentsPerDay');
@@ -98,7 +99,10 @@ export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'r
     powerUnitsPerHour += room.powerUnitsPerHour;
   }
 
-  const utilitiesCents = powerUnitsPerHour * OPERATING_HOURS_PER_CAMPAIGN_DAY * UTILITY_RATE_CENTS_PER_UNIT_HOUR;
+  const baseUtilitiesCents = powerUnitsPerHour * OPERATING_HOURS_PER_CAMPAIGN_DAY * UTILITY_RATE_CENTS_PER_UNIT_HOUR;
+  const utilitiesCents = isEconomyUpgradePurchased(state, ENERGY_EFFICIENCY_UPGRADE_ID)
+    ? Math.floor(baseUtilitiesCents * 80 / 100)
+    : baseUtilitiesCents;
   const totalCents = staffWagesCents + utilitiesCents;
   for (const [field, value] of Object.entries({ staffWagesCents, utilitiesCents, totalCents })) {
     assertNonNegativeSafeInteger(value, field);
@@ -108,7 +112,7 @@ export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'r
 
 /** Creates idempotent ledger postings for a completed campaign day. */
 export function createDailyOperatingLedgerEntries(
-  state: Pick<GameState, 'staff' | 'rooms' | 'economy'>,
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy' | 'upgrades'>,
   completedDay: number,
   simulationMinute: SimulationMinute,
 ): LedgerEntry[] {
