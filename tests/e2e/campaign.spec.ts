@@ -167,11 +167,15 @@ test('failed or unresolved QC offers a documented terminal rejection instead of 
   await expect(page.locator('#game-log')).toContainText('BATCH REJECTED');
 });
 
-test('keyboard navigation reaches primary controls in a predictable order', async ({ page }) => {
+test('keyboard navigation reaches primary controls in a predictable order', async ({ page }, testInfo) => {
   await page.goto('/');
-  // Focus the first control explicitly; browser-specific initial landmark focus must not alter the order assertion.
+  // Focus the first control explicitly; Firefox also tabs to its scrollable management landmark.
   await page.locator('#reset-camera').focus();
   await expect(page.locator(':focus')).toHaveAttribute('id', 'reset-camera');
+  if (testInfo.project.name === 'firefox') {
+    await page.keyboard.press('Tab');
+    await expect(page.locator(':focus')).toHaveAttribute('id', 'game-panel');
+  }
   const expectedIds = ['save-game', 'load-game', 'export-game', 'import-game'];
   for (const id of expectedIds) {
     await page.keyboard.press('Tab');
