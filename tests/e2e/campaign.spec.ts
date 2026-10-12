@@ -4,6 +4,37 @@ import { expect, test } from '@playwright/test';
 const unitStage = (page: import('@playwright/test').Page) =>
   page.locator('#game-metrics .metric-card').nth(3).locator('.metric-value');
 
+test('management loop completes through QC release, dispatch, and revenue posting in the browser', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
+
+  const runAction = async (label: string, revision: number): Promise<void> => {
+    await page.getByRole('button', { name: label, exact: true }).click();
+    await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision ' + revision);
+  };
+
+  await runAction('Simulationsschritt ausführen', 1);
+  await runAction('Einheit in Batch überführen', 2);
+  await runAction('Batch erstellen', 3);
+  await runAction('Verarbeitung einplanen', 4);
+  await runAction('Spielprozess starten', 5);
+  await runAction('Qualitätsprüfung ausführen', 6);
+  await expect(page.getByRole('button', { name: 'Batch freigeben', exact: true })).toBeVisible();
+  await runAction('Batch freigeben', 7);
+  await runAction('Abnehmerauftrag annehmen', 8);
+  await runAction('Freigegebenen Bestand reservieren', 9);
+  await runAction('Lieferung vorbereiten', 10);
+  await runAction('Lieferung versenden', 11);
+  await runAction('Wareneingang bestätigen', 12);
+
+  await expect(page.locator('#game-metrics .metric-card').nth(4).locator('.metric-value')).toHaveText('released');
+  await expect(page.locator('#game-metrics .metric-card').nth(5).locator('.metric-value')).toHaveText('delivered');
+  await expect(page.locator('#game-metrics .metric-card').nth(1).locator('.metric-value')).toContainText('258.500');
+  await expect(page.locator('#game-actions')).toContainText('Kampagnenziel erreicht');
+  await expect(page.locator('#game-log')).toContainText('DELIVERY_CONFIRMED');
+});
+
 test('manual save restores the exact committed campaign state', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
