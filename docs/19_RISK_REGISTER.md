@@ -7,7 +7,7 @@
 | R-003 | Determinismus bricht durch Zeit/RNG | mittel/hoch | Replay drift | feste Ticks, seeded RNG, pure domain, replay tests | CI / Simulation |
 | R-004 | Save wird korrupt/verloren | mittel/critical | Migration-/transaction-/quota errors | Snapshots, validation, atomic writes, recovery/export | P0 / Persistence |
 | R-005 | Doppelbuchung oder negativer Bestand | mittel/critical | invariant/property tests | Ledger, reservierte Mengen, idempotency keys | P0 / Simulation |
-| R-006 | UI zeigt falschen/widerlegten Zustand | mittel/hoch | diff/E2E/state selectors mismatch | source of truth, selectors, contract tests | UI gate / Presentation |
+| R-006 | UI zeigt falschen/widerlegten Zustand | mittel/hoch | E2E/state selectors mismatch | source of truth, selectors, contract tests | UI gate / Presentation |
 | R-007 | Platzhalter als finale Optik ausgegeben | hoch/hoch | Asset manifest missing / visual review fails | Final-art gate, screenshots und Assets registrieren | P0 / Art owner |
 | R-008 | Unbekannte Asset-Lizenz | mittel/critical | `pending` im rights register | Ersatzasset oder Beleg beschaffen; Release blockieren | Rights gate / Producer |
 | R-009 | Produktname kollidiert mit Marke | mittel/hoch | Register-/ähnlichkeitsrecherche | schriftliche Recherche, Alternativname bereithalten, fachkundige Prüfung bei Risiko | Rights gate / Producer |
