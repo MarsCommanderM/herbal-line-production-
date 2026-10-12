@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const roots = ['contracts', 'src', 'scripts', '.github/workflows'];
+const roots = ['contracts', 'src', 'scripts', 'tests', '.github/workflows'];
 const extensions = new Set(['.ts', '.mjs', '.css', '.html', '.yml', '.yaml', '.json']);
 const files = [];
 
@@ -20,7 +20,7 @@ async function walk(directory) {
 }
 
 for (const root of roots) await walk(root);
-for (const file of ['index.html', 'package.json', 'tsconfig.json', 'vite.config.ts', 'vitest.config.ts']) {
+for (const file of ['index.html', 'package.json', 'playwright.config.ts', 'tsconfig.json', 'vite.config.ts', 'vitest.config.ts']) {
   try { await readFile(file, 'utf8'); files.push(file); } catch (error) {
     if (!(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')) throw error;
   }
