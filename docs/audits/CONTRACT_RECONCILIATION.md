@@ -4,34 +4,40 @@
 
 The supplied Herbal Line Master Pack is the binding reference for product requirements, domain concepts, schemas and production gates. The agreed product is a fictional, strictly regulated medical-cannabis production management simulation. Current implementation details must be reconciled against the canonical archive; a generic botanical rescope is not an approved product decision. The simulation remains fictional and must not provide real-world controlled-substance production or distribution instructions.
 
-## Decisions recorded
+## Canonical contract facts restored from the archive
 
-| Contract | Conflict | Resolution |
-|---|---|---|
-| Compliance state | Domain status union omitted `recovery_review`. | Added `recovery_review` to the compliance state union. |
-| Quality assessment | `passed: boolean` duplicated `decision: pass/fail/review`. | Use the decision union as the canonical assessment outcome. |
-| Inventory reservation | Quantity reservation and a `reserved` disposition duplicated state. | Reservation is represented by reserved quantity; lot disposition remains independent. |
-| Economy | Parallel balance and summary totals duplicated the ledger. | Finance selectors derive balances and totals from opening balance plus ledger. |
-| Persistence | UI state was mixed into the save payload. | Persisted payload omits transient UI; UI is reconstructed on restore. |
-| Commands | Domain, UI and persistence commands shared one undifferentiated union. | Separate command categories and retain a composed public union. |
+The canonical `contracts/*.ts` files now match the original archive's Git blob hashes exactly. They are not the same as the previously modified implementation contracts.
 
-## Verified implementation and test evidence
+- `LicenseStatus` is `valid | warning | suspended`; `recovery_review` is not a canonical license status.
+- `QualityAssessment` requires both `passed: boolean` and `decision: pass | fail | review`.
+- `GameState` does not declare a top-level `qualityAssessments` array.
+- `EconomyState` includes revenue/expense summaries as fields in addition to the ledger.
+- Canonical ledger accounts are `revenue | expense | penalty | investment | refund`; `grant` is not included.
+- The canonical public command type is `GameCommand`, not `DomainCommand`.
+- Canonical events do not include several event strings currently emitted by the implementation, including `upgrade.purchased`, `time.day_ended`, and several facility/machine events.
+- The canonical save payload is `GameState`, including its `ui` field.
 
-Latest verified revision: `bce2a0bd0edda036032be03e8dfea3033057ea52`.
+These facts are source-contract evidence, not a statement that the implementation has already been reconciled.
 
-[GitHub Actions run 38182289439](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182289439) passed all steps on that exact commit:
+## Current CI evidence after canonical contract restoration
 
-- `npm ci --no-audit --no-fund`
-- Source policy lint: 11 TypeScript files checked
-- Format check: 28 source/config files checked
-- Strict TypeScript typecheck
-- Unit tests: 26 passed across 5 test files
-- Production build
-- Chromium E2E: 3 passed
-- Production preview smoke: HTML, JS bundle, save controls and CSS served successfully
-- Master-pack validation: 39 required paths and 6 JSON documents checked
-- `git diff --check`
+The GitHub Actions run on the restoration branch, [Herbal Line CI run 38290153329](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153329), **failed at strict TypeScript typecheck**. Domain tests, production build and browser E2E were skipped because typecheck failed.
 
+Reported error groups include:
+
+- missing canonical `EconomyState` summary fields in initial state and finance fixtures;
+- unsupported `grant` ledger account;
+- implementation-only `recovery_review` status;
+- references to undeclared `GameState.qualityAssessments`;
+- import of missing `DomainCommand`;
+- implementation-only event types;
+- missing `QualityAssessment.passed`;
+- mismatch between `InventoryLotState` and the implementation's `InventoryReservation` shape;
+- save codec payload missing canonical `ui`.
+
+The separate [Master Pack Validation run 38290153248](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153248) passed. That workflow validates required pack files/basic metadata; it does not establish that the game typechecks or builds.
+
+A previous green CI run on revision `bce2a0bd0edda036032be03e8dfea3033057ea52` is historical and predates restoration of the exact canonical contracts. It must not be used as evidence that the current restoration branch passes.
 ## Persistence behavior now implemented
 
 - Canonical JSON serialization and SHA-256 integrity check.
