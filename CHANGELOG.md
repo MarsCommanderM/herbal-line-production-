@@ -37,3 +37,9 @@
 - Added pure multi-day balance projections with explicit daily-revenue assumptions and bounded forecast horizons.
 - Added a cash-runway selector and dashboard metrics for a 30-day zero-revenue scenario; the UI labels the assumptions instead of presenting the projection as guaranteed income.
 - Added deterministic tests for zero-revenue burn, revenue-offset scenarios, runway exhaustion and invalid forecast inputs. Same-revision CI is pending.
+
+## Unreleased — Economy upgrades and distress indicator
+
+- Added a one-time, ledger-backed energy-efficiency upgrade that reduces fictional utility expenses by 20 percent.
+- Added duplicate-purchase and insufficient-funds guards, purchase audit events, and UI feedback; the purchase changes the derived balance through an `investment` ledger entry.
+- Added a financial-health indicator based on current balance and zero-revenue runway, plus finance/domain and Chromium E2E coverage. Exact-revision CI pending.

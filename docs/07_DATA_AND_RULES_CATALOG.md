@@ -27,6 +27,8 @@ Inhalte sind datengetrieben. Definitionen (Content) sind unveränderliche Versio
 - Räume: `production_room_small` (Kapazität 6; Preis 200.000 Cent; Power 12 Spiel-Energieeinheiten je Spielstunde), `processing_room_small` (Kapazität 4; Preis 250.000 Cent; Power 8), `quality_lab_small` (Kapazität 3; Preis 300.000 Cent; Power 6), `storage_small` (Kapazität 12; Preis 150.000 Cent; Power 3), `logistics_desk` (Kapazität 4 Auftragsplätze; Preis 100.000 Cent; Power 1).
 - Kunden: `buyer_a` und `buyer_b`, mit ausschließlich abstrakten Zuverlässigkeits-/Qualitätsanforderungen und einer erforderlichen Reputation.
 - Upgrades: `sensor_pack_1` und `drying_rack_1` sind Spielverbesserungen mit in-game Effekten. Sie dürfen keine realen Anleitungen zu Anbau, Verarbeitung kontrollierter Produkte oder Extraktion enthalten.
+- Das aktuell implementierte Wirtschaftsupgrade `energy-efficiency-1` kostet einmalig 250.000 Cent Spielgeld und reduziert die fiktiven Energiekosten um 20 Prozent. Der Kauf erzeugt einen `investment`-Ledger-Eintrag mit idempotency key `upgrade-purchase:energy-efficiency-1`; unzureichendes Guthaben und doppelte Käufe werden abgewiesen.
+
 
 ## 4. Wachstum/Qualität als abstraktes Simulationsmodell
 

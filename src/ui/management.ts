@@ -1,5 +1,6 @@
 import type { EntityId, GameState } from '../../contracts/domain';
-import { calculateDailyOperatingCosts, getCashRunwayDays, projectCampaignBalance } from '../domain/finance';
+import { calculateDailyOperatingCosts, getCashRunwayDays, getFinancialHealth, projectCampaignBalance } from '../domain/finance';
+import { ECONOMY_UPGRADES, isEconomyUpgradePurchased } from '../domain/upgrades';
 import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
 import { roomSupportsStaffRole } from '../domain/facility';
 import { getCampaignGuidance } from './campaign-guidance';
@@ -9,6 +10,7 @@ type Action = {
   detail: string;
   type: VerticalSliceCommand['type'];
   payload: Record<string, unknown>;
+  disabled?: boolean;
 };
 
 const entityId = (value: string): EntityId => value as EntityId;
@@ -89,6 +91,19 @@ function availableActions(state: GameState): Action[] {
     }
   }
 
+  for (const upgrade of ECONOMY_UPGRADES) {
+    const stateUpgrade = state.upgrades.find((item) => item.id === upgrade.id);
+    if (!stateUpgrade || !stateUpgrade.unlocked || isEconomyUpgradePurchased(state, upgrade.id)) continue;
+    const cost = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(Number(upgrade.costCents) / 100);
+    actions.push({
+      label: upgrade.label + ' kaufen',
+      detail: upgrade.description + ' Einmalige Spielinvestition: ' + cost + '.',
+      type: 'UPGRADE/PURCHASE',
+      payload: { upgradeId: upgrade.id },
+      disabled: getCampaignBalance(state) < Number(upgrade.costCents),
+    });
+  }
+
   actions.push({
     label: 'Tag abschließen',
     detail: 'Schließt den aktuellen Kampagnentag ab und bucht fiktive Tageslöhne sowie Betriebskosten genau einmal ins Finanz-Ledger.',
@@ -158,6 +173,7 @@ export function renderManagementUI(
   const runwayDays = getCashRunwayDays(state);
   const runway = runwayDays === null ? 'Kein Nettoverbrauch' : runwayDays + ' Tage';
   const projectedBalance = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format((projectCampaignBalance(state, 30).at(-1)?.closingBalanceCents ?? getCampaignBalance(state)) / 100);
+  const financialHealth = ({ stable: 'Stabil', watch: 'Beobachten', critical: 'Kritisch' } as const)[getFinancialHealth(state)];
 
   metricsRoot.replaceChildren(
     metric('Spieltag', String(state.time.day)),
@@ -165,6 +181,7 @@ export function renderManagementUI(
     metric('Tageskosten', dailyCosts),
     metric('Reichweite (0 € Umsatz)', runway),
     metric('30-Tage-Szenario (0 € Umsatz)', projectedBalance),
+    metric('Finanzstatus', financialHealth),
     metric('Lizenzstatus', state.compliance.licenseStatus.replaceAll('_', ' ')),
     metric('Einheitenstatus', plant ? plant.stage.replaceAll('_', ' ') : '—'),
     metric('Batchstatus', batch ? batch.status.replaceAll('_', ' ') : 'Kein Batch'),
@@ -213,6 +230,7 @@ export function renderManagementUI(
     button.className = 'game-action';
     button.textContent = action.label;
     button.title = action.detail;
+    button.disabled = action.disabled ?? false;
     button.addEventListener('click', () => runCommand(action.type, action.payload));
     actionsRoot.append(button);
     const detail = document.createElement('p');

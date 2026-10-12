@@ -1,4 +1,5 @@
 import type { EconomyState, GameState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
+import { ENERGY_EFFICIENCY_UPGRADE_ID, getEconomyUpgradeDefinition, isEconomyUpgradePurchased } from './upgrades';
 
 export interface LedgerTotals {
   revenueCents: number;
@@ -82,7 +83,7 @@ export const UTILITY_RATE_CENTS_PER_UNIT_HOUR = 125;
 export const OPERATING_HOURS_PER_CAMPAIGN_DAY = 24;
 
 /** Pure fictional game-balance model. Only unlocked rooms consume utility units. */
-export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'rooms'>): DailyOperatingCosts {
+export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'rooms' | 'upgrades'>): DailyOperatingCosts {
   let staffWagesCents = 0;
   for (const staff of state.staff) {
     assertNonNegativeSafeInteger(Number(staff.wageCentsPerDay), 'staff.wageCentsPerDay');
@@ -98,7 +99,12 @@ export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'r
     powerUnitsPerHour += room.powerUnitsPerHour;
   }
 
-  const utilitiesCents = powerUnitsPerHour * OPERATING_HOURS_PER_CAMPAIGN_DAY * UTILITY_RATE_CENTS_PER_UNIT_HOUR;
+  const baseUtilitiesCents = powerUnitsPerHour * OPERATING_HOURS_PER_CAMPAIGN_DAY * UTILITY_RATE_CENTS_PER_UNIT_HOUR;
+  const efficiencyUpgrade = getEconomyUpgradeDefinition(ENERGY_EFFICIENCY_UPGRADE_ID);
+  const utilityReductionPercent = isEconomyUpgradePurchased(state, ENERGY_EFFICIENCY_UPGRADE_ID)
+    ? efficiencyUpgrade?.utilityReductionPercent ?? 0
+    : 0;
+  const utilitiesCents = Math.floor(baseUtilitiesCents * (100 - utilityReductionPercent) / 100);
   const totalCents = staffWagesCents + utilitiesCents;
   for (const [field, value] of Object.entries({ staffWagesCents, utilitiesCents, totalCents })) {
     assertNonNegativeSafeInteger(value, field);
@@ -108,7 +114,7 @@ export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'r
 
 /** Creates idempotent ledger postings for a completed campaign day. */
 export function createDailyOperatingLedgerEntries(
-  state: Pick<GameState, 'staff' | 'rooms' | 'economy'>,
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy' | 'upgrades'>,
   completedDay: number,
   simulationMinute: SimulationMinute,
 ): LedgerEntry[] {
@@ -152,7 +158,7 @@ export interface ProjectedEconomyDay {
  * This is game-balance tooling, not a real-world financial estimate.
  */
 export function projectCampaignBalance(
-  state: Pick<GameState, 'staff' | 'rooms' | 'economy'>,
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy' | 'upgrades'>,
   days: number,
   expectedDailyRevenueCents = 0,
 ): ProjectedEconomyDay[] {
@@ -181,7 +187,7 @@ export function projectCampaignBalance(
 
 /** Number of full days before funds are exhausted under a fixed daily revenue scenario; null means no net burn. */
 export function getCashRunwayDays(
-  state: Pick<GameState, 'staff' | 'rooms' | 'economy'>,
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy' | 'upgrades'>,
   expectedDailyRevenueCents = 0,
 ): number | null {
   assertNonNegativeSafeInteger(expectedDailyRevenueCents, 'expectedDailyRevenueCents');
@@ -190,4 +196,18 @@ export function getCashRunwayDays(
   const balance = Number(getBalanceCents(state.economy));
   if (balance <= 0) return 0;
   return Math.floor(balance / dailyNetBurn);
+}
+
+export type FinancialHealth = 'stable' | 'watch' | 'critical';
+
+/** Game-only distress indicator based on current cash and zero-revenue runway. */
+export function getFinancialHealth(
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy' | 'upgrades'>,
+): FinancialHealth {
+  const balance = Number(getBalanceCents(state.economy));
+  if (balance < 0) return 'critical';
+  const runway = getCashRunwayDays(state);
+  if (runway !== null && runway < 7) return 'critical';
+  if (runway !== null && runway < 30) return 'watch';
+  return 'stable';
 }

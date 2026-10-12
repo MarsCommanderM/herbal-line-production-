@@ -207,6 +207,42 @@ describe('botanical operations vertical slice', () => {
     expect(result.state.inventoryLots[0]?.quantityReserved).toBe(0);
     expect(result.state.orders[0]?.status).toBe('accepted');
   });
+  it('purchases the energy-efficiency upgrade atomically and prevents duplicate investment', () => {
+    const initial = createInitialGameState();
+    const result = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.error.message);
+
+    expect(result.state.upgrades.find((item) => item.id === 'energy-efficiency-1')?.purchasedAt).toBe(0);
+    expect(result.state.economy.ledger).toHaveLength(1);
+    expect(result.state.economy.ledger[0]?.account).toBe('investment');
+    expect(result.state.economy.ledger[0]?.amountCents).toBe(250_000);
+    expect(getCampaignBalance(result.state)).toBe(24_750_000);
+    expect(result.events.map((event) => event.type)).toEqual(['upgrade.purchased', 'finance.ledger_posted']);
+
+    const repeated = dispatch(result.state, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
+    expect(repeated.ok).toBe(false);
+    if (repeated.ok) throw new Error('An upgrade cannot be purchased twice.');
+    expect(repeated.error.code).toBe('INVALID_TRANSITION');
+    expect(repeated.state.economy.ledger).toHaveLength(1);
+  });
+
+  it('rejects unaffordable or unknown upgrades without changing the campaign', () => {
+    const initial = createInitialGameState();
+    const lowFunds = { ...initial, economy: { ...initial.economy, openingBalanceCents: 100 as typeof initial.economy.openingBalanceCents } };
+    const unaffordable = dispatch(lowFunds, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
+    expect(unaffordable.ok).toBe(false);
+    if (unaffordable.ok) throw new Error('Insufficient funds must block an upgrade purchase.');
+    expect(unaffordable.error.code).toBe('INSUFFICIENT_FUNDS');
+    expect(unaffordable.state).toBe(lowFunds);
+
+    const unknown = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: '__proto__' });
+    expect(unknown.ok).toBe(false);
+    if (unknown.ok) throw new Error('Unknown upgrade IDs must be rejected.');
+    expect(unknown.error.code).toBe('NOT_FOUND');
+    expect(unknown.state).toBe(initial);
+  });
+
   it('ends a campaign day, advances to the next 08:00, and posts wages and utilities once', () => {
     const initial = createInitialGameState();
     const result = dispatch(initial, 'TIME/END_DAY');

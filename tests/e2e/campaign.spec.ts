@@ -257,3 +257,23 @@ test('end-of-day settlement updates the campaign clock, ledger and autosave', as
   await expect(page.locator('#game-metrics')).toContainText('880,00');
   await expect(page.locator('#game-metrics')).toContainText('222.720,00');
 });
+
+
+test('energy-efficiency purchase is ledger-backed and lowers future daily costs', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#game-metrics')).toContainText('880,00');
+  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toBeEnabled();
+
+  await page.getByRole('button', { name: 'Energieeffizienz I kaufen' }).click();
+  await expect(page.locator('#game-feedback')).toContainText('Energieeffizienz I gekauft');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
+  await expect(page.locator('#game-metrics')).toContainText('247.500,00');
+  await expect(page.locator('#game-metrics')).toContainText('832,00');
+  await expect(page.getByRole('button', { name: 'Energieeffizienz I kaufen' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Tag abschließen' }).click();
+  await expect(page.locator('#game-feedback')).toContainText('Tag 1 abgeschlossen');
+  await expect(page.locator('#game-metrics')).toContainText('832,00');
+  await expect(page.locator('#game-metrics')).toContainText('221.708,00');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
+});
