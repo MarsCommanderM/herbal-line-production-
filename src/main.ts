@@ -261,6 +261,28 @@ function createBotanicalPlant(x: number, z: number, variant: number): THREE.Grou
 
 async function boot(): Promise<() => void> {
   if (!worldRoot || !uiRoot) throw new Error('Required application roots are missing.');
+  // Keep the playable management UI independent from WebGL/Pixi initialization.
+  // Graphics failures must not prevent campaign controls and persistence from starting.
+  try {
+    const restored = await readBestAvailableSave();
+    if (restored) {
+      gameState = restoreGameState(restored.envelope);
+      commandSequence = gameState.revision;
+      setSaveStatus(restored.recoveredFromBackup ? 'error' : 'success', restored.recoveredFromBackup
+        ? 'Autosave beschädigt; letztes gültiges Backup wiederhergestellt.'
+        : 'Autosave wiederhergestellt · Revision ' + gameState.revision + '.');
+    } else {
+      setSaveStatus('info', 'Neue Kampagne · Autosave nach jeder erfolgreichen Aktion.');
+    }
+  } catch (error) {
+    setSaveStatus('error', 'Spielstand konnte nicht automatisch geladen werden: ' + (error instanceof Error ? error.message : String(error)));
+  }
+  renderManagementUI(gameState, runGameCommand);
+  saveGameButton?.addEventListener('click', saveCampaign);
+  loadGameButton?.addEventListener('click', loadCampaign);
+  exportGameButton?.addEventListener('click', exportGame);
+  importGameButton?.addEventListener('click', handleImportClick);
+  importSaveInput?.addEventListener('change', handleImportChange);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#0b1220');
@@ -390,27 +412,7 @@ async function boot(): Promise<() => void> {
     stateLine.text = 'TAG ' + gameState.time.day + '  /  REV ' + gameState.revision + '  /  ' + gameState.compliance.licenseStatus.toUpperCase();
     layout();
   };
-  try {
-    const restored = await readBestAvailableSave();
-    if (restored) {
-      gameState = restoreGameState(restored.envelope);
-      commandSequence = gameState.revision;
-      setSaveStatus(restored.recoveredFromBackup ? 'error' : 'success', restored.recoveredFromBackup
-        ? 'Autosave beschädigt; letztes gültiges Backup wiederhergestellt.'
-        : 'Autosave wiederhergestellt · Revision ' + gameState.revision + '.');
-    } else {
-      setSaveStatus('info', 'Neue Kampagne · Autosave nach jeder erfolgreichen Aktion.');
-    }
-  } catch (error) {
-    setSaveStatus('error', 'Spielstand konnte nicht automatisch geladen werden: ' + (error instanceof Error ? error.message : String(error)));
-  }
-  renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
-  saveGameButton?.addEventListener('click', saveCampaign);
-  loadGameButton?.addEventListener('click', loadCampaign);
-  exportGameButton?.addEventListener('click', exportCampaign);
-  importGameButton?.addEventListener('click', handleImportClick);
-  importSaveInput?.addEventListener('change', handleImportChange);
   window.addEventListener('resize', layout);
 
   const resize = (): void => {
