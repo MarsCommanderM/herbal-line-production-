@@ -14,7 +14,7 @@ import type {
 } from '../../contracts/domain';
 import type { CommandBase, CommandFailureCode, DomainCommand, CommandResult } from '../../contracts/commands';
 import type { DomainEvent } from '../../contracts/events';
-import { getBalanceCents } from './finance';
+import { createDailyOperatingLedgerEntries, getBalanceCents } from './finance';
 import { validateGameStateInvariants } from './invariants';
 import { clampScore, roomSupportsStaffRole, validateFacilityInvariants } from './facility';
 import { reserveInventory, transitionBatch } from './transitions';
@@ -39,6 +39,7 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'FACILITY/MOVE_MACHINE'
     | 'MACHINE/START_MAINTENANCE'
     | 'MACHINE/COMPLETE_MAINTENANCE'
+    | 'TIME/END_DAY'
 }>;
 
 const entityId = (value: string): EntityId => value as EntityId;
@@ -154,6 +155,50 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
   if (command.actorId !== state.player.id) return failure(state, 'COMPLIANCE_BLOCKED', 'Nur der aktuelle Kampagnenleiter darf diese Aktion ausführen.');
 
   switch (command.type) {
+    case 'TIME/END_DAY': {
+      if (!Number.isSafeInteger(state.time.minuteOfDay) || state.time.minuteOfDay < 0 || state.time.minuteOfDay >= 1440) {
+        return failure(state, 'PRECONDITION_FAILED', 'Die aktuelle Spielzeit ist ungültig; der Tag kann nicht abgeschlossen werden.');
+      }
+      const completedDay = state.time.day;
+      const nextDay = completedDay + 1;
+      const minutesToNextDayStart = ((480 - state.time.minuteOfDay + 1440) % 1440) || 1440;
+      const totalMinutes = Number(state.time.totalMinutes) + minutesToNextDayStart;
+      if (!Number.isSafeInteger(totalMinutes) || totalMinutes < 0) {
+        return failure(state, 'PRECONDITION_FAILED', 'Die nächste Spielzeit liegt außerhalb des zulässigen Zahlenbereichs.');
+      }
+      const nextTotalMinutes = minute(totalMinutes);
+      const postings = createDailyOperatingLedgerEntries(state, completedDay, nextTotalMinutes);
+      const timeEvent: DomainEvent = {
+        ...eventBase(state, command, state.player.id, 1),
+        type: 'time.day_ended',
+        completedDay,
+        nextDay,
+      };
+      const ledgerEvents: DomainEvent[] = postings.map((entry, index) => ({
+        ...eventBase(state, command, state.player.id, index + 2),
+        type: 'finance.ledger_posted',
+        ledgerEntryId: entry.id,
+        amountCents: Number(entry.amountCents),
+        account: entry.account,
+      }));
+      const costs = postings.reduce((sum, entry) => sum + Number(entry.amountCents), 0);
+      return commit(state, command, {
+        time: { ...state.time, day: nextDay, minuteOfDay: 480, totalMinutes: nextTotalMinutes },
+        economy: { ...state.economy, ledger: [...state.economy.ledger, ...postings] },
+        ui: {
+          ...state.ui,
+          notifications: [...state.ui.notifications, {
+            id: entityId('notification-day-end-' + nextDay),
+            code: 'DAILY_SETTLEMENT',
+            level: getBalanceCents({ ...state.economy, ledger: [...state.economy.ledger, ...postings] }) < 0 ? 'danger' : 'info',
+            title: 'Tagesabschluss',
+            message: 'Tag ' + completedDay + ' abgeschlossen. Betriebskosten: ' + (costs / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }) + '.',
+            createdAt: nextTotalMinutes,
+            read: false,
+          }],
+        },
+      }, [timeEvent, ...ledgerEvents], 'CAMPAIGN_DAY_ENDED', 'Tag ' + completedDay + ' abgeschlossen; Löhne und Betriebskosten wurden im Ledger gebucht.', [state.player.id, ...postings.map((entry) => entry.id)]);
+    }
     case 'PLANT/ADVANCE_FICTIONAL_STEP': {
       const plant = state.plants.find((item) => item.id === command.plantId);
       if (!plant) return failure(state, 'NOT_FOUND', 'Produktionseinheit nicht gefunden.');

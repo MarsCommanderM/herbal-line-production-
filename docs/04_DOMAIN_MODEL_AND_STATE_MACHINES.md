@@ -108,6 +108,9 @@ Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte S
 - Maschinenzuordnung ist bidirektional: `MachineState.roomId` und `RoomState.assignedMachineIds` müssen übereinstimmen.
 - Eine aktive Maschine hat genau einen aktiven Job, und dieser verweist auf einen `processing`-Batch im selben Raum. Maschinen in Wartung sind jobfrei; aktive Maschinen können weder verlegt noch in Wartung gesetzt werden.
 - Keine ungültigen Zahlen: alle Scores sind endlich und innerhalb definierter Grenzen.
+- Der Tagesabschluss verschiebt die Kampagnenzeit auf 08:00 des Folgetags und bucht Tageslöhne sowie Betriebskosten als unveränderliche Ledger-Einträge.
+- Tageskosten werden über den Schlüssel `operating-costs:day:{day}:{wages|utilities}` idempotent gebucht; wiederholte Buchungen desselben Tages dürfen keine doppelten Aufwendungen erzeugen.
+- Der Kontostand wird ausschließlich aus Eröffnungsbestand und Ledger abgeleitet. Ein negativer Kontostand bleibt sichtbar und wird nicht stillschweigend auf null begrenzt.
 - Kein Auftrag wird doppelt erfüllt oder doppelt abgerechnet.
 - Kein suspendierter Betrieb führt kritische Freigaben/Versand durch.
 - Jeder terminale Übergang hat Ursache, Actor, Simulationszeit und auditrelevanten Logeintrag.

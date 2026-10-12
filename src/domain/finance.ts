@@ -1,4 +1,4 @@
-import type { EconomyState, LedgerEntry, MoneyCents } from '../../contracts/domain';
+import type { EconomyState, GameState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
 
 export interface LedgerTotals {
   revenueCents: number;
@@ -70,4 +70,71 @@ export function getLedgerTotals(entries: readonly LedgerEntry[]): Omit<LedgerTot
     if (!Number.isSafeInteger(value)) throw new RangeError(`Ledger total ${field} exceeded safe integer precision`);
   }
   return totals;
+}
+
+export interface DailyOperatingCosts {
+  staffWagesCents: number;
+  utilitiesCents: number;
+  totalCents: number;
+}
+
+export const UTILITY_RATE_CENTS_PER_UNIT_HOUR = 125;
+export const OPERATING_HOURS_PER_CAMPAIGN_DAY = 24;
+
+/** Pure fictional game-balance model. Only unlocked rooms consume utility units. */
+export function calculateDailyOperatingCosts(state: Pick<GameState, 'staff' | 'rooms'>): DailyOperatingCosts {
+  let staffWagesCents = 0;
+  for (const staff of state.staff) {
+    assertNonNegativeSafeInteger(Number(staff.wageCentsPerDay), 'staff.wageCentsPerDay');
+    staffWagesCents += Number(staff.wageCentsPerDay);
+  }
+
+  let powerUnitsPerHour = 0;
+  for (const room of state.rooms) {
+    if (!room.unlocked) continue;
+    if (!Number.isSafeInteger(room.powerUnitsPerHour) || room.powerUnitsPerHour < 0) {
+      throw new RangeError('room.powerUnitsPerHour must be a non-negative safe integer');
+    }
+    powerUnitsPerHour += room.powerUnitsPerHour;
+  }
+
+  const utilitiesCents = powerUnitsPerHour * OPERATING_HOURS_PER_CAMPAIGN_DAY * UTILITY_RATE_CENTS_PER_UNIT_HOUR;
+  const totalCents = staffWagesCents + utilitiesCents;
+  for (const [field, value] of Object.entries({ staffWagesCents, utilitiesCents, totalCents })) {
+    assertNonNegativeSafeInteger(value, field);
+  }
+  return { staffWagesCents, utilitiesCents, totalCents };
+}
+
+/** Creates idempotent ledger postings for a completed campaign day. */
+export function createDailyOperatingLedgerEntries(
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy'>,
+  completedDay: number,
+  simulationMinute: SimulationMinute,
+): LedgerEntry[] {
+  if (!Number.isSafeInteger(completedDay) || completedDay < 1) {
+    throw new RangeError('completedDay must be a positive safe integer');
+  }
+  const costs = calculateDailyOperatingCosts(state);
+  const existingKeys = new Set(state.economy.ledger.map((entry) => entry.idempotencyKey));
+  const entries: LedgerEntry[] = [];
+  const postings = [
+    { suffix: 'wages', amount: costs.staffWagesCents, reasonCode: 'DAILY_STAFF_WAGES' },
+    { suffix: 'utilities', amount: costs.utilitiesCents, reasonCode: 'DAILY_UTILITIES' },
+  ] as const;
+
+  for (const posting of postings) {
+    const idempotencyKey = 'operating-costs:day:' + completedDay + ':' + posting.suffix;
+    if (existingKeys.has(idempotencyKey)) continue;
+    entries.push({
+      id: ('ledger-day-' + completedDay + '-' + posting.suffix) as EntityId,
+      simulationMinute,
+      account: 'expense',
+      amountCents: posting.amount as MoneyCents,
+      referenceId: null,
+      reasonCode: posting.reasonCode,
+      idempotencyKey,
+    });
+  }
+  return entries;
 }

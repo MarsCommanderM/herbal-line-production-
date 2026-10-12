@@ -207,6 +207,38 @@ describe('botanical operations vertical slice', () => {
     expect(result.state.inventoryLots[0]?.quantityReserved).toBe(0);
     expect(result.state.orders[0]?.status).toBe('accepted');
   });
+  it('ends a campaign day, advances to the next 08:00, and posts wages and utilities once', () => {
+    const initial = createInitialGameState();
+    const result = dispatch(initial, 'TIME/END_DAY');
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.error.message);
+
+    expect(result.state.time.day).toBe(2);
+    expect(result.state.time.minuteOfDay).toBe(480);
+    expect(result.state.time.totalMinutes).toBe(1440);
+    expect(result.state.economy.ledger).toHaveLength(2);
+    expect(result.state.economy.ledger.map((entry) => entry.reasonCode)).toEqual(['DAILY_STAFF_WAGES', 'DAILY_UTILITIES']);
+    expect(getCampaignBalance(result.state)).toBe(24_912_000);
+    expect(result.events.map((event) => event.type)).toEqual(['time.day_ended', 'finance.ledger_posted', 'finance.ledger_posted']);
+    expect(result.state.ui.notifications.at(-1)?.code).toBe('DAILY_SETTLEMENT');
+  });
+
+  it('does not duplicate an already posted day settlement and allows a negative balance to remain visible', () => {
+    const initial = createInitialGameState();
+    const first = applyOk(initial, 'TIME/END_DAY');
+    const second = applyOk(first, 'TIME/END_DAY');
+    expect(second.economy.ledger).toHaveLength(4);
+    expect(new Set(second.economy.ledger.map((entry) => entry.idempotencyKey)).size).toBe(4);
+
+    const lowFunds = {
+      ...initial,
+      economy: { ...initial.economy, openingBalanceCents: 1 as typeof initial.economy.openingBalanceCents },
+    };
+    const overdrawn = applyOk(lowFunds, 'TIME/END_DAY');
+    expect(getCampaignBalance(overdrawn)).toBe(-87_999);
+    expect(overdrawn.ui.notifications.at(-1)?.level).toBe('danger');
+  });
+
   it('reassigns staff atomically and rejects incompatible room roles', () => {
     const initial = createInitialGameState();
     const moved = applyOk(initial, 'FACILITY/ASSIGN_STAFF', {

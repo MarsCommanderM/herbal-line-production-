@@ -1,6 +1,7 @@
 import type { EntityId, EventId, SimulationMinute, Score0To100 } from './domain';
 export interface EventBase { eventId: EventId; simulationMinute: SimulationMinute; schemaVersion: 1; entityId: EntityId; }
 export type DomainEvent =
+  | (EventBase & { type: 'time.day_ended'; completedDay: number; nextDay: number })
   | (EventBase & { type: 'source.received'; sourceLotId: EntityId })
   | (EventBase & { type: 'source.accepted' | 'source.quarantined' | 'source.rejected'; sourceLotId: EntityId; reasonCodes: string[] })
   | (EventBase & { type: 'plant.created' | 'plant.stage_changed' | 'plant.rejected'; plantId: EntityId; previousStage?: string; nextStage?: string; reasonCode?: string })

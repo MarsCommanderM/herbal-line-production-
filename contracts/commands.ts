@@ -4,6 +4,7 @@ export interface CommandBase { commandId: CommandId; actorId: EntityId; expected
 export type DomainCommand =
   | (CommandBase & { type: 'TIME/SET_PAUSED'; paused: boolean })
   | (CommandBase & { type: 'TIME/SET_SPEED'; speed: 0 | 1 | 2 | 4 })
+  | (CommandBase & { type: 'TIME/END_DAY' })
   | (CommandBase & { type: 'SOURCE/RECEIVE'; sourceLotId: EntityId; sourceRef: string; quantity: number })
   | (CommandBase & { type: 'SOURCE/INSPECT'; sourceLotId: EntityId; accepted: boolean; qualityScore: Score0To100; findingCodes: string[] })
   | (CommandBase & { type: 'PLANT/CREATE'; plantId: EntityId; profileId: string; sourceLotId: EntityId; roomId: EntityId })
