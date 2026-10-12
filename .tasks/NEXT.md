@@ -34,9 +34,11 @@
 - **Evidence:** unit tests plus Chromium E2E tests for save/load, autosave across reload, corrupted-primary fallback to backup, and export/import round-trip.
 - **Remaining:** explicit migration chain when a new schema version is introduced, quota/interrupted-write recovery tests, and cross-browser coverage.
 
-## P1-003 — Operational Dashboard and Queue UX (NEXT)
+## P1-003 — Operational Dashboard and Queue UX (IMPLEMENTED; ACCEPTANCE CONTINUES)
 
-- **Goal:** improve task clarity, disabled/blocked-action explanations, empty states, keyboard flow, and accessible feedback without duplicating domain rules in the UI.
+- **Implemented:** an accessible live campaign-status panel with state-derived guidance, recommended next step, quality-gate explanations, license/compliance restrictions, station availability, and delivered-goal completion. Reduced-motion preferences are respected.
+- **Evidence:** unit tests for active state, suspended-license restrictions, failed quality assessment and completion; Chromium E2E verifies the guidance changes as the campaign progresses. Run 38206406378 passed.
+- **Remaining:** broader keyboard-only walkthrough, viewport/responsive QA, accessibility audit, and domain/UI coverage for more terminal and blocked states.
 - **Gate:** every primary action has a clear precondition, visible result, and tested error state.
 
 ## Operating rule
