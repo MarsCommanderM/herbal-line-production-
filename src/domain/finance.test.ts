@@ -48,6 +48,14 @@ describe('ledger-derived finance', () => {
     expect(() => getLedgerTotals([entry('revenue', Number.MAX_SAFE_INTEGER + 1, 'unsafe')])).toThrow(RangeError);
   });
 
+  it('rejects balance totals that exceed safe integer precision', () => {
+    const economy: EconomyState = {
+      openingBalanceCents: cents(Number.MAX_SAFE_INTEGER),
+      ledger: [entry('revenue', 1, 'balance-overflow')],
+    };
+    expect(() => getBalanceCents(economy)).toThrow(RangeError);
+  });
+
   it('allows a negative balance as a detectable state instead of hiding it', () => {
     const economy: EconomyState = { openingBalanceCents: cents(100), ledger: [entry('expense', 101, 'overdrawn')] };
     expect(getBalanceCents(economy)).toBe(-1);

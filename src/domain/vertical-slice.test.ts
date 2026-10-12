@@ -220,6 +220,34 @@ describe('botanical operations vertical slice', () => {
     expect(duplicate.state).toBe(result.state);
   });
 
+  it('uses the ledger-derived balance when checking room affordability', () => {
+    const initial = createInitialGameState();
+    const priorInvestment = {
+      ...initial,
+      economy: {
+        openingBalanceCents: 250_000 as MoneyCents,
+        ledger: [{
+          id: entity('ledger-prior-investment'),
+          simulationMinute: initial.time.totalMinutes,
+          account: 'investment' as const,
+          amountCents: 100_000 as MoneyCents,
+          referenceId: null,
+          reasonCode: 'test.prior_investment',
+          idempotencyKey: 'test:prior-investment',
+        }],
+      },
+    };
+    expect(getCampaignBalance(priorInvestment)).toBe(150_000);
+    const result = dispatch(priorInvestment, 'ROOM/PURCHASE', {
+      roomId: entity('room-expansion-after-investment'), definitionId: 'production_room_small',
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('A room purchase must not spend more than the ledger-derived balance.');
+    expect(result.error.code).toBe('INSUFFICIENT_FUNDS');
+    expect(result.state).toBe(priorInvestment);
+    expect(result.state.economy.ledger).toHaveLength(1);
+  });
+
   it('rejects unknown room definitions and unaffordable purchases without mutating state', () => {
     const initial = createInitialGameState();
     const unknown = dispatch(initial, 'ROOM/PURCHASE', {
