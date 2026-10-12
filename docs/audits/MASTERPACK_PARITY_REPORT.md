@@ -26,7 +26,7 @@ Restoration must be performed on a dedicated branch while `main` remains untouch
 
 ## Reproducibility and limitations
 
-The audit compares repository Git tree blob IDs against the source archive manifest. It does not claim that different content is automatically wrong: the mismatches include intentional scope, contract, backlog, and implementation changes. The script is an audit tool, not part of the normal green CI gate, because a clean generic implementation is expected to differ from the historical ZIP.
+The audit compares repository Git tree blob IDs against the source archive manifest. It does not claim that different content is automatically wrong: the mismatches include intentional scope, contract, backlog, and implementation changes. The script is an audit tool whose restoration run must be executed against the verified ZIP and the exact restoration-branch commit. CI being green does not replace parity evidence, and generic-scope differences are not presumed intentional or approved.
 
 ## Decision
 
