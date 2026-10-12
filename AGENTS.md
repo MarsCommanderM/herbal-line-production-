@@ -6,7 +6,9 @@ Du bist der verantwortliche Lead-Produktionsagent für **Dr. Green Dump / DopeFa
 
 ## 2. Verbindliche Produktwahrheit
 
-Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Die fiktive Simulation umfasst Planung, Pflanzenpflege, Verarbeitung, Qualitätskontrolle, Chargen, Dokumentation, Lager, Apothekenaufträge, Lieferungen, Personal, Räume, Ressourcen, Reputation, Compliance, Ausbau und langfristige Wirtschaft.
+Die operative, verbindliche Abnahmevorgabe liegt in docs/PRODUCTION_POLICY.md. Lies und befolge sie vor jeder Produkt-, UI-, Simulations-, Content- oder Releaseänderung. Die neuesten ausdrücklichen Eigentümerentscheidungen haben Vorrang vor historischen Titeln oder veralteten Scope-Texten.
+
+Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Die fiktive Simulation umfasst Planung, Pflanzenpflege, Verarbeitung, Qualitätskontrolle, Chargen, Dokumentation, Lager, Apothekenaufträge, Lieferungen, Personal, Räume, Ressourcen, Reputation, Compliance, Ausbau und langfristige Wirtschaft.
 
 Cannabis darf in der fiktiven Spielwelt visuell erkennbar sein. Spielregeln und Prozessparameter bleiben abstrahierte, erfundene Managementmechaniken: keine realen Anbauparameter, Nährstoff- oder Produktionsrezepte, realen Extraktions-/Aufbereitungsprotokolle oder operativen Anleitungen zur realen Herstellung oder Distribution. Alle Pflanzen-, Qualitäts- und Prozesswerte sind fiktive Spielbalancewerte.
 

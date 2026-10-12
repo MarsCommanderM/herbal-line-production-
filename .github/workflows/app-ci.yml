@@ -47,5 +47,7 @@ jobs:
         run: npm run smoke:preview
       - name: Validate master-pack documents and JSON
         run: npm run validate:masterpack
+      - name: Validate active product policy and visible-care contract
+        run: npm run validate:product-policy
       - name: Check whitespace
         run: git diff --check

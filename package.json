@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "validate:masterpack": "python scripts/validate_masterpack.py",
     "test:e2e": "playwright test",
-    "smoke:preview": "node scripts/smoke-preview.mjs"
+    "smoke:preview": "node scripts/smoke-preview.mjs",
+    "validate:product-policy": "node scripts/validate-product-policy.mjs"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "0.17.3",

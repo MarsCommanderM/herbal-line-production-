@@ -14,6 +14,7 @@ Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den leg
 
 ## Inhalt
 
+- `docs/PRODUCTION_POLICY.md`: verbindliche Produktidentität, Scope, sichtbare Cannabis-Pflanzenpflege und Release-Gates.
 - `AGENTS.md`: verbindliche Direktive für den autonomen Hauptagenten und sein internes Team aus 2–3 Subagenten.
 - `docs/`: konsolidiertes Masterdokument von Vision und GDD bis Architektur, Datenverträgen, Tests, Rechten, Risiko, Release und Live-Betrieb.
 - `contracts/`: kanonische TypeScript-Domänenverträge als gemeinsame Referenz.
@@ -27,13 +28,13 @@ Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den leg
 1. ZIP entpacken.
 2. Den gesamten Inhalt in das bestehende Repository kopieren oder das Verzeichnis als neues Repository verwenden.
 3. Vor Änderungen den tatsächlichen Repository-Status prüfen: Root, Branch, Working Tree, vorhandene Dateien und aktuelle Projektwahrheit.
-4. `AGENTS.md` vollständig lesen; danach `docs/00_MASTER_PRODUCTION_DOCUMENT.md`, `docs/11_AUTONOMOUS_AGENT_PLAYBOOK.md` und `.tasks/NEXT.md` lesen.
-5. `python scripts/validate_masterpack.py` ausführen.
+4. `docs/PRODUCTION_POLICY.md` und `AGENTS.md` vollständig lesen; danach `docs/00_MASTER_PRODUCTION_DOCUMENT.md`, das GDD, aktive Contracts und `.tasks/NEXT.md` lesen.
+5. `python scripts/validate_masterpack.py` und `npm run validate:product-policy` ausführen.
 6. Erst nach dem Repository-Audit die erste Task abarbeiten. Vorhandene wertvolle Arbeit wird niemals blind überschrieben.
 
 ## Autoritative Quellenreihenfolge
 
-Bei Konflikten gilt: (1) bestätigte Benutzerentscheidung, (2) `AGENTS.md` für Arbeitsregeln, (3) `docs/00_MASTER_PRODUCTION_DOCUMENT.md` für Produktwahrheit, (4) `contracts/` und `schemas/` für technische Verträge, (5) jeweilige Systemspezifikation, (6) `.tasks/` für Status und Reihenfolge, (7) Implementierung. Der Agent protokolliert Konflikte und korrigiert veraltete Dokumente; er führt keine zweite, abweichende Wahrheit ein.
+Bei Konflikten gilt: (1) bestätigte Benutzerentscheidung, (2) `docs/PRODUCTION_POLICY.md` als Produkt-/Abnahmevorgabe, (3) `AGENTS.md` für Arbeitsregeln, (4) `docs/00_MASTER_PRODUCTION_DOCUMENT.md` für Produktwahrheit, (5) aktive Runtime-`contracts/` und `schemas/`, (6) jeweilige Systemspezifikation, (7) `.tasks/` für Status und Reihenfolge, (8) Implementierung. Der Agent protokolliert Konflikte und korrigiert veraltete Dokumente; er führt keine zweite, abweichende Wahrheit ein.
 
 ## Qualitätsaussage
 
