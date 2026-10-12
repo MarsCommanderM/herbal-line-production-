@@ -27,8 +27,9 @@ REQUIRED = [
     "contracts/persistence.ts", "schemas/content-manifest.schema.json",
     "schemas/order-template.schema.json", "schemas/plant-profile.schema.json",
     "schemas/room-definition.schema.json", "schemas/save-envelope-v1.schema.json",
+    "schemas/balance.schema.json", "src/data/balance.json",
 ]
-JSON_FILES = ["PROJECT_MANIFEST.json"] + [
+JSON_FILES = ["PROJECT_MANIFEST.json", "src/data/balance.json"] + [
     str(p.relative_to(ROOT)) for p in sorted((ROOT / "schemas").glob("*.json"))
 ] if (ROOT / "schemas").exists() else ["PROJECT_MANIFEST.json"]
 
@@ -47,6 +48,23 @@ def main() -> int:
             parsed_json[rel] = json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as exc:
             errors.append(f"invalid JSON in {rel}: {exc}")
+    balance = parsed_json.get("src/data/balance.json")
+    if isinstance(balance, dict):
+        if balance.get("schemaVersion") != 1 or not balance.get("balanceVersion"):
+            errors.append("balance config must declare schemaVersion=1 and a non-empty balanceVersion")
+        economy = balance.get("economy")
+        if not isinstance(economy, dict) or not isinstance(economy.get("utilityRateCentsPerUnitHour"), int) or not isinstance(economy.get("operatingHoursPerCampaignDay"), int):
+            errors.append("balance config economy rates must be integers")
+        quality = balance.get("quality")
+        if not isinstance(quality, dict) or not isinstance(quality.get("releaseThreshold"), int) or not isinstance(quality.get("reviewThreshold"), int) or not isinstance(quality.get("contaminationPenaltyMultiplier"), (int, float)):
+            errors.append("balance config quality rules are incomplete")
+        upgrades = balance.get("upgrades")
+        if not isinstance(upgrades, list):
+            errors.append("balance config upgrades must be an array")
+        else:
+            ids = [item.get("id") for item in upgrades if isinstance(item, dict)]
+            if len(ids) != len(upgrades) or any(not isinstance(item, str) or not item for item in ids) or len(set(ids)) != len(ids):
+                errors.append("balance config upgrade entries must have unique non-empty IDs")
     manifest = parsed_json.get("PROJECT_MANIFEST.json")
     if isinstance(manifest, dict):
         for key in ("projectId", "title", "platform", "language", "productDescription", "releaseStandard"):

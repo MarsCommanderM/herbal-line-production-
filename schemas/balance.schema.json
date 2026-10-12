@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/schemas/balance.schema.json",
   "title": "Herbal Line fictional game balance",
   "type": "object",
   "additionalProperties": false,
