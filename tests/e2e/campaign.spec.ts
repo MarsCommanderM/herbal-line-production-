@@ -226,14 +226,17 @@ test('facility controls enforce staffing roles and complete abstract machine mai
   await page.getByRole('button', { name: 'Mara Weiss: Verarbeitung zuweisen' }).click();
   await expect(page.getByRole('button', { name: 'Mara Weiss: Pflanzenraum zuweisen' })).toBeVisible();
   await expect(page.locator('#game-feedback')).toContainText('Mara Weiss wurde dem Raum');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
 
   await page.getByRole('button', { name: 'Spielstation warten' }).click();
   await expect(page.getByRole('button', { name: 'Wartung abschließen' })).toBeVisible();
   await expect(page.locator('#game-feedback')).toContainText('Wartung gestartet');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
 
   await page.getByRole('button', { name: 'Wartung abschließen' }).click();
   await expect(page.getByRole('button', { name: 'Wartung abschließen' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Spielstation warten' })).toHaveCount(0);
   await expect(page.locator('#facility-overview')).toContainText('Zustand 100/100');
   await expect(page.locator('#game-feedback')).toContainText('Wartung abgeschlossen');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 3');
 });
