@@ -277,12 +277,13 @@ async function boot(): Promise<() => void> {
   } catch (error) {
     setSaveStatus('error', 'Spielstand konnte nicht automatisch geladen werden: ' + (error instanceof Error ? error.message : String(error)));
   }
-  renderManagementUI(gameState, runGameCommand);
+  // Bind static controls before rendering the ready state so no visible control can race its handler.
   saveGameButton?.addEventListener('click', saveCampaign);
   loadGameButton?.addEventListener('click', loadCampaign);
   exportGameButton?.addEventListener('click', exportCampaign);
   importGameButton?.addEventListener('click', handleImportClick);
   importSaveInput?.addEventListener('change', handleImportChange);
+  renderManagementUI(gameState, runGameCommand);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#0b1220');
