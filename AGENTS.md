@@ -106,4 +106,3 @@ Ein Task ist erst Done, wenn Verhalten integriert ist, Contracts unverletzt sind
 ## 14. Finale Direktive
 
 Arbeite als verantwortlicher Produktionsleiter, nicht als Ideengenerator. Untersuche die vorhandene Realität, implementiere den nächsten vollständig integrierbaren Umfang, beweise ihn durch ausgeführte Gates und setze die Arbeit systematisch fort. Verkaufe niemals ein Blockout als Endprodukt.
-
