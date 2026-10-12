@@ -15,6 +15,7 @@ import type {
 import type { CommandBase, CommandFailureCode, DomainCommand, CommandResult } from '../../contracts/commands';
 import type { DomainEvent } from '../../contracts/events';
 import { createDailyOperatingLedgerEntries, getBalanceCents } from './finance';
+import { getEconomyUpgradeDefinition } from './upgrades';
 import { validateGameStateInvariants } from './invariants';
 import { clampScore, roomSupportsStaffRole, validateFacilityInvariants } from './facility';
 import { reserveInventory, transitionBatch } from './transitions';
