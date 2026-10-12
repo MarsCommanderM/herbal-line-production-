@@ -10,6 +10,11 @@ import {
 } from './save-system';
 
 describe('save envelope integrity', () => {
+  it('uses the SHA-256 algorithm over canonical JSON', () => {
+    expect(checksumPayload('abc')).toBe('sha256:6cc43f858fbb763301637b5af970e2a46b46f461f27e5a0f41e009c59b827b25');
+    expect(checksumPayload({})).toBe('sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a');
+  });
+
   it('creates a versioned envelope without transient UI state', () => {
     const state = createInitialGameState();
     const envelope = buildSaveEnvelope(state, '2026-10-12T12:00:00.000Z');
