@@ -47,12 +47,12 @@
 - **Added on the reconciled feature branch:** typed staff assignment/unassignment and machine movement commands, an abstract maintenance start/complete lifecycle, a live facility overview, unit tests, and Chromium E2E coverage. Same-revision CI verification is pending.
 - **Remaining:** property-based command-sequence testing, machine movement edge cases, and broader command-by-command invariant coverage.
 
-## P2-002 — Economy and progression (DAILY SETTLEMENT IMPLEMENTED; CI PENDING)
+## P2-002 — Economy and progression (DAILY SETTLEMENT + FIRST UPGRADE IMPLEMENTED; CI PENDING)
 
-- **Implemented:** pure fictional daily-cost calculation, explicit end-of-day transition to next-day 08:00, idempotent wage and utility expense postings, audit events, daily-cost dashboard metric, a 30-day zero-revenue balance projection, cash-runway estimate, and negative-balance warning.
+- **Implemented:** pure fictional daily-cost calculation, explicit end-of-day transition to next-day 08:00, idempotent wage and utility expense postings, audit events, a 30-day zero-revenue balance projection, cash-runway estimate, negative-balance warning, a ledger-backed energy-efficiency upgrade with a 20% utility-cost reduction, and a stable/watch/critical financial-health indicator.
 - **Balance model:** wages sum each staff member's configured daily wage; utility costs use unlocked-room power units × 24 hours × 125 cents per unit-hour. These are game-balance constants, not real-world cost estimates.
 - **Acceptance:** finance unit tests cover deterministic cost totals, idempotency, multi-day zero-revenue and explicit-revenue projections, cash runway, and invalid assumptions; domain tests cover day/time progression, ledger entries, event emission, settlement uniqueness and negative balance; Chromium E2E checks day-end feedback, autosave, runway, and the 30-day forecast.
-- **Remaining:** broader multi-day progression tuning, revenue/expense ratio scenarios, wage/utility upgrades, and financial distress recovery. The new forecast revision's same-revision CI is pending.
+- **Remaining:** broader multi-day progression tuning, revenue/expense ratio scenarios, upgrade variety, and a deliberate recovery path when funds are exhausted. The upgrade revision's same-revision CI is pending.
 
 ## Operating rule
 
