@@ -246,7 +246,12 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         account: ledgerEntry.account,
       };
       return commit(state, command, {
-        upgrades: state.upgrades.map((item) => item.id === definition.id ? { ...item, purchasedAt: state.time.totalMinutes } : item),
+        upgrades: state.upgrades.map((item) => {
+          if (item.id === definition.id) return { ...item, purchasedAt: state.time.totalMinutes };
+          const dependentDefinition = getEconomyUpgradeDefinition(item.id);
+          if (dependentDefinition?.prerequisiteUpgradeId === definition.id) return { ...item, unlocked: true };
+          return item;
+        }),
         economy: { ...state.economy, ledger: [...state.economy.ledger, ledgerEntry] },
         ui: {
           ...state.ui,
