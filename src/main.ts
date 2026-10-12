@@ -181,7 +181,9 @@ async function exportCampaign(): Promise<void> {
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = 'herbal-line-campaign-01.json';
+    document.body.append(anchor);
     anchor.click();
+    anchor.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     setSaveStatus('success', 'Spielstandexport gestartet.');
   } catch (error) {
