@@ -15,3 +15,10 @@
 - Agentenrollen, Parallelitätsgrenzen, Repository-Audit, DoD und Release-Gates verbindlich gemacht.
 - Namens-/Copyright-Metadaten für Michael Braunschweig als Auftraggeber-Vorgabe gesetzt; Rechtekette und Markenfreigabe bleiben beweispflichtige Gates.
 - Taskboard, kanonische TypeScript-Verträge, JSON-Schemas, Risiko-, Test-, Sicherheits- und Release-Dokumente aufgenommen.
+
+## Unreleased — Facility systems
+
+- Added pure facility invariants for room capacity/occupancy and bidirectional staff/machine assignments.
+- Added role-checked staff reassignment, machine movement guards, and an abstract maintenance start/complete lifecycle.
+- Added initial maintenance staffing, unit tests, and Chromium UI acceptance coverage.
+- Acceptance remains pending same-revision CI; no release-ready claim is made.
