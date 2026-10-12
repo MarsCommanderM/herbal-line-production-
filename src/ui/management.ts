@@ -104,6 +104,34 @@ function metric(labelText: string, valueText: string): HTMLElement {
   return card;
 }
 
+function renderFacilityOverview(state: GameState, root: HTMLElement): void {
+  root.replaceChildren();
+  for (const room of state.rooms) {
+    const card = document.createElement('article');
+    card.className = 'facility-room-card';
+    const title = document.createElement('h3');
+    title.textContent = room.displayName;
+    const capacity = document.createElement('p');
+    capacity.className = 'facility-room-capacity';
+    capacity.textContent = 'Belegung: ' + room.occupied + '/' + room.capacity + ' · Zustand: ' + room.condition + '/100';
+    const staff = document.createElement('p');
+    staff.className = 'facility-room-detail';
+    const assignedStaff = room.assignedStaffIds
+      .map((id) => state.staff.find((person) => person.id === id)?.displayName)
+      .filter((name): name is string => name !== undefined);
+    staff.textContent = 'Personal: ' + (assignedStaff.length > 0 ? assignedStaff.join(', ') : 'niemand zugewiesen');
+    const machines = document.createElement('p');
+    machines.className = 'facility-room-detail';
+    const assignedMachines = room.assignedMachineIds
+      .map((id) => state.machines.find((machine) => machine.id === id))
+      .filter((machine): machine is GameState['machines'][number] => machine !== undefined)
+      .map((machine) => machine.id + ' · ' + machine.status + ' · Zustand ' + machine.condition + '/100');
+    machines.textContent = 'Spielstationen: ' + (assignedMachines.length > 0 ? assignedMachines.join('; ') : 'keine');
+    card.append(title, capacity, staff, machines);
+    root.append(card);
+  }
+}
+
 export function renderManagementUI(
   state: GameState,
   runCommand: (type: VerticalSliceCommand['type'], payload: Record<string, unknown>) => void,
@@ -112,7 +140,8 @@ export function renderManagementUI(
   const actionsRoot = document.querySelector<HTMLDivElement>('#game-actions');
   const logRoot = document.querySelector<HTMLDivElement>('#game-log');
   const guidanceRoot = document.querySelector<HTMLDivElement>('#campaign-guidance');
-  if (!metricsRoot || !actionsRoot || !logRoot || !guidanceRoot) return;
+  const facilityRoot = document.querySelector<HTMLDivElement>('#facility-overview');
+  if (!metricsRoot || !actionsRoot || !logRoot || !guidanceRoot || !facilityRoot) return;
 
   const plant = state.plants[0];
   const batch = state.batches[state.batches.length - 1];
@@ -127,6 +156,8 @@ export function renderManagementUI(
     metric('Batchstatus', batch ? batch.status.replaceAll('_', ' ') : 'Kein Batch'),
     metric('Abnehmernauftrag', order ? order.status.replaceAll('_', ' ') : 'Kein Auftrag'),
   );
+
+  renderFacilityOverview(state, facilityRoot);
 
   const guidance = getCampaignGuidance(state);
   guidanceRoot.replaceChildren();
