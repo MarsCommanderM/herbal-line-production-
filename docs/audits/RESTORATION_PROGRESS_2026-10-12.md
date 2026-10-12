@@ -18,6 +18,8 @@ The archive's expected Git blob SHA-1s were calculated from the actual file byte
 
 | Path | Expected archive blob | Branch result |
 |---|---|---|
+| `.editorconfig` | `192c070cf03df5d7af0521a1073c0919cb46f742` | Exact match verified |
+| `.gitignore` | `a0907890dae45d04d5a0af32fdbc01c6d0440cff` | Exact match verified |
 | `.tasks/NEXT.md` | `816d1ffa7f4ee7a697aa8da7499870091fd86b71` | Exact match restored |
 | `.tasks/BACKLOG.md` | `e002ab4884f12242916b15c193792b93e1e39cb0` | Exact match restored |
 | `AGENTS.md` | `a20ef5de0f140885cd4838be62e667f0a5ebc126` | Scope wording restored, but blob hash does not match; exact parity remains open |
@@ -28,6 +30,7 @@ The current parity report preserves the earlier `4/42` comparison as historical 
 
 - The full 42-path comparison has **not** yet been rerun against the latest restoration-branch commit.
 - Canonical restoration of all 42 archive files is **not complete**.
+- The application HTML title/description, package description, and initial campaign's source/customer labels have been corrected toward the original medical-cannabis identity. These are implementation edits, not archive files.
 - The current application implementation has not yet been reconciled end-to-end against the restored canonical docs.
 - The latest queried GitHub combined-status endpoint returned no status entries for the restoration commit queried. This is not evidence that CI passed.
 - No local clean checkout of the current GitHub branch was available in the container. The local repository ZIP is a separate snapshot and is not treated as the current GitHub checkout. Its dependency install, typecheck, tests and build were not run.
