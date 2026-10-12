@@ -32,7 +32,53 @@ test('management loop completes through QC release, dispatch, and revenue postin
   await expect(page.locator('#game-metrics .metric-card').nth(5).locator('.metric-value')).toHaveText('delivered');
   await expect(page.locator('#game-metrics .metric-card').nth(1).locator('.metric-value')).toContainText('258.500');
   await expect(page.locator('#game-actions')).toContainText('Kampagnenziel erreicht');
-  await expect(page.locator('#game-log')).toContainText('DELIVERY_CONFIRMED');
+  await expect(page.locator('#game-log')).toContainText('DELIVERY CONFIRMED');
+
+  const committed = await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line-saves', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    return await new Promise<{ revision: number; checksum: string; orderStatus: string; deliveryStatus: string; revenueCount: number }>((resolve, reject) => {
+      const transaction = database.transaction('slots', 'readonly');
+      const request = transaction.objectStore('slots').get('autosave');
+      request.onsuccess = () => {
+        const record = request.result as {
+          envelope: {
+            revision: number;
+            checksum: string;
+            payload: {
+              orders: Array<{ status: string }>;
+              deliveries: Array<{ status: string }>;
+              economy: { ledger: Array<{ idempotencyKey: string }> };
+            };
+          };
+        };
+        database.close();
+        resolve({
+          revision: record.envelope.revision,
+          checksum: record.envelope.checksum,
+          orderStatus: record.envelope.payload.orders[0]?.status ?? 'missing',
+          deliveryStatus: record.envelope.payload.deliveries[0]?.status ?? 'missing',
+          revenueCount: record.envelope.payload.economy.ledger.filter(
+            (entry) => entry.idempotencyKey === 'delivery:delivery-001:revenue',
+          ).length,
+        });
+      };
+      request.onerror = () => { database.close(); reject(request.error); };
+    });
+  });
+  expect(committed.revision).toBe(12);
+  expect(committed.checksum).toMatch(/^sha256:[0-9a-f]{64}$/);
+  expect(committed.orderStatus).toBe('delivered');
+  expect(committed.deliveryStatus).toBe('delivered');
+  expect(committed.revenueCount).toBe(1);
+
+  await page.reload();
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision 12');
+  await expect(page.locator('#game-metrics .metric-card').nth(5).locator('.metric-value')).toHaveText('delivered');
+  await expect(page.locator('#game-actions')).toContainText('Kampagnenziel erreicht');
 });
 
 test('manual save restores the exact committed campaign state', async ({ page }) => {
