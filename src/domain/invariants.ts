@@ -39,6 +39,29 @@ export function validateGameStateInvariants(state: GameState): StateInvariantVio
   const lots = new Map(state.inventoryLots.map((lot) => [lot.id, lot]));
 
   for (const plant of state.plants) {
+    if (plant.care) {
+      const allowedLevels = new Set(['low', 'balanced', 'high']);
+      for (const [field, value] of [
+        ['waterLevel', plant.care.waterLevel],
+        ['lightLevel', plant.care.lightLevel],
+        ['temperatureLevel', plant.care.temperatureLevel],
+        ['humidityLevel', plant.care.humidityLevel],
+        ['nutrientLevel', plant.care.nutrientLevel],
+      ] as const) {
+        if (!allowedLevels.has(value)) add('INVALID_PLANT_CARE_LEVEL', 'plants.' + plant.id + '.care.' + field, 'Plant care settings must use a defined fictional game level.');
+      }
+      for (const [field, value] of [
+        ['pruningCount', plant.care.pruningCount],
+        ['cuttingsTaken', plant.care.cuttingsTaken],
+        ['cuttingsSet', plant.care.cuttingsSet],
+      ] as const) {
+        if (!Number.isSafeInteger(value) || value < 0) add('INVALID_PLANT_CARE_COUNT', 'plants.' + plant.id + '.care.' + field, 'Plant-care counters must be non-negative safe integers.');
+      }
+      if (plant.care.cuttingsSet > plant.care.cuttingsTaken) add('CUTTING_COUNT_MISMATCH', 'plants.' + plant.id + '.care', 'Set cutting count cannot exceed the number cut.');
+    }
+    if (plant.propagatedFromPlantId && !state.plants.some((parent) => parent.id === plant.propagatedFromPlantId)) {
+      add('PROPAGATION_PARENT_MISSING', 'plants.' + plant.id + '.propagatedFromPlantId', 'A propagated plant must reference its parent plant.');
+    }
     if (plant.batchId !== null) {
       const batch = batches.get(plant.batchId);
       if (!batch || !batch.plantIds.includes(plant.id)) {

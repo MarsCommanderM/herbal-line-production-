@@ -2,12 +2,13 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
-import type { CommandId } from '../contracts/domain';
+import type { CommandId, EntityId, PlantCareState } from '../contracts/domain';
 import { createInitialGameState } from './domain/initial-state';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from './domain/vertical-slice';
 import { renderManagementUI } from './ui/management';
 import { IndexedDbSaveRepository } from './persistence/indexeddb-save-repository';
 import { createSaveEnvelope, restoreGameState } from './persistence/save-codec';
+import { getPlantCareState } from './domain/plant-care';
 
 const worldRoot = document.querySelector<HTMLDivElement>('#world-root');
 const uiRoot = document.querySelector<HTMLDivElement>('#ui-root');
@@ -53,9 +54,18 @@ function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<stri
     gameFeedback.dataset.level = 'success';
     gameFeedback.textContent = gameState.logs[gameState.logs.length - 1]?.message ?? 'Aktion ausgeführt.';
   }
-  renderManagementUI(gameState, runGameCommand);
+  renderManagementUI(gameState, runGameCommand, selectPlant);
   onGameStateChanged();
   void autosaveCampaign();
+}
+
+function selectPlant(plantId: EntityId): void {
+  const plant = gameState.plants.find((item) => item.id === plantId);
+  if (!plant) return;
+  gameState = { ...gameState, ui: { ...gameState.ui, selectedEntityId: plantId } };
+  renderManagementUI(gameState, runGameCommand, selectPlant);
+  onGameStateChanged();
+  setFeedback('success', 'Pflanze ausgewählt: ' + plantId + '. Pflegeaktionen werden direkt an diesem Pflanzenobjekt simuliert.');
 }
 
 function setFeedback(level: 'success' | 'error', message: string): void {
@@ -148,7 +158,7 @@ async function applyLoadedSave(): Promise<void> {
   }
   gameState = restoreGameState(result.envelope);
   commandSequence = gameState.revision;
-  renderManagementUI(gameState, runGameCommand);
+  renderManagementUI(gameState, runGameCommand, selectPlant);
   onGameStateChanged();
   if (result.recoveredFromBackup) {
     setFeedback('success', 'Wiederherstellung aus Backup · Revision ' + gameState.revision + '.');
@@ -203,7 +213,7 @@ async function importCampaign(file: File): Promise<void> {
     if (!imported) throw new Error('Import wurde nicht dauerhaft gespeichert.');
     gameState = restoreGameState(imported);
     commandSequence = gameState.revision;
-    renderManagementUI(gameState, runGameCommand);
+    renderManagementUI(gameState, runGameCommand, selectPlant);
     onGameStateChanged();
     setFeedback('success', 'Spielstand importiert · Revision ' + metadata.revision + '.');
     setSaveStatus('success', 'Import validiert, gespeichert und geladen.');
@@ -266,6 +276,8 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
         leaflet.rotation.z = -angle * 0.9;
         leaflet.rotation.x = -0.2 - Math.abs(angle) * 0.22;
         leaflet.scale.set(0.62 + (1 - Math.abs(angle)) * 0.3, 0.68 + (1 - Math.abs(angle)) * 0.2, 0.6);
+        leaflet.userData.isCannabisLeaflet = true;
+        leaflet.userData.baseScale = leaflet.scale.clone();
         leaflet.castShadow = true;
         fan.add(leaflet);
       }
@@ -279,9 +291,30 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
     leaflet.rotation.z = -Math.sin(index * Math.PI * 2 / 7) * 0.55;
     leaflet.rotation.x = -0.28;
     leaflet.scale.set(0.72, 0.66, 0.65);
+    leaflet.userData.isCannabisLeaflet = true;
+    leaflet.userData.baseScale = leaflet.scale.clone();
     crown.add(leaflet);
   }
   plant.add(crown);
+  const potMaterial = new THREE.MeshStandardMaterial({ color: '#8a795f', roughness: 0.9 });
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.22, 0.3, 10), potMaterial);
+  pot.position.y = 0.15;
+  pot.castShadow = true;
+  plant.add(pot);
+  const soilMaterial = new THREE.MeshStandardMaterial({ color: '#3e4b42', roughness: 1 });
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(0.17, 12), soilMaterial);
+  soil.rotation.x = -Math.PI / 2;
+  soil.position.y = 0.305;
+  plant.add(soil);
+  const careRingMaterial = new THREE.MeshStandardMaterial({ color: '#51d6ad', emissive: '#17352e', side: THREE.DoubleSide, roughness: 0.6 });
+  const careRing = new THREE.Mesh(new THREE.RingGeometry(0.27, 0.3, 24), careRingMaterial);
+  careRing.rotation.x = -Math.PI / 2;
+  careRing.position.y = 0.035;
+  careRing.visible = false;
+  plant.add(careRing);
+  plant.userData.soilMaterial = soilMaterial;
+  plant.userData.careRingMaterial = careRingMaterial;
+  plant.userData.careRing = careRing;
   plant.position.set(x, 0, z);
   return plant;
 }
@@ -310,9 +343,11 @@ async function boot(): Promise<() => void> {
   exportGameButton?.addEventListener('click', exportCampaign);
   importGameButton?.addEventListener('click', handleImportClick);
   importSaveInput?.addEventListener('change', handleImportChange);
-  renderManagementUI(gameState, runGameCommand);
+  renderManagementUI(gameState, runGameCommand, selectPlant);
 
   const scene = new THREE.Scene();
+  const plantVisuals = new Map<string, THREE.Group[]>();
+  const cuttingVisuals = new Map<string, THREE.Group[]>();
   scene.background = new THREE.Color('#0b1220');
   scene.fog = new THREE.Fog('#0b1220', 24, 70);
 
@@ -370,6 +405,11 @@ async function boot(): Promise<() => void> {
   }
 
   const stationMaterial = new THREE.MeshStandardMaterial({ color: '#33465c', roughness: 0.45, metalness: 0.35 });
+  const propagationSurface = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.22, 2.6), stationMaterial);
+  propagationSurface.position.set(8.1, 0.14, 5.7);
+  propagationSurface.castShadow = true;
+  propagationSurface.receiveShadow = true;
+  scene.add(propagationSurface);
   for (let row = 0; row < 3; row += 1) {
     for (let column = 0; column < 4; column += 1) {
       const x = -7.5 + column * 5;
@@ -384,8 +424,116 @@ async function boot(): Promise<() => void> {
       for (let pod = 0; pod < 3; pod += 1) {
         const plant = createCannabisPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
         plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
+        if (row === 0 && column === 0 && pod === 0) {
+          const activePlant = gameState.plants.find((item) => item.id === gameState.ui.selectedEntityId) ?? gameState.plants[0];
+          if (activePlant) {
+            plant.userData.plantId = activePlant.id;
+            plant.userData.baseScale = plant.scale.clone();
+            const growLight = new THREE.PointLight(0xddeeff, 0.8, 4);
+            growLight.position.set(0, 2.6, 0);
+            plant.add(growLight);
+            plant.userData.growLight = growLight;
+            plantVisuals.set(activePlant.id, [plant]);
+          }
+        }
         station.add(plant);
       }
+    }
+  }
+
+  const careLevelColours = { low: '#8f9b54', balanced: '#286b3b', high: '#1e7541' } as const;
+  const careRingColours: Record<PlantCareState['lastAction'] extends infer _T ? string : never, string> = {
+    water: '#7fbfff', light: '#f6d365', temperature: '#ff9b71', humidity: '#83d8e8',
+    nutrients: '#8ed081', prune: '#c6b4ff', take_cutting: '#e6c6a8', set_cutting: '#51d6ad',
+  };
+
+  function createCuttingVisual(slot: number): THREE.Group {
+    const cutting = new THREE.Group();
+    const stemMaterial = new THREE.MeshStandardMaterial({ color: '#527c55', roughness: 0.9 });
+    const leafMaterial = new THREE.MeshStandardMaterial({ color: '#3d824b', roughness: 0.8, side: THREE.DoubleSide });
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.02, 0.22, 5), stemMaterial);
+    stem.position.y = 0.11;
+    cutting.add(stem);
+    for (let index = 0; index < 3; index += 1) {
+      const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.13, 5), leafMaterial);
+      leaf.position.set((index - 1) * 0.05, 0.16 + index * 0.025, (index % 2) * 0.025);
+      leaf.rotation.z = (index - 1) * 0.45;
+      cutting.add(leaf);
+    }
+    cutting.position.set(6.7 + (slot % 4) * 0.46, 0.27, 5.0 + Math.floor(slot / 4) * 0.42);
+    scene.add(cutting);
+    return cutting;
+  }
+
+  function applyPlantCareVisual(plant: THREE.Group, statePlant: GameState['plants'][number]): void {
+    const care = getPlantCareState(statePlant);
+    const baseScale = plant.userData.baseScale as THREE.Vector3 | undefined;
+    if (baseScale) {
+      const pruningScale = Math.max(0.72, 1 - Math.min(care.pruningCount, 8) * 0.035);
+      plant.scale.set(baseScale.x, baseScale.y * pruningScale, baseScale.z);
+    }
+    const light = plant.userData.growLight as THREE.PointLight | undefined;
+    if (light) light.intensity = ({ low: 0.2, balanced: 0.8, high: 1.3 } as const)[care.lightLevel];
+    const soilMaterial = plant.userData.soilMaterial as THREE.MeshStandardMaterial | undefined;
+    if (soilMaterial) soilMaterial.color.set(({ low: '#ad9869', balanced: '#3e4b42', high: '#294a5e' } as const)[care.waterLevel]);
+    const ring = plant.userData.careRing as THREE.Mesh | undefined;
+    const ringMaterial = plant.userData.careRingMaterial as THREE.MeshStandardMaterial | undefined;
+    if (ring) ring.visible = statePlant.id === gameState.ui.selectedEntityId;
+    if (ringMaterial) {
+      ringMaterial.color.set(care.lastAction ? (careRingColours[care.lastAction] ?? '#51d6ad') : '#51d6ad');
+      ringMaterial.emissive.set(statePlant.id === gameState.ui.selectedEntityId ? '#17352e' : '#000000');
+    }
+    plant.traverse((object) => {
+      if (!(object instanceof THREE.Mesh) || object.userData.isCannabisLeaflet !== true) return;
+      const material = Array.isArray(object.material) ? object.material[0] : object.material;
+      if (material instanceof THREE.MeshStandardMaterial) material.color.set(careLevelColours[care.nutrientLevel]);
+      const leafBaseScale = object.userData.baseScale as THREE.Vector3 | undefined;
+      if (leafBaseScale) {
+        const pruneScale = Math.max(0.72, 1 - Math.min(care.pruningCount, 8) * 0.035);
+        object.scale.set(leafBaseScale.x * pruneScale, leafBaseScale.y * pruneScale, leafBaseScale.z * pruneScale);
+      }
+    });
+  }
+
+  function syncPlantVisuals(state: ReturnType<typeof createInitialGameState>): void {
+    for (const statePlant of state.plants) {
+      let visuals = plantVisuals.get(statePlant.id);
+      if (!visuals && statePlant.propagatedFromPlantId) {
+        const propagatedIndex = state.plants.filter((item) => item.propagatedFromPlantId).findIndex((item) => item.id === statePlant.id);
+        const visual = createCannabisPlant(7.1 + (propagatedIndex % 3) * 0.8, 0, 100 + propagatedIndex);
+        visual.position.y = 0.34;
+        visual.scale.setScalar(0.24);
+        visual.userData.plantId = statePlant.id;
+        visual.userData.baseScale = visual.scale.clone();
+        const growLight = new THREE.PointLight(0xddeeff, 0.4, 2);
+        growLight.position.set(0, 1.2, 0);
+        visual.add(growLight);
+        visual.userData.growLight = growLight;
+        scene.add(visual);
+        visuals = [visual];
+        plantVisuals.set(statePlant.id, visuals);
+      }
+      if (visuals) for (const visual of visuals) applyPlantCareVisual(visual, statePlant);
+
+      const care = getPlantCareState(statePlant);
+      const targetCuttings = Math.max(0, care.cuttingsTaken - care.cuttingsSet);
+      const existing = cuttingVisuals.get(statePlant.id) ?? [];
+      while (existing.length < targetCuttings) {
+        const currentCount = [...cuttingVisuals.values()].reduce((sum, list) => sum + list.length, 0);
+        existing.push(createCuttingVisual(currentCount));
+      }
+      while (existing.length > targetCuttings) {
+        const removed = existing.pop();
+        if (!removed) continue;
+        scene.remove(removed);
+        removed.traverse((object) => {
+          if (!(object instanceof THREE.Mesh)) return;
+          object.geometry.dispose();
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          for (const material of materials) material.dispose();
+        });
+      }
+      cuttingVisuals.set(statePlant.id, existing);
     }
   }
 
@@ -438,10 +586,32 @@ async function boot(): Promise<() => void> {
   layout();
   onGameStateChanged = () => {
     stateLine.text = 'TAG ' + gameState.time.day + '  /  REV ' + gameState.revision + '  /  ' + gameState.compliance.licenseStatus.toUpperCase();
+    syncPlantVisuals(gameState);
     layout();
   };
   onGameStateChanged();
   window.addEventListener('resize', layout);
+
+  const plantRaycaster = new THREE.Raycaster();
+  const plantPointer = new THREE.Vector2();
+  const onWorldPointerDown = (event: PointerEvent): void => {
+    if (event.button !== 0) return;
+    const bounds = renderer.domElement.getBoundingClientRect();
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    plantPointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+    plantPointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
+    plantRaycaster.setFromCamera(plantPointer, camera);
+    const intersections = plantRaycaster.intersectObjects(scene.children, true);
+    for (const intersection of intersections) {
+      let target: THREE.Object3D | null = intersection.object;
+      while (target && typeof target.userData.plantId !== 'string') target = target.parent;
+      if (target && typeof target.userData.plantId === 'string') {
+        selectPlant(target.userData.plantId as EntityId);
+        return;
+      }
+    }
+  };
+  renderer.domElement.addEventListener('pointerdown', onWorldPointerDown);
 
   const resize = (): void => {
     const width = Math.max(1, worldRoot.clientWidth);
@@ -459,6 +629,7 @@ async function boot(): Promise<() => void> {
 
   return () => {
     renderer.setAnimationLoop(null);
+    renderer.domElement.removeEventListener('pointerdown', onWorldPointerDown);
     window.removeEventListener('resize', resize);
     window.removeEventListener('resize', layout);
     resetCameraButton?.removeEventListener('click', resetCamera);
@@ -468,6 +639,8 @@ async function boot(): Promise<() => void> {
     importGameButton?.removeEventListener('click', handleImportClick);
     importSaveInput?.removeEventListener('change', handleImportChange);
     controls.dispose();
+    plantVisuals.clear();
+    cuttingVisuals.clear();
     ui.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
     renderer.dispose();
     renderer.domElement.remove();

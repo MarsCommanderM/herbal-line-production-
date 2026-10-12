@@ -5,6 +5,8 @@ import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertica
 import { roomSupportsStaffRole } from '../domain/facility';
 import { getCampaignGuidance } from './campaign-guidance';
 import { getTutorialProgress } from './tutorial';
+import { getPlantCareState } from '../domain/plant-care';
+import type { CareLevel, PlantCareAction, PlantCareState } from '../../contracts/domain';
 
 type Action = {
   label: string;
@@ -18,7 +20,7 @@ const entityId = (value: string): EntityId => value as EntityId;
 
 function availableActions(state: GameState): Action[] {
   const actions: Action[] = [];
-  const plant = state.plants[0];
+  const plant = state.plants.find((item) => item.id === state.ui.selectedEntityId) ?? state.plants.find((item) => item.stage === 'active') ?? state.plants[0];
   const batch = state.batches[state.batches.length - 1];
   const order = state.orders[0];
 
@@ -167,9 +169,110 @@ function renderFacilityOverview(state: GameState, root: HTMLElement): void {
   }
 }
 
+type CareSettingAction = Extract<PlantCareAction, 'water' | 'light' | 'temperature' | 'humidity' | 'nutrients'>;
+type CareSettingField = keyof Pick<PlantCareState, 'waterLevel' | 'lightLevel' | 'temperatureLevel' | 'humidityLevel' | 'nutrientLevel'>;
+
+function renderPlantCare(
+  state: GameState,
+  root: HTMLElement,
+  runCommand: (type: VerticalSliceCommand['type'], payload: Record<string, unknown>) => void,
+  selectPlant?: (plantId: EntityId) => void,
+): void {
+  root.replaceChildren();
+  const plant = state.plants.find((item) => item.id === state.ui.selectedEntityId)
+    ?? state.plants.find((item) => item.stage === 'active')
+    ?? state.plants[0];
+  if (!plant) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-state';
+    empty.textContent = 'Noch keine Pflanze angelegt.';
+    root.append(empty);
+    return;
+  }
+
+  const care = getPlantCareState(plant);
+  const plantPicker = document.createElement('select');
+  plantPicker.className = 'plant-picker';
+  plantPicker.setAttribute('aria-label', 'Pflanze für Pflege auswählen');
+  for (const item of state.plants) {
+    const option = document.createElement('option');
+    option.value = item.id;
+    option.textContent = item.id + ' · ' + item.stage.replaceAll('_', ' ');
+    option.selected = item.id === plant.id;
+    plantPicker.append(option);
+  }
+  plantPicker.addEventListener('change', () => selectPlant?.(entityId(plantPicker.value)));
+
+  const summary = document.createElement('p');
+  summary.className = 'plant-care-summary';
+  summary.textContent = 'Ausgewählt: ' + plant.id + ' · Vitalität ' + plant.vitality + '/100 · Stress ' + plant.stressIndex + '/100 · Pflegewerte sind ausschließlich fiktive Spielstufen.';
+
+  const stageNote = document.createElement('p');
+  stageNote.className = 'plant-care-note';
+  stageNote.textContent = plant.stage === 'active'
+    ? 'Die folgenden Aktionen werden am gewählten Pflanzenobjekt simuliert und im Betriebsprotokoll gespeichert.'
+    : 'Pflegeaktionen sind für diese Pflanze gesperrt, solange sie nicht aktiv ist.';
+
+  const levels: CareLevel[] = ['low', 'balanced', 'high'];
+  const levelNames: Record<CareLevel, string> = { low: 'niedrig', balanced: 'Standard', high: 'hoch' };
+  const groups: { action: CareSettingAction; label: string; field: CareSettingField }[] = [
+    { action: 'water', label: 'Bewässerung', field: 'waterLevel' },
+    { action: 'light', label: 'Licht', field: 'lightLevel' },
+    { action: 'temperature', label: 'Temperatur', field: 'temperatureLevel' },
+    { action: 'humidity', label: 'Luftfeuchtigkeit', field: 'humidityLevel' },
+    { action: 'nutrients', label: 'Nährstoffniveau', field: 'nutrientLevel' },
+  ];
+
+  const settingsGrid = document.createElement('div');
+  settingsGrid.className = 'care-settings-grid';
+  for (const group of groups) {
+    const card = document.createElement('div');
+    card.className = 'care-setting-card';
+    const heading = document.createElement('h4');
+    heading.textContent = group.label;
+    const buttons = document.createElement('div');
+    buttons.className = 'care-setting-buttons';
+    for (const level of levels) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'care-setting-button';
+      button.textContent = group.label + ': ' + levelNames[level].toLowerCase();
+      button.setAttribute('aria-pressed', String(care[group.field] === level));
+      button.disabled = plant.stage !== 'active';
+      button.addEventListener('click', () => runCommand('PLANT/CARE_ACTION', { plantId: plant.id, action: group.action, setting: level }));
+      buttons.append(button);
+    }
+    card.append(heading, buttons);
+    settingsGrid.append(card);
+  }
+
+  const actionRow = document.createElement('div');
+  actionRow.className = 'plant-care-action-row';
+  const addAction = (label: string, action: PlantCareAction, disabled: boolean, detail: string): void => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'care-action-button';
+    button.textContent = label;
+    button.title = detail;
+    button.disabled = disabled;
+    button.addEventListener('click', () => runCommand('PLANT/CARE_ACTION', { plantId: plant.id, action }));
+    actionRow.append(button);
+  };
+  addAction('Beschneiden', 'prune', plant.stage !== 'active', 'Fiktive Pflegeaktion; verändert die Pflanzenwerte und Darstellung.');
+  addAction('Steckling schneiden', 'take_cutting', plant.stage !== 'active', 'Erzeugt ein verfügbares Stecklingsobjekt in der Spielsimulation.');
+  addAction(
+    'Steckling setzen (' + Math.max(0, care.cuttingsTaken - care.cuttingsSet) + ')',
+    'set_cutting',
+    plant.stage !== 'active' || care.cuttingsTaken <= care.cuttingsSet || !state.rooms.some((room) => room.id === plant.roomId && room.unlocked && room.occupied < room.capacity),
+    'Setzt einen zuvor geschnittenen Spiel-Steckling in die Kampagne.',
+  );
+  root.append(plantPicker, summary, stageNote, settingsGrid, actionRow);
+}
+
 export function renderManagementUI(
   state: GameState,
   runCommand: (type: VerticalSliceCommand['type'], payload: Record<string, unknown>) => void,
+  selectPlant?: (plantId: EntityId) => void,
 ): void {
   const metricsRoot = document.querySelector<HTMLDivElement>('#game-metrics');
   const actionsRoot = document.querySelector<HTMLDivElement>('#game-actions');
@@ -177,6 +280,7 @@ export function renderManagementUI(
   const guidanceRoot = document.querySelector<HTMLDivElement>('#campaign-guidance');
   const tutorialRoot = document.querySelector<HTMLDivElement>('#campaign-tutorial');
   const facilityRoot = document.querySelector<HTMLDivElement>('#facility-overview');
+  const plantCareRoot = document.querySelector<HTMLDivElement>('#plant-care');
   if (!metricsRoot || !actionsRoot || !logRoot || !guidanceRoot || !tutorialRoot || !facilityRoot) return;
 
   const plant = state.plants[0];
@@ -203,6 +307,7 @@ export function renderManagementUI(
   );
 
   renderFacilityOverview(state, facilityRoot);
+  if (plantCareRoot) renderPlantCare(state, plantCareRoot, runCommand, selectPlant);
 
   const guidance = getCampaignGuidance(state);
   guidanceRoot.replaceChildren();

@@ -55,6 +55,21 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
 });
 
+test('visible plant-care controls update fictional state and survive reload', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
+  const lowLight = page.getByRole('button', { name: 'Licht: niedrig' });
+  await expect(lowLight).toHaveAttribute('aria-pressed', 'false');
+  await lowLight.click();
+  await expect(lowLight).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#game-feedback')).toContainText('Lichteinstellung');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Licht: niedrig' })).toHaveAttribute('aria-pressed', 'true');
+});
+
 test('autosave survives reload and corrupt primary recovers the last valid backup', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
@@ -194,7 +209,7 @@ test('keyboard navigation reaches primary controls in a predictable order', asyn
 test('mobile viewport keeps the management panel inside the screen without horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
   await expect(page.locator('#campaign-guidance')).toContainText('Produktionseinheit aktiv');
 
   const geometry = await page.evaluate(() => {

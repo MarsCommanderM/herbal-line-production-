@@ -1,10 +1,11 @@
-import type { EntityId, EventId, SimulationMinute, Score0To100 } from './domain';
+import type { CareLevel, EntityId, EventId, PlantCareAction, SimulationMinute, Score0To100 } from './domain';
 export interface EventBase { eventId: EventId; simulationMinute: SimulationMinute; schemaVersion: 1; entityId: EntityId; }
 export type DomainEvent =
   | (EventBase & { type: 'time.day_ended'; completedDay: number; nextDay: number })
   | (EventBase & { type: 'source.received'; sourceLotId: EntityId })
   | (EventBase & { type: 'source.accepted' | 'source.quarantined' | 'source.rejected'; sourceLotId: EntityId; reasonCodes: string[] })
   | (EventBase & { type: 'plant.created' | 'plant.stage_changed' | 'plant.rejected'; plantId: EntityId; previousStage?: string; nextStage?: string; reasonCode?: string })
+  | (EventBase & { type: 'plant.care_applied'; plantId: EntityId; action: PlantCareAction; setting?: CareLevel; createdPlantId?: EntityId })
   | (EventBase & { type: 'batch.created' | 'batch.queued' | 'batch.processing_started' | 'batch.awaiting_qc' | 'batch.released' | 'batch.rejected' | 'batch.quarantined'; batchId: EntityId; reasonCode?: string })
   | (EventBase & { type: 'quality.assessed'; batchId: EntityId; assessmentId: EntityId; score: Score0To100; decision: 'pass' | 'fail' | 'review' })
   | (EventBase & { type: 'order.accepted' | 'order.allocated' | 'order.blocked' | 'order.expired'; orderId: EntityId; reasonCode?: string })

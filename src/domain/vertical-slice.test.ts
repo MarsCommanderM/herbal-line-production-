@@ -42,7 +42,7 @@ function progressToReleasedInventory() {
   state = applyOk(state, 'BATCH/CREATE', {
     batchId: entity('batch-001'),
     plantIds: [entity('plant-001')],
-    profileId: 'fictional-botanical-batch',
+    profileId: 'fictional-medical-cannabis-batch',
   });
   state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-001'), roomId: entity('room-processing-01') });
   state = applyOk(state, 'BATCH/START_PROCESSING', { batchId: entity('batch-001'), machineId: entity('machine-processing-001') });
@@ -51,7 +51,7 @@ function progressToReleasedInventory() {
   return state;
 }
 
-describe('botanical operations vertical slice', () => {
+describe('medical cannabis operations vertical slice', () => {
   it('completes fictional stage, batch, QC, stock, buyer order, and delivery flow', () => {
     let state = progressToReleasedInventory();
     expect(state.batches[0]?.status).toBe('released');
@@ -99,6 +99,31 @@ describe('botanical operations vertical slice', () => {
     expect(repeated.state.revision).toBe(revision);
     expect(repeated.state.economy.ledger).toHaveLength(1);
 
+  });
+
+  it('applies fictional plant-care settings, logs the change and rejects malformed settings atomically', () => {
+    const initial = createInitialGameState();
+    const cared = applyOk(initial, 'PLANT/CARE_ACTION', { plantId: entity('plant-001'), action: 'light', setting: 'low' });
+    expect(cared.plants[0]?.care?.lightLevel).toBe('low');
+    expect(cared.plants[0]?.stressIndex).toBeGreaterThan(initial.plants[0]!.stressIndex);
+    expect(cared.logs.at(-1)?.code).toBe('PLANT_CARE_ACTION');
+    expect(cared.revision).toBe(initial.revision + 1);
+
+    const malformed = dispatch(initial, 'PLANT/CARE_ACTION', { plantId: entity('plant-001'), action: 'light', setting: 'extreme' });
+    expect(malformed.ok).toBe(false);
+    if (!malformed.ok) expect(malformed.state).toBe(initial);
+  });
+
+  it('cuts and sets a fictional propagation cutting with traceable parent linkage and room-capacity accounting', () => {
+    let state = applyOk(createInitialGameState(), 'PLANT/CARE_ACTION', { plantId: entity('plant-001'), action: 'take_cutting' });
+    expect(state.plants[0]?.care?.cuttingsTaken).toBe(1);
+    state = applyOk(state, 'PLANT/CARE_ACTION', { plantId: entity('plant-001'), action: 'set_cutting' });
+    const cutting = state.plants.find((plant) => plant.propagatedFromPlantId === entity('plant-001'));
+    expect(cutting).toBeDefined();
+    expect(cutting?.stage).toBe('active');
+    expect(state.rooms.find((room) => room.id === entity('room-production-01'))?.occupied).toBe(2);
+    expect(state.ui.selectedEntityId).toBe(cutting?.id);
+    expect(state.plants[0]?.care?.cuttingsSet).toBe(1);
   });
 
   it('rejects a stale command without changing the state', () => {

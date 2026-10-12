@@ -11,7 +11,7 @@ export interface CampaignGuidance {
 
 /** User-facing explanation derived from domain state; it never grants permission to act. */
 export function getCampaignGuidance(state: GameState): CampaignGuidance {
-  const plant = state.plants[0];
+  const plant = state.plants.find((item) => item.id === state.ui.selectedEntityId) ?? state.plants.find((item) => item.stage === 'active') ?? state.plants[0];
   const batch = state.batches[state.batches.length - 1];
   const order = state.orders[0];
 

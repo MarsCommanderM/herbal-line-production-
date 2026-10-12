@@ -13,7 +13,7 @@ export interface TutorialProgress {
 function currentStep(state: GameState): number {
   const order = state.orders[0];
   const batch = state.batches[state.batches.length - 1];
-  const plant = state.plants[0];
+  const plant = state.plants.find((item) => item.id === state.ui.selectedEntityId) ?? state.plants.find((item) => item.stage === 'active') ?? state.plants[0];
 
   if (order?.status === 'delivered') return 6;
   if (

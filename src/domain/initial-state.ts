@@ -50,7 +50,7 @@ export function createInitialGameState(): GameState {
       { id: sourceLotId, sourceRef: 'MED-CANNABIS-LOT-001', receivedAt: minute(0), status: 'accepted', quantity: 12, qualityScore: score(92), roomId: productionRoomId, inspectionFindings: [], traceEventIds: [sourceAcceptedEventId] },
     ],
     plants: [
-      { id: plantId, profileId: 'medical-cannabis-campaign-profile', sourceLotId, roomId: productionRoomId, stage: 'active', progress: score(80), vitality: score(88), qualityPotential: score(92), stressIndex: score(8), contaminationIndex: score(3), createdAt: minute(0), lastUpdatedAt: minute(0), batchId: null, rejectedReason: null },
+      { id: plantId, profileId: 'medical-cannabis-campaign-profile', sourceLotId, roomId: productionRoomId, stage: 'active', progress: score(80), vitality: score(88), qualityPotential: score(92), stressIndex: score(8), contaminationIndex: score(3), createdAt: minute(0), lastUpdatedAt: minute(0), batchId: null, rejectedReason: null, care: { waterLevel: 'balanced', lightLevel: 'balanced', temperatureLevel: 'balanced', humidityLevel: 'balanced', nutrientLevel: 'balanced', pruningCount: 0, cuttingsTaken: 0, cuttingsSet: 0, lastAction: null }, propagatedFromPlantId: null },
     ],
     batches: [],
     inventoryLots: [],

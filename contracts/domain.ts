@@ -1,4 +1,5 @@
-/** Canonical serializable domain contracts for Dr. Green Dump / DopeFarm.
+/** Runtime application contracts for Dr. Green Dump / DopeFarm.
+ * The immutable source contracts are preserved under masterpack/canonical/contracts/.
  * All plant and process values are fictional game abstractions, never real-world operating advice.
  */
 export type Brand<T, Name extends string> = T & { readonly __brand: Name };
@@ -19,6 +20,19 @@ export type OrderStatus = 'available' | 'accepted' | 'allocated' | 'ready_to_shi
 export type RoomKind = 'production' | 'processing' | 'quality' | 'storage' | 'logistics' | 'office' | 'utility';
 export type StaffRole = 'operations' | 'quality' | 'compliance' | 'logistics' | 'maintenance' | 'management';
 export type ViolationSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type CareLevel = 'low' | 'balanced' | 'high';
+export type PlantCareAction = 'water' | 'light' | 'temperature' | 'humidity' | 'nutrients' | 'prune' | 'take_cutting' | 'set_cutting';
+export interface PlantCareState {
+  waterLevel: CareLevel;
+  lightLevel: CareLevel;
+  temperatureLevel: CareLevel;
+  humidityLevel: CareLevel;
+  nutrientLevel: CareLevel;
+  pruningCount: number;
+  cuttingsTaken: number;
+  cuttingsSet: number;
+  lastAction: PlantCareAction | null;
+}
 
 export interface TimeState { day: number; minuteOfDay: number; totalMinutes: SimulationMinute; speed: 0 | 1 | 2 | 4; paused: boolean; }
 export interface PlayerState { id: EntityId; callsign: string; level: number; experience: number; }
@@ -39,6 +53,9 @@ export interface PlantState {
   stage: PlantStage; progress: Score0To100; vitality: Score0To100; qualityPotential: Score0To100;
   stressIndex: Score0To100; contaminationIndex: Score0To100; createdAt: SimulationMinute;
   lastUpdatedAt: SimulationMinute; batchId: EntityId | null; rejectedReason: string | null;
+  /** Optional for compatibility with existing v1 saves; missing values use fictional defaults. */
+  care?: PlantCareState;
+  propagatedFromPlantId?: EntityId | null;
 }
 export interface TraceEntry {
   eventId: EventId; simulationMinute: SimulationMinute; eventType: string;
@@ -68,7 +85,7 @@ export interface OrderState {
   allocatedLotIds: EntityId[]; deliveryId: EntityId | null;
 }
 export interface CustomerState {
-  id: EntityId; name: string; kind: 'licensed_buyer' | 'institutional_buyer' | 'botanical_retailer';
+  id: EntityId; name: string; kind: 'pharmacy' | 'clinic' | 'licensed_buyer';
   reliabilityScore: Score0To100; minimumReputation: Reputation0To1000; preferredQuality: Score0To100;
   paymentDelayDays: number; unlocked: boolean;
 }

@@ -1,4 +1,4 @@
-import type { CommandId, EntityId, GameState, Score0To100 } from './domain';
+import type { CareLevel, CommandId, EntityId, GameState, PlantCareAction, Score0To100 } from './domain';
 
 export interface CommandBase { commandId: CommandId; actorId: EntityId; expectedRevision: number; }
 export type DomainCommand =
@@ -11,6 +11,7 @@ export type DomainCommand =
   | (CommandBase & { type: 'PLANT/ADVANCE_FICTIONAL_STEP'; plantId: EntityId })
   | (CommandBase & { type: 'PLANT/REJECT'; plantId: EntityId; reasonCode: string })
   | (CommandBase & { type: 'PLANT/HARVEST'; plantId: EntityId })
+  | (CommandBase & { type: 'PLANT/CARE_ACTION'; plantId: EntityId; action: PlantCareAction; setting?: CareLevel })
   | (CommandBase & { type: 'BATCH/CREATE'; batchId: EntityId; plantIds: EntityId[]; profileId: string })
   | (CommandBase & { type: 'BATCH/QUEUE'; batchId: EntityId; roomId: EntityId })
   | (CommandBase & { type: 'BATCH/START_PROCESSING'; batchId: EntityId; machineId: EntityId })

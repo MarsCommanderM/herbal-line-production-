@@ -11,6 +11,7 @@ import type {
   LedgerEntry,
   SimulationMinute,
   TraceEntry,
+  PlantCareAction,
 } from '../../contracts/domain';
 import type { CommandBase, CommandFailureCode, DomainCommand, CommandResult } from '../../contracts/commands';
 import type { DomainEvent } from '../../contracts/events';
@@ -19,11 +20,13 @@ import { getEconomyUpgradeDefinition } from './upgrades';
 import { validateGameStateInvariants } from './invariants';
 import { clampScore, roomSupportsStaffRole, validateFacilityInvariants } from './facility';
 import { reserveInventory, transitionBatch } from './transitions';
+import { DEFAULT_PLANT_CARE, getPlantCareState, isCareLevel } from './plant-care';
 
 export type VerticalSliceCommand = Extract<DomainCommand, {
   type:
     | 'PLANT/ADVANCE_FICTIONAL_STEP'
     | 'PLANT/HARVEST'
+    | 'PLANT/CARE_ACTION'
     | 'BATCH/CREATE'
     | 'BATCH/QUEUE'
     | 'BATCH/START_PROCESSING'
@@ -311,6 +314,152 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         },
       }, [timeEvent, ...ledgerEvents], 'CAMPAIGN_DAY_ENDED', 'Tag ' + completedDay + ' abgeschlossen; Löhne und Betriebskosten wurden im Ledger gebucht.', [state.player.id, ...postings.map((entry) => entry.id)]);
     }
+    case 'PLANT/CARE_ACTION': {
+      const plant = state.plants.find((item) => item.id === command.plantId);
+      if (!plant) return failure(state, 'NOT_FOUND', 'Cannabis-Pflanze nicht gefunden.');
+      if (plant.stage !== 'active') return failure(state, 'INVALID_TRANSITION', 'Pflegeaktionen sind nur für aktive Pflanzen verfügbar.');
+      if (isBlocked(state, 'PLANT/CARE_ACTION')) return failure(state, 'COMPLIANCE_BLOCKED', 'Der Lizenz-/Compliance-Status blockiert diese Pflegeaktion.');
+
+      const settingActions: PlantCareAction[] = ['water', 'light', 'temperature', 'humidity', 'nutrients'];
+      const level = isCareLevel(command.setting) ? command.setting : undefined;
+      if (settingActions.includes(command.action) && !level) {
+        return failure(state, 'INVALID_PAYLOAD', 'Für diese Pflegeaktion ist eine gültige fiktive Spielstufe erforderlich.');
+      }
+
+      let care = getPlantCareState(plant);
+      let vitalityDelta = 0;
+      let stressDelta = 0;
+      let qualityDelta = 0;
+      let contaminationDelta = 0;
+      let newPlant: PlantState | undefined;
+
+      switch (command.action) {
+        case 'water':
+          if (!level) return failure(state, 'INVALID_PAYLOAD', 'Bewässerungsstufe fehlt.');
+          care = { ...care, waterLevel: level, lastAction: command.action };
+          vitalityDelta += level === 'balanced' ? 2 : -1;
+          stressDelta += level === 'balanced' ? -3 : 3;
+          if (level === 'high') contaminationDelta += 1;
+          break;
+        case 'light':
+          if (!level) return failure(state, 'INVALID_PAYLOAD', 'Lichtstufe fehlt.');
+          care = { ...care, lightLevel: level, lastAction: command.action };
+          vitalityDelta += level === 'balanced' ? 1 : -1;
+          stressDelta += level === 'balanced' ? -3 : 2;
+          qualityDelta += level === 'balanced' ? 1 : -1;
+          break;
+        case 'temperature':
+          if (!level) return failure(state, 'INVALID_PAYLOAD', 'Temperaturstufe fehlt.');
+          care = { ...care, temperatureLevel: level, lastAction: command.action };
+          vitalityDelta += level === 'balanced' ? 1 : -1;
+          stressDelta += level === 'balanced' ? -3 : 3;
+          break;
+        case 'humidity':
+          if (!level) return failure(state, 'INVALID_PAYLOAD', 'Luftfeuchtigkeitsstufe fehlt.');
+          care = { ...care, humidityLevel: level, lastAction: command.action };
+          vitalityDelta += level === 'balanced' ? 1 : -1;
+          stressDelta += level === 'balanced' ? -3 : 3;
+          if (level === 'high') contaminationDelta += 1;
+          break;
+        case 'nutrients':
+          if (!level) return failure(state, 'INVALID_PAYLOAD', 'Nährstoffstufe fehlt.');
+          care = { ...care, nutrientLevel: level, lastAction: command.action };
+          vitalityDelta += level === 'balanced' ? 1 : -1;
+          stressDelta += level === 'balanced' ? -2 : 2;
+          qualityDelta += level === 'balanced' ? 1 : -1;
+          break;
+        case 'prune':
+          care = { ...care, pruningCount: care.pruningCount + 1, lastAction: command.action };
+          vitalityDelta -= 1;
+          stressDelta += 1;
+          qualityDelta += 1;
+          break;
+        case 'take_cutting':
+          care = { ...care, cuttingsTaken: care.cuttingsTaken + 1, lastAction: command.action };
+          vitalityDelta -= 1;
+          stressDelta += 2;
+          break;
+        case 'set_cutting': {
+          if (care.cuttingsTaken <= care.cuttingsSet) {
+            return failure(state, 'PRECONDITION_FAILED', 'Es ist kein ungesetzter Steckling verfügbar. Schneide zuerst einen Steckling als Spielaktion.');
+          }
+          const room = state.rooms.find((item) => item.id === plant.roomId);
+          if (!room || !room.unlocked) return failure(state, 'PRECONDITION_FAILED', 'Der zugewiesene Pflanzenraum ist nicht verfügbar.');
+          if (room.occupied >= room.capacity) return failure(state, 'CAPACITY_EXCEEDED', 'Der Pflanzenraum hat keine freie Spielkapazität.');
+          const cuttingId = entityId('plant-cutting-' + (state.revision + 1));
+          if (state.plants.some((item) => item.id === cuttingId)) return failure(state, 'DUPLICATE_COMMAND', 'Die Stecklings-ID existiert bereits.');
+          care = { ...care, cuttingsSet: care.cuttingsSet + 1, lastAction: command.action };
+          newPlant = {
+            id: cuttingId,
+            profileId: plant.profileId,
+            sourceLotId: plant.sourceLotId,
+            roomId: plant.roomId,
+            stage: 'active',
+            progress: clampScore(0),
+            vitality: clampScore(70),
+            qualityPotential: clampScore(Number(plant.qualityPotential) - 5),
+            stressIndex: clampScore(12),
+            contaminationIndex: clampScore(3),
+            createdAt: state.time.totalMinutes,
+            lastUpdatedAt: state.time.totalMinutes,
+            batchId: null,
+            rejectedReason: null,
+            care: { ...DEFAULT_PLANT_CARE },
+            propagatedFromPlantId: plant.id,
+          };
+          break;
+        }
+      }
+
+      const updatedPlant: PlantState = {
+        ...plant,
+        care,
+        vitality: clampScore(Number(plant.vitality) + vitalityDelta),
+        stressIndex: clampScore(Number(plant.stressIndex) + stressDelta),
+        qualityPotential: clampScore(Number(plant.qualityPotential) + qualityDelta),
+        contaminationIndex: clampScore(Number(plant.contaminationIndex) + contaminationDelta),
+        lastUpdatedAt: state.time.totalMinutes,
+      };
+      const actionNames: Record<PlantCareAction, string> = {
+        water: 'Bewässerung',
+        light: 'Lichteinstellung',
+        temperature: 'Temperatursimulation',
+        humidity: 'Luftfeuchtigkeitssimulation',
+        nutrients: 'Nährstoffsimulation',
+        prune: 'Beschneiden',
+        take_cutting: 'Steckling schneiden',
+        set_cutting: 'Steckling setzen',
+      };
+      const levelLabel = level ? ' · Spielstufe ' + ({ low: 'niedrig', balanced: 'standard', high: 'hoch' } as const)[level] : '';
+      const careEvent: DomainEvent = {
+        ...eventBase(state, command, plant.id),
+        type: 'plant.care_applied',
+        plantId: plant.id,
+        action: command.action,
+        ...(level ? { setting: level } : {}),
+        ...(newPlant ? { createdPlantId: newPlant.id } : {}),
+      };
+      const nextPlants = newPlant
+        ? [...state.plants.map((item) => item.id === plant.id ? updatedPlant : item), newPlant]
+        : state.plants.map((item) => item.id === plant.id ? updatedPlant : item);
+      const patch: Partial<GameState> = {
+        plants: nextPlants,
+        ...(newPlant ? {
+          rooms: state.rooms.map((room) => room.id === plant.roomId ? { ...room, occupied: room.occupied + 1 } : room),
+          ui: { ...state.ui, selectedEntityId: newPlant.id },
+        } : {}),
+      };
+      const related = newPlant ? [plant.id, newPlant.id] : [plant.id];
+      return commit(
+        state,
+        command,
+        patch,
+        [careEvent],
+        'PLANT_CARE_ACTION',
+        actionNames[command.action] + levelLabel + ' ausgeführt. Die Pflanzenwerte wurden ausschließlich mit fiktiver Spielbalance aktualisiert.' + (newPlant ? ' Neue Pflanzen-ID: ' + newPlant.id + '.' : ''),
+        related,
+      );
+    }
     case 'PLANT/ADVANCE_FICTIONAL_STEP': {
       const plant = state.plants.find((item) => item.id === command.plantId);
       if (!plant) return failure(state, 'NOT_FOUND', 'Produktionseinheit nicht gefunden.');
@@ -458,7 +607,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       const lotId = entityId('inventory-' + batch.id);
       if (state.inventoryLots.some((lot) => lot.id === lotId)) return failure(state, 'DUPLICATE_COMMAND', 'Bestandslos existiert bereits.');
       const lot: InventoryLotState = {
-        id: lotId, batchId: batch.id, itemDefinitionId: 'BOT-01', quantityAvailable: batch.quantity, quantityReserved: 0,
+        id: lotId, batchId: batch.id, itemDefinitionId: 'MED-CANNABIS-01', quantityAvailable: batch.quantity, quantityReserved: 0,
         qualityScore: batch.qualityScore, status: 'released', createdAt: state.time.totalMinutes,
         expiresAt: minute(Number(state.time.totalMinutes) + 10080), storageRoomId: storageRoom.id,
       };
