@@ -49,10 +49,10 @@
 
 ## P2-002 — Economy and progression (DAILY SETTLEMENT IMPLEMENTED; CI PENDING)
 
-- **Implemented:** pure fictional daily-cost calculation, explicit end-of-day transition to next-day 08:00, idempotent wage and utility expense postings, audit events, a daily-cost dashboard metric, and a negative-balance warning.
+- **Implemented:** pure fictional daily-cost calculation, explicit end-of-day transition to next-day 08:00, idempotent wage and utility expense postings, audit events, daily-cost dashboard metric, a 30-day zero-revenue balance projection, cash-runway estimate, and negative-balance warning.
 - **Balance model:** wages sum each staff member's configured daily wage; utility costs use unlocked-room power units × 24 hours × 125 cents per unit-hour. These are game-balance constants, not real-world cost estimates.
-- **Acceptance:** finance unit tests cover deterministic cost totals and idempotency; domain tests cover day/time progression, ledger entries, event emission, autosettlement uniqueness and negative balance; Chromium E2E checks visible day-end feedback and autosave.
-- **Remaining:** progression tuning over multiple campaign days, revenue/expense ratio scenarios, wage/utility upgrades, and financial distress recovery. Same-revision CI pending.
+- **Acceptance:** finance unit tests cover deterministic cost totals, idempotency, multi-day zero-revenue and explicit-revenue projections, cash runway, and invalid assumptions; domain tests cover day/time progression, ledger entries, event emission, settlement uniqueness and negative balance; Chromium E2E checks day-end feedback, autosave, runway, and the 30-day forecast.
+- **Remaining:** broader multi-day progression tuning, revenue/expense ratio scenarios, wage/utility upgrades, and financial distress recovery. The new forecast revision's same-revision CI is pending.
 
 ## Operating rule
 

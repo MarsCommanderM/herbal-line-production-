@@ -138,3 +138,56 @@ export function createDailyOperatingLedgerEntries(
   }
   return entries;
 }
+
+export interface ProjectedEconomyDay {
+  dayOffset: number;
+  openingBalanceCents: number;
+  expectedRevenueCents: number;
+  operatingCostsCents: number;
+  closingBalanceCents: number;
+}
+
+/**
+ * Pure scenario projection. Revenue is an explicit scenario input; the default assumes no future sales.
+ * This is game-balance tooling, not a real-world financial estimate.
+ */
+export function projectCampaignBalance(
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy'>,
+  days: number,
+  expectedDailyRevenueCents = 0,
+): ProjectedEconomyDay[] {
+  if (!Number.isSafeInteger(days) || days < 1 || days > 3650) {
+    throw new RangeError('days must be a safe integer between 1 and 3650');
+  }
+  assertNonNegativeSafeInteger(expectedDailyRevenueCents, 'expectedDailyRevenueCents');
+  const operatingCostsCents = calculateDailyOperatingCosts(state).totalCents;
+  let balance = Number(getBalanceCents(state.economy));
+  const projection: ProjectedEconomyDay[] = [];
+
+  for (let dayOffset = 1; dayOffset <= days; dayOffset += 1) {
+    const openingBalanceCents = balance;
+    balance += expectedDailyRevenueCents - operatingCostsCents;
+    if (!Number.isSafeInteger(balance)) throw new RangeError('Projected balance exceeded safe integer precision');
+    projection.push({
+      dayOffset,
+      openingBalanceCents,
+      expectedRevenueCents: expectedDailyRevenueCents,
+      operatingCostsCents,
+      closingBalanceCents: balance,
+    });
+  }
+  return projection;
+}
+
+/** Number of full days before funds are exhausted under a fixed daily revenue scenario; null means no net burn. */
+export function getCashRunwayDays(
+  state: Pick<GameState, 'staff' | 'rooms' | 'economy'>,
+  expectedDailyRevenueCents = 0,
+): number | null {
+  assertNonNegativeSafeInteger(expectedDailyRevenueCents, 'expectedDailyRevenueCents');
+  const dailyNetBurn = calculateDailyOperatingCosts(state).totalCents - expectedDailyRevenueCents;
+  if (dailyNetBurn <= 0) return null;
+  const balance = Number(getBalanceCents(state.economy));
+  if (balance <= 0) return 0;
+  return Math.floor(balance / dailyNetBurn);
+}

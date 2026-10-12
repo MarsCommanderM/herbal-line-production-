@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { EconomyState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
-import { calculateDailyOperatingCosts, createDailyOperatingLedgerEntries, getBalanceCents, getLedgerTotals } from './finance';
+import { calculateDailyOperatingCosts, createDailyOperatingLedgerEntries, getBalanceCents, getCashRunwayDays, getLedgerTotals, projectCampaignBalance } from './finance';
 import { createInitialGameState } from './initial-state';
 
 const id = (value: string) => value as EntityId;
@@ -72,6 +72,39 @@ describe('ledger-derived finance', () => {
     const withPostings = { ...state, economy: { ...state.economy, ledger: postings } };
     expect(createDailyOperatingLedgerEntries(withPostings, 1, minute(1440))).toEqual([]);
     expect(createDailyOperatingLedgerEntries(withPostings, 2, minute(2880))).toHaveLength(2);
+  });
+
+  it('projects a 30-day zero-revenue scenario without mutating the live ledger', () => {
+    const state = createInitialGameState();
+    const projection = projectCampaignBalance(state, 30);
+    expect(projection).toHaveLength(30);
+    expect(projection[0]).toEqual({
+      dayOffset: 1,
+      openingBalanceCents: 25_000_000,
+      expectedRevenueCents: 0,
+      operatingCostsCents: 88_000,
+      closingBalanceCents: 24_912_000,
+    });
+    expect(projection[29]?.closingBalanceCents).toBe(22_360_000);
+    expect(state.economy.ledger).toEqual([]);
+  });
+
+  it('models explicit daily revenue and estimates cash runway without hiding distress', () => {
+    const state = createInitialGameState();
+    expect(projectCampaignBalance(state, 30, 100_000).at(-1)?.closingBalanceCents).toBe(25_360_000);
+    expect(getCashRunwayDays(state)).toBe(284);
+    expect(getCashRunwayDays(state, 100_000)).toBeNull();
+
+    const lowFunds = { ...state, economy: { ...state.economy, openingBalanceCents: cents(1) } };
+    expect(getCashRunwayDays(lowFunds)).toBe(0);
+  });
+
+  it('rejects invalid forecast horizons and revenue assumptions', () => {
+    const state = createInitialGameState();
+    expect(() => projectCampaignBalance(state, 0)).toThrow(RangeError);
+    expect(() => projectCampaignBalance(state, 3651)).toThrow(RangeError);
+    expect(() => projectCampaignBalance(state, 3, -1)).toThrow(RangeError);
+    expect(() => getCashRunwayDays(state, Number.MAX_SAFE_INTEGER + 1)).toThrow(RangeError);
   });
 
   it('allows a negative balance as a detectable state instead of hiding it', () => {

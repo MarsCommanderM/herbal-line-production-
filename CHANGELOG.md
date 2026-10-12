@@ -31,3 +31,9 @@
 - Added an explicit campaign day-end command that advances the clock to the next 08:00 and posts idempotent expense entries to the canonical ledger.
 - Added day-end and ledger events, a daily-cost dashboard metric, negative-balance warning, and unit/Chromium acceptance coverage.
 - Utility pricing and wages are fictional balance constants; broader multi-day economy tuning remains open.
+
+## Unreleased — Economy forecast
+
+- Added pure multi-day balance projections with explicit daily-revenue assumptions and bounded forecast horizons.
+- Added a cash-runway selector and dashboard metrics for a 30-day zero-revenue scenario; the UI labels the assumptions instead of presenting the projection as guaranteed income.
+- Added deterministic tests for zero-revenue burn, revenue-offset scenarios, runway exhaustion and invalid forecast inputs. Same-revision CI is pending.
