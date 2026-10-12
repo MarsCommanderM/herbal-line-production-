@@ -77,38 +77,43 @@ export function checksumPayload(payload: unknown): string {
   ]);
   const hash = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
   const words = new Uint32Array(64);
+  const wordAt = (array: Uint32Array, index: number): number => {
+    const value = array[index];
+    if (value === undefined) throw new Error('SHA-256 word index out of bounds.');
+    return value;
+  };
   const rotateRight = (value: number, bits: number): number => (value >>> bits) | (value << (32 - bits));
 
   for (let offset = 0; offset < bytes.length; offset += 64) {
     for (let i = 0; i < 16; i += 1) words[i] = view.getUint32(offset + i * 4, false);
     for (let i = 16; i < 64; i += 1) {
-      const x = words[i - 15];
-      const y = words[i - 2];
+      const x = wordAt(words, i - 15);
+      const y = wordAt(words, i - 2);
       const s0 = rotateRight(x, 7) ^ rotateRight(x, 18) ^ (x >>> 3);
       const s1 = rotateRight(y, 17) ^ rotateRight(y, 19) ^ (y >>> 10);
-      words[i] = (words[i - 16] + s0 + words[i - 7] + s1) >>> 0;
+      words[i] = (wordAt(words, i - 16) + s0 + wordAt(words, i - 7) + s1) >>> 0;
     }
 
-    let a = hash[0], b = hash[1], c = hash[2], d = hash[3];
-    let e = hash[4], f = hash[5], g = hash[6], h = hash[7];
+    let a = wordAt(hash, 0), b = wordAt(hash, 1), c = wordAt(hash, 2), d = wordAt(hash, 3);
+    let e = wordAt(hash, 4), f = wordAt(hash, 5), g = wordAt(hash, 6), h = wordAt(hash, 7);
     for (let i = 0; i < 64; i += 1) {
       const sum1 = rotateRight(e, 6) ^ rotateRight(e, 11) ^ rotateRight(e, 25);
       const choice = (e & f) ^ (~e & g);
-      const temp1 = (h + sum1 + choice + constants[i] + words[i]) >>> 0;
+      const temp1 = (h + sum1 + choice + wordAt(constants, i) + wordAt(words, i)) >>> 0;
       const sum0 = rotateRight(a, 2) ^ rotateRight(a, 13) ^ rotateRight(a, 22);
       const majority = (a & b) ^ (a & c) ^ (b & c);
       const temp2 = (sum0 + majority) >>> 0;
       h = g; g = f; f = e; e = (d + temp1) >>> 0;
       d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
     }
-    hash[0] = (hash[0] + a) >>> 0;
-    hash[1] = (hash[1] + b) >>> 0;
-    hash[2] = (hash[2] + c) >>> 0;
-    hash[3] = (hash[3] + d) >>> 0;
-    hash[4] = (hash[4] + e) >>> 0;
-    hash[5] = (hash[5] + f) >>> 0;
-    hash[6] = (hash[6] + g) >>> 0;
-    hash[7] = (hash[7] + h) >>> 0;
+    hash[0] = (wordAt(hash, 0) + a) >>> 0;
+    hash[1] = (wordAt(hash, 1) + b) >>> 0;
+    hash[2] = (wordAt(hash, 2) + c) >>> 0;
+    hash[3] = (wordAt(hash, 3) + d) >>> 0;
+    hash[4] = (wordAt(hash, 4) + e) >>> 0;
+    hash[5] = (wordAt(hash, 5) + f) >>> 0;
+    hash[6] = (wordAt(hash, 6) + g) >>> 0;
+    hash[7] = (wordAt(hash, 7) + h) >>> 0;
   }
   return 'sha256:' + Array.from(hash, (word) => word.toString(16).padStart(8, '0')).join('');
 }
