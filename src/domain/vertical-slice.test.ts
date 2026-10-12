@@ -167,11 +167,15 @@ describe('botanical operations vertical slice', () => {
   });
 
   it('requires a documented reason for batch rejection', () => {
-    const state = createInitialGameState();
-    const result = dispatch(state, 'BATCH/REJECT', { batchId: entity('batch-missing'), reasonCode: 'x' });
+    let state = createInitialGameState();
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', { batchId: entity('batch-reason'), plantIds: [entity('plant-001')], profileId: 'fictional-profile' });
+    const result = dispatch(state, 'BATCH/REJECT', { batchId: entity('batch-reason'), reasonCode: 'x' });
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error('Unknown batch cannot be rejected.');
-    expect(result.error.code).toBe('NOT_FOUND');
+    if (result.ok) throw new Error('A short rejection reason must be rejected.');
+    expect(result.error.code).toBe('INVALID_PAYLOAD');
+    expect(result.state).toEqual(state);
   });
 
   it('keeps inventory and order unchanged when allocation is insufficient', () => {
