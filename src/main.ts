@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
-import type { CommandId, EntityId, PlantCareState } from '../contracts/domain';
+import type { CommandId, EntityId, GameState, PlantCareState } from '../contracts/domain';
 import { createInitialGameState } from './domain/initial-state';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from './domain/vertical-slice';
 import { renderManagementUI } from './ui/management';
