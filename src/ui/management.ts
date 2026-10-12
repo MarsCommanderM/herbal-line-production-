@@ -1,5 +1,6 @@
 import type { EntityId, GameState } from '../../contracts/domain';
 import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
+import { roomSupportsStaffRole } from '../domain/facility';
 import { getCampaignGuidance } from './campaign-guidance';
 
 type Action = {
@@ -54,6 +55,39 @@ function availableActions(state: GameState): Action[] {
   } else if (order && order.status === 'shipped' && order.deliveryId) {
     actions.push({ label: 'Wareneingang bestätigen', detail: 'Den Empfang idempotent bestätigen und den Umsatz einmalig verbuchen.', type: 'DELIVERY/CONFIRM', payload: { deliveryId: order.deliveryId, proofCode: 'RX-ACK-001' } });
   }
+  for (const staff of state.staff) {
+    if (staff.activeAssignmentId !== null) continue;
+    const targetRoom = state.rooms.find((room) =>
+      room.unlocked && room.id !== staff.assignedRoomId && roomSupportsStaffRole(room.kind, staff.role),
+    );
+    if (targetRoom) {
+      actions.push({
+        label: staff.displayName + ': ' + targetRoom.displayName + ' zuweisen',
+        detail: 'Die Raumzuordnung wird auf beiden Seiten atomar aktualisiert und auf Rollenkonformität geprüft.',
+        type: 'FACILITY/ASSIGN_STAFF',
+        payload: { staffId: staff.id, roomId: targetRoom.id },
+      });
+    }
+  }
+
+  for (const machine of state.machines) {
+    if (machine.status === 'maintenance') {
+      actions.push({
+        label: 'Wartung abschließen',
+        detail: 'Die fiktive Wartung beendet den Wartungsstatus und erhöht den Zustandswert um bis zu 30 Punkte.',
+        type: 'MACHINE/COMPLETE_MAINTENANCE',
+        payload: { machineId: machine.id },
+      });
+    } else if (machine.status === 'idle' && machine.condition < 100) {
+      actions.push({
+        label: 'Spielstation warten',
+        detail: 'Startet eine abstrakte Wartungsaktion. Eine verfügbare Wartungsfachkraft muss im selben Raum zugewiesen sein.',
+        type: 'MACHINE/START_MAINTENANCE',
+        payload: { machineId: machine.id },
+      });
+    }
+  }
+
   return actions;
 }
 
