@@ -1,7 +1,7 @@
 # 04 — Domain Model und Zustandsmaschinen
 
 **Status:** verbindliche Fachspezifikation v1.0.0  
-**Zweck:** einheitliche fachliche Wahrheit für Design, Implementierung, Simulation, UI, Saves und Tests.  
+**Zweck:** einheitliche fachliche Wahrheit für Design, Implementierung, Simulation, UI, Saves und Tests.
 
 ## 1. Modellierungsregeln
 
