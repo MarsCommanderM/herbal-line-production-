@@ -41,8 +41,9 @@ The archive's expected Git blob SHA-1s were calculated from the actual file byte
 | `docs/02_FEATURE_SCOPE_AND_RELEASE_CONTENT.md` | `45897b7a9e02e8029b3ad640f7c857d7d7536065` | Exact match restored |
 | `docs/06_CANONICAL_CONTRACTS.md` | `836dbe1c2529c8414c6b8b1b30cfa61bb900f190` | Exact match restored |
 | `docs/07_DATA_AND_RULES_CATALOG.md` | `35b2f9611f47489cea1c2c50e3dab1c4d2e36ddb` | Exact match restored |
+| `docs/14_BACKLOG.md` | `b3de2091d77529613d7745c76b448917fa705769` | Exact match restored |
 
-Total currently verified exact archive files: **21 of 42**. This is a verified subset, not full parity.
+Total currently verified exact archive files: **22 of 42**. This is a verified subset, not full parity.
 
 The current parity report preserves the earlier `4/42` comparison as historical evidence for `main@6ddb8849886f35ece5f3d784d06714b4054f5116` only. It is not being represented as a fresh comparison of this restoration branch.
 
