@@ -285,6 +285,7 @@ test('second efficiency tier unlocks after the first and compounds utility savin
   await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Energieeffizienz I kaufen' }).click();
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
   await expect(page.getByRole('button', { name: 'Energieeffizienz II kaufen' })).toBeEnabled();
   await page.getByRole('button', { name: 'Energieeffizienz II kaufen' }).click();
 
