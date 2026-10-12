@@ -90,13 +90,17 @@ test('autosave survives reload and corrupt primary recovers the last valid backu
 });
 
 test('exported saves can be imported after a later campaign change', async ({ page }) => {
+  test.setTimeout(60_000);
   await page.goto('/');
   await page.getByRole('button', { name: 'Spielstand speichern' }).click();
   await expect(page.locator('#game-feedback')).toContainText('Spielstand gespeichert');
+  await expect(page.locator('#save-status')).toContainText('Manueller Spielstand gespeichert · Revision 0.');
+  await expect(page.getByRole('button', { name: 'Spielstand exportieren' })).toBeEnabled();
 
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Spielstand exportieren' }).click();
   const download = await downloadPromise;
+  await expect(page.locator('#save-status')).toContainText('Spielstandexport gestartet.');
   const stream = await download.createReadStream();
   if (!stream) throw new Error('Export download stream was not created.');
   const chunks: Buffer[] = [];
@@ -105,6 +109,8 @@ test('exported saves can be imported after a later campaign change', async ({ pa
 
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
+  await expect(page.getByRole('button', { name: 'Spielstand importieren' })).toBeEnabled();
 
   const chooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Spielstand importieren' }).click();
@@ -112,6 +118,7 @@ test('exported saves can be imported after a later campaign change', async ({ pa
   await chooser.setFiles({ name: 'campaign-save.json', mimeType: 'application/json', buffer: exported });
 
   await expect(page.locator('#game-feedback')).toContainText('Spielstand importiert');
+  await expect(page.locator('#save-status')).toContainText('Import validiert, gespeichert und geladen.');
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toHaveCount(0);
 });
