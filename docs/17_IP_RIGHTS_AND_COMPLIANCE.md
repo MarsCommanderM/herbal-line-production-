@@ -4,7 +4,7 @@
 
 Vorgegebene Projektmetadaten:
 
-`Herbal Line — Copyright © 2026 Michael Braunschweig. All rights reserved.`
+`Dr. Green Dump / DopeFarm — Copyright © 2026 Michael Braunschweig. All rights reserved.`
 
 Diese Zeile wird als gewünschte Projektangabe in die Unterlagen übernommen. Sie beweist nicht von selbst, dass alle Beiträge, Assets, Fonts, Sounds, Codebestandteile, Markenrechte oder Auftragsarbeiten tatsächlich exklusiv dem Genannten zustehen. Der Hauptagent muss die Herkunft jedes Beitrags und jede eingeräumte Nutzungsrechtelage erfassen, anstatt aus dem Namen im Manifest Eigentum abzuleiten.
 
@@ -26,7 +26,7 @@ Nach deutschem Urheberrechtsgesetz ist Urheber grundsätzlich der Schöpfer eine
 
 ## 4. Produktname und Marke
 
-`Herbal Line` ist der Arbeits-/Produktname in diesem Dokument, aber nicht als markenrechtlich freigegeben gekennzeichnet. Vor öffentlicher kommerzieller Nutzung: Recherche nach identischen und ähnlichen Zeichen in relevanten Waren-/Dienstleistungsklassen und Gebieten (mindestens DPMAregister sowie, falls der Zielmarkt es erfordert, EUIPO/TMview/WIPO), Prüfung von Domains/Stores, Dokumentation der Suchstrategie und ggf. fachkundige Rechtsprüfung. Ein einfacher Treffer-freier Suchlauf ist keine Garantie der Verfügbarkeit.
+`Dr. Green Dump / DopeFarm` ist der Arbeits-/Produktname in diesem Dokument, aber nicht als markenrechtlich freigegeben gekennzeichnet. Vor öffentlicher kommerzieller Nutzung: Recherche nach identischen und ähnlichen Zeichen in relevanten Waren-/Dienstleistungsklassen und Gebieten (mindestens DPMAregister sowie, falls der Zielmarkt es erfordert, EUIPO/TMview/WIPO), Prüfung von Domains/Stores, Dokumentation der Suchstrategie und ggf. fachkundige Rechtsprüfung. Ein einfacher Treffer-freier Suchlauf ist keine Garantie der Verfügbarkeit.
 
 ## 5. Third-party dependencies
 
