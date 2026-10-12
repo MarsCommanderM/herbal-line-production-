@@ -4,9 +4,12 @@
 
 ## 1. Produktauftrag
 
-Herbal Line ist ein hochwertiges Web-Managementspiel über den Betrieb einer fiktiven, streng regulierten botanischen Anlage. Der Spieler koordiniert Räume und Personal, verwaltet abstrakte Pflanzen- und Chargenzustände, steuert fiktive Qualitätsprüfungen, sichert Rückverfolgbarkeit, verwaltet Lagerbestände und erfüllt generische Kundenaufträge zuverlässig.
+Dr. Green Dump / DopeFarm : ist ein hochwertiges Web-Managementspiel über den legalen, kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. In dem der spieler die Leitung führt für einen legalen Produktions- und Lieferprozess für ein reguliertes medizinisches Cannabis Arznei-/Naturprodukt. Es simuliert — Cannabis-Anbau- und  Vertriebsanleitung. 
+Spielwelt: klar erkennbare Cannabis-Pflanzen, professionelle Anbauräume, Lampen, Bewässerung, Klima- und Lüftungstechnik, Arbeitsbereiche, Lager und Verarbeitung.
+Spieleraktionen: Pflege und Betreuung der Pflanzen müssen direkt sichtbar an den Pflanzen stattfinden – nicht nur als abstrakte Schaltflächen in einem Verwaltungsmenü.
+Geschäftsablauf: Pflanzenpflege, simulierte Verarbeitung, Qualitätssicherung, Lager, Logistik und Auslieferung an Apotheken. Die internen Abläufe der Apotheken selbst gehören nicht zum Spielumfang.
+Die Simulationswerte sind fiktive Spielwerte. Das schränkt die Cannabis-Thematik nicht ein: Die Pflanzen dürfen erkennbar sein und die Aktionen müssen visuell verständlich umgesetzt werden.
 
-Das Spiel ist eine abstrakte Managementsimulation, keine reale Produktions- oder Vertriebsanleitung. Alle Pflanzenzustände und Prozessparameter sind fiktive Spielwerte. Das Spiel enthält keine realen Anbauparameter, Rezepturen, Aufbereitungs-/Extraktionsmethoden oder operativen Anleitungen zur Herstellung oder Distribution kontrollierter Substanzen.
 
 ## 2. Spielversprechen
 
