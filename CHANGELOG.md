@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Added deterministic mixed-command fuzzing for 1,280 reproducible command attempts across 16 fixed seeds; every accepted transition is checked against game-state and facility invariants, and every rejected transition must leave the exact state unchanged.
+- Verified the fuzz test, current unit suite, build, and Chromium/Firefox/WebKit E2E on commit `f5d07e630529a59bf27f1e322100af62a8f9ce93` (GitHub Actions run [#38282628563](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38282628563)).
+
 - Added an accessible, state-derived campaign guidance panel with next-step recommendations and explanations for quality, compliance, and availability blockers.
 - Added a terminal batch rejection path with documented reason codes, queue/room cleanup, and a UI recovery action for failed or unresolved quality checks.
 - Documented measured source-archive drift and the intentional generic-botanical scope fork; no exact 1:1 ZIP parity claim is made.

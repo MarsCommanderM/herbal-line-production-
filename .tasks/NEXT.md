@@ -40,12 +40,13 @@
 - **Remaining:** full WCAG contrast/semantics review, broader assistive-technology testing, and more viewport coverage.
 - **Gate:** every primary action has a clear precondition, visible result, and tested error state.
 
-## P2-001 — Facility, capacity, staffing and maintenance (IMPLEMENTATION INTEGRATED; CI PENDING)
+## P2-001 — Facility, capacity, staffing and maintenance (INTEGRATED; DETERMINISTIC FUZZ + CROSS-BROWSER CI VERIFIED)
 
 - **Implemented:** cross-entity invariant validation runs before every successful domain commit. It checks room capacity/occupancy, batch/plant/inventory links, QC state, terminal rejected batches, machine/job consistency, inventory reservation bounds, ledger idempotency keys, bidirectional staff/machine room assignments, role-to-room compatibility, and maintenance/job consistency.
 - **Evidence:** unit tests validate the initial state, deliberately corrupted state, full queue → processing → QC → rejection progression, duplicate ledger keys, and rejection of commands that would preserve an invalid state. A deterministic corruption matrix and 100 generated room-occupancy mutations also pass. Same-revision CI run 38208111520 passed, including all 7 Chromium E2E tests.
-- **Added on the reconciled feature branch:** typed staff assignment/unassignment and machine movement commands, an abstract maintenance start/complete lifecycle, a live facility overview, unit tests, and Chromium E2E coverage. Same-revision CI verification is pending.
-- **Remaining:** property-based command-sequence testing, machine movement edge cases, and broader command-by-command invariant coverage.
+- **Integrated implementation:** typed staff assignment/unassignment and machine movement commands, an abstract maintenance start/complete lifecycle, a live facility overview, unit tests, and Chromium/Firefox/WebKit E2E coverage. The integrated baseline passed its complete cross-browser CI run [#38280141532](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38280141532).
+- **New verified coverage:** deterministic command-sequence fuzz test uses 16 fixed seeds × 80 mixed commands = 1,280 command attempts. After each accepted command it asserts both game-state and facility invariants; rejected commands must preserve the exact state and object reference. Exact revision `f5d07e630529a59bf27f1e322100af62a8f9ce93` passed all CI steps, including cross-browser E2E ([run #38282628563](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38282628563)).
+- **Remaining:** additional machine movement edge cases, more command-specific invariant corruption cases, save transaction abort-path coverage, and accessibility review.
 
 ## P2-002 — Economy and progression (DAILY SETTLEMENT + TIERED UPGRADES + RECOVERY IMPLEMENTED; CI PENDING)
 
