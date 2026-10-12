@@ -60,3 +60,24 @@ A separate working branch, `production/herbal-line-baseline-20261012`, was creat
 ## Audit conclusion
 
 **Baseline status: PARTIAL / NOT GREEN.** Repository metadata and drift are documented. Exact archive synchronization, build/test verification, and implementation acceptance remain open.
+
+
+## Follow-up verification — 2026-10-12
+
+This section supplements the historical baseline above; it does not retroactively make the original read-only audit a local-clone audit.
+
+- Current recovery branch: `production/herbal-line-baseline-20261012`
+- Verified revision: `a9ff0d8cf481529baab73b62d1d1526402cfa169`
+- Exact-revision workflow: [GitHub Actions run #38210853633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38210853633), conclusion `success`.
+- Passed in that workflow: locked dependency installation, source-policy lint, format check, strict TypeScript typecheck, domain unit tests, production build, Chromium browser E2E, served-build smoke test, Master-Pack document/JSON validation and whitespace check.
+- Browser evidence includes: full 12-command management flow, one delivery revenue ledger entry, valid persisted SHA-256 checksum, post-reload restoration of the delivered campaign, backup restoration after primary corruption, safe startup when no valid backup exists, and keyboard activation of manual save from the operations dashboard.
+- Current observed `main` head during this follow-up: `4a1e2724dcce32d4b5a2516bb5a3df651884fc37`; its recursive tree contained 98 paths and was not truncated. The recovery work was committed to the separate working branch; no commit in this task targeted `main`.
+- The Master-Pack validator ran in CI and passed. That validates repository documents/JSON; it does **not** prove byte-for-byte archive parity.
+- Exact archive parity remains blocked because the archive bytes are not available in the current working surface. Preserve this blocker until the archive itself is provided or made accessible and every path/content hash is compared.
+
+## Remaining blockers after follow-up
+
+1. Exact Master-Pack archive-to-branch byte parity and final P0-002 review.
+2. A pre-v1 schema migration is not implemented or claimed because no canonical pre-v1 save schema is supplied. V1 validation, legacy FNV checksum compatibility and unsupported-version rejection are verified.
+3. P1-004 quality, audit and incident work remains open for end-to-end corrective-action acceptance.
+4. P2/P3/P4 work packages in `.tasks/BACKLOG.md` remain open on this branch.

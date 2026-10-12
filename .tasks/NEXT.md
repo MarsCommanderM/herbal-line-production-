@@ -1,27 +1,41 @@
 # Next Task — Authoritative Queue
 
-## Current status
-P0-001 repository truth audit is recorded in `docs/audits/BASELINE.md`. The GitHub-connected audit confirmed the project documentation and contract paths, and recorded the missing executable-app/toolchain baseline. The target repository was not cloned into an executable checkout here; no app build or game tests have been claimed. Master-pack validation and ZIP integrity were tested on the local extracted pack.
+## Verified baseline — 2026-10-12
 
-## P0-002 — Reconcile Project Truth (SOURCE-LEVEL COMPLETE; REVIEW OPEN)
-- **Goal:** Compare product scope, canonical contracts, schemas, simulation rules, and persistence ownership; resolve contradictions before application scaffolding.
-- **Outputs:** `docs/audits/CONTRACT_RECONCILIATION.md`, explicit decision log, corrected domain/save contracts only where justified.
-- **Acceptance:** one consistent source of truth for entities, transitions, time, RNG, money, batch release, inventory reservation, order/delivery idempotency and save migration.
-- **Dependencies:** P0-001.
-- **Status:** Source-level reconciliation recorded; exact archive parity and final review remain open.
+- Working branch: `production/herbal-line-baseline-20261012`
+- Verified revision: `a9ff0d8cf481529baab73b62d1d1526402cfa169`
+- CI evidence: [Run #38210853633 — success](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38210853633). This exact revision passed locked install, lint, format, strict typecheck, domain tests, production build, Playwright browser E2E, production-preview smoke, Master-Pack document/JSON validation, and whitespace checks.
+- Default branch observed during this update: `main@4a1e2724dcce32d4b5a2516bb5a3df651884fc37`, 98 tracked paths. Recovery-branch commits in this task were not pushed to `main`.
+- **Still blocked:** byte-for-byte comparison with `Herbal-Line-Production-Master-Pack.zip`. The archive bytes are not available in the current working surface, so the historical path/hash record is not a fresh parity proof.
 
-## P0-003 — Reproducible Engineering Baseline
-- **Goal:** Establish a runnable Vite/TypeScript app, strict compiler settings, pinned dependencies and committed lockfile, lint, unit tests, production build and CI.
-- **Outputs:** app shell, dependency manifest/lockfile, scripts, CI gates, smoke tests and reproducible instructions.
-- **Acceptance:** clean checkout can install via frozen lockfile and run typecheck, lint, tests and build; each result is observed on the same commit and recorded.
-- **Dependencies:** P0-002.
-- **Status:** Implemented on the recovery branch; latest revision CI must pass before acceptance.
+## P0-001 — Repository truth audit (PARTIAL; PARITY BLOCKED)
 
-## P1-001 — Vertical Slice Domain
-- **Goal:** Implement the first fully traceable management loop: intake → abstract botanical stages → QC hold/release → inventory → generic customer dispatch.
-- **Acceptance:** illegal transitions rejected; held/rejected batches cannot dispatch; stock movement and delivery are traceable; deterministic tests cover positive and negative paths.
-- **Dependencies:** P0-003.
-- **Status:** End-to-end domain flow and management controls implemented; CI/browser E2E and save/load remain open.
+The truth audit and branch separation are documented in `docs/audits/BASELINE.md`. Current remote heads and the recovery branch CI are recorded. Do not call this a 1:1 Master-Pack sync until every archive path and content hash has been compared against the actual archive.
+
+## P0-002 — Canonical scope/contract reconciliation (SOURCE-LEVEL COMPLETE; REVIEW OPEN)
+
+Contract conflicts are catalogued in `docs/audits/CONTRACT_RECONCILIATION.md`. Final review remains blocked on P0-001 exact archive parity.
+
+## P0-003 — Reproducible engineering baseline (VERIFIED)
+
+The exact revision above passed the full CI workflow: clean `npm ci`, lint, format, strict TypeScript, unit tests, production build, browser tests, preview smoke, Master-Pack document/JSON validation and `git diff --check`.
+
+## P1-001 — Botanical operations vertical slice (VERIFIED)
+
+Vitest covers successful intake-to-delivery domain flow, transition guards, QC hold/release, insufficient-stock rejection, stale-command rejection and idempotent revenue confirmation. Playwright drove the UI through 12 actions, asserted delivered order and shipment state plus one revenue ledger entry, then reloaded and verified the persisted delivered campaign.
+
+## P1-002 — Save/load, validation and recovery (CORE VERIFIED; SCHEMA MIGRATION SUBGATE OPEN)
+
+Verified capabilities: versioned v1 envelope validation, SHA-256 checksum vectors, legacy FNV-1a checksum compatibility, explicit rejection of unsupported schema versions, autosave/manual save, load/reload, export/import validation, corrupt-primary backup recovery, safe startup when no valid backup exists, and failed-write/retry coverage. A migration from a pre-v1 schema is not claimed: the current canonical contract specifies v1 and supplies no older schema to migrate.
+
+## P1-003 — Operational dashboard and queue UX (VERIFIED)
+
+The dashboard exposes process batches, room occupancy/capacity meters, machine status, and order/delivery state. Playwright checks the queue semantics and activates manual save with Enter from keyboard focus.
+
+## Next unblocked task — P1-004: Quality, audit and incident systems
+
+Close any remaining QA/audit gaps with evidence, focusing on traceable holds/releases, incident/corrective-action state transitions and negative-path tests. Do not downgrade acceptance requirements to make CI pass.
 
 ## Operating rule
+
 Do not mark a task complete without implementation evidence, relevant tests, reviewed diff and updated documentation. Continue to the next unblocked task after acceptance. Paid or irreversible external actions require existing explicit authorization.

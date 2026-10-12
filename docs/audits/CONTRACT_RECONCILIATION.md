@@ -2,7 +2,7 @@
 
 ## Authority
 
-The source of truth is the supplied Herbal Line Master Pack: `AGENTS.md`, `PROJECT_MANIFEST.json`, `docs/00_MASTER_PRODUCTION_DOCUMENT.md`, `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md`, `docs/05_TECH_ARCHITECTURE.md`, `docs/06_CANONICAL_CONTRACTS.md`, `contracts/*.ts`, and `schemas/*.schema.json`. The implementation branch uses the safe generic botanical-operations scope: fictional plants, abstract QC/inventory/compliance, and generic customer orders. No real-world production or controlled-substance distribution guidance is implemented.
+The intended authority is the supplied Herbal Line Master Pack: `AGENTS.md`, `PROJECT_MANIFEST.json`, `docs/00_MASTER_PRODUCTION_DOCUMENT.md`, `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md`, `docs/05_TECH_ARCHITECTURE.md`, `docs/06_CANONICAL_CONTRACTS.md`, `contracts/*.ts`, and `schemas/*.schema.json`. The implementation branch uses the safe generic botanical-operations scope: fictional plants, abstract QC/inventory/compliance, and generic customer orders. No real-world production or controlled-substance distribution guidance is implemented.
 
 ## Conflicts found and reconciled on this branch
 
@@ -14,18 +14,21 @@ The source of truth is the supplied Herbal Line Master Pack: `AGENTS.md`, `PROJE
 | Economy | `GameState.moneyCents` duplicated a balance derivable from `EconomyState.openingBalanceCents + ledger`; mutable daily/lifetime summary totals duplicated ledger-derived data. | Removed the parallel balance and summary fields. Finance selectors derive balance and totals from the ledger. |
 | Persistence | The save payload included transient UI state, contrary to the canonical distinction between game state and UI state. | Save payload type is `Omit<GameState, 'ui'>`; the v1 JSON schema no longer requires `ui` or `moneyCents`. |
 | Commands | One union mixed domain mutations, UI navigation/selection, and persistence requests. | Split into `DomainCommand`, `UICommand`, and `PersistenceCommand`, with `GameCommand` as the aggregate union. |
+| Save integrity | The save format previously used a weak non-cryptographic checksum only. | V1 writes canonical-JSON SHA-256; the reader retains explicit FNV-1a compatibility for existing v1 envelopes and rejects malformed checksum formats through the schema. |
 
 ## Validation evidence
 
-- The supplied archive validator ran locally and passed: 20 required paths checked, exit status 0.
-- All 6 JSON files in the archive parsed successfully, exit status 0.
-- ZIP integrity check passed with no archive errors.
-- GitHub Actions initially executed typecheck on the recovery branch and found two defects in the carried-over app foundation: branded money arithmetic inferred an overly narrow type, and a Three.js geometry spread failed strict TypeScript. Both were corrected in commits on this branch.
-- A subsequent CI run is required to establish whether typecheck, source lint, format check, tests, build, and master-pack validation pass together. No all-green claim is made yet.
+- The historical Master-Pack validator run is recorded in the original baseline. The current branch's CI validator also passed on `a9ff0d8cf481529baab73b62d1d1526402cfa169`.
+- Exact CI result: [Run #38210853633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38210853633) — success for locked install, source-policy lint, format, strict typecheck, unit tests, production build, browser E2E, served preview smoke, document/JSON validation, and whitespace.
+- Domain tests cover the fictional intake/stage → batch → QC → released inventory → order allocation → dispatch → delivery loop; reject stale commands, failed QC release and insufficient allocation; confirm revenue idempotency.
+- Browser E2E completed the 12-command workflow, verified a delivered order and delivery, one matching revenue ledger entry, SHA-256 checksum, and persistence after a full reload.
+- Persistence E2E covers corruption with a valid backup, corruption without a valid backup, export/import, invalid import, and manual save/load.
+- Dashboard E2E checks process queue, room capacity, machine status, order/delivery status and keyboard activation of manual save.
+- The Master-Pack document/JSON validator passed in CI. This is **not** proof of exact ZIP-to-branch content parity.
 
 ## Remaining blockers
 
-1. Exact byte-for-byte synchronization with the supplied archive is still not verified. The historical 42-path snapshot used as the recovery base has content differences in some files; this must be reconciled before calling the repository a 1:1 copy.
-2. Save/load storage, migration, and recovery are not implemented.
-3. The full intake → fictional production stages → QA → inventory → pharmacy order → dispatch loop is not implemented.
-4. CI must pass on the current head before P0-003 can be accepted.
+1. Exact byte-for-byte synchronization with the supplied archive is not verified; the archive bytes are not available in the current working surface. P0-001 and final P0-002 review remain open.
+2. Save schema v1 and recovery are verified. A schema migration from pre-v1 is not claimed: the current canonical contract specifies v1 but does not provide a pre-v1 envelope to migrate. Unsupported versions are explicitly rejected until an authoritative legacy schema exists.
+3. P1-004 corrective-action workflow and end-to-end acceptance remain open. The next implementation task is quality, audit and incident hardening.
+4. The later P2/P3/P4 backlogs remain open; the project is not a release candidate.
