@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EconomyState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
 import { calculateDailyOperatingCosts, createDailyOperatingLedgerEntries, getBalanceCents, getCashRunwayDays, getFinancialHealth, getLedgerTotals, projectCampaignBalance } from './finance';
-import { ENERGY_EFFICIENCY_UPGRADE_ID } from './upgrades';
+import { ENERGY_EFFICIENCY_UPGRADE_2_ID, ENERGY_EFFICIENCY_UPGRADE_ID } from './upgrades';
 import { createInitialGameState } from './initial-state';
 
 const id = (value: string) => value as EntityId;
@@ -88,6 +88,23 @@ describe('ledger-derived finance', () => {
       staffWagesCents: 64_000,
       utilitiesCents: 19_200,
       totalCents: 83_200,
+    });
+  });
+
+  it('applies both efficiency tiers in catalog order with deterministic cent rounding', () => {
+    const state = createInitialGameState();
+    const upgraded = {
+      ...state,
+      upgrades: state.upgrades.map((item) => {
+        if (item.id === ENERGY_EFFICIENCY_UPGRADE_ID) return { ...item, purchasedAt: minute(0) };
+        if (item.id === ENERGY_EFFICIENCY_UPGRADE_2_ID) return { ...item, unlocked: true, purchasedAt: minute(0) };
+        return item;
+      }),
+    };
+    expect(calculateDailyOperatingCosts(upgraded)).toEqual({
+      staffWagesCents: 64_000,
+      utilitiesCents: 17_280,
+      totalCents: 81_280,
     });
   });
 
