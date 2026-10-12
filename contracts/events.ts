@@ -13,6 +13,7 @@ export type DomainEvent =
   | (EventBase & { type: 'compliance.violation_recorded' | 'compliance.license_changed' | 'compliance.audit_completed'; code: string; status?: string })
   | (EventBase & { type: 'finance.ledger_posted'; ledgerEntryId: EntityId; amountCents: number; account: string })
   | (EventBase & { type: 'upgrade.purchased'; upgradeId: string; costCents: number })
+  | (EventBase & { type: 'economy.distress_support_granted'; ledgerEntryId: EntityId; amountCents: number; daysOfRunway: number })
   | (EventBase & { type: 'facility.staff_assigned' | 'facility.staff_unassigned'; staffId: EntityId; roomId: EntityId })
   | (EventBase & { type: 'facility.machine_moved'; machineId: EntityId; previousRoomId: EntityId; nextRoomId: EntityId })
   | (EventBase & { type: 'machine.maintenance_started' | 'machine.maintenance_completed'; machineId: EntityId; roomId: EntityId; condition: number })

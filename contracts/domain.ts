@@ -102,7 +102,7 @@ export interface ComplianceState {
   blockedOperationCodes: string[];
 }
 export interface LedgerEntry {
-  id: EntityId; simulationMinute: SimulationMinute; account: 'revenue' | 'expense' | 'penalty' | 'investment' | 'refund';
+  id: EntityId; simulationMinute: SimulationMinute; account: 'revenue' | 'expense' | 'penalty' | 'investment' | 'refund' | 'grant';
   amountCents: MoneyCents; referenceId: EntityId | null; reasonCode: string; idempotencyKey: string;
 }
 export interface EconomyState { openingBalanceCents: MoneyCents; ledger: LedgerEntry[]; }

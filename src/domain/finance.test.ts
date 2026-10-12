@@ -36,12 +36,13 @@ describe('ledger-derived finance', () => {
   });
 
   it('derives totals without mutable summary fields', () => {
-    expect(getLedgerTotals([entry('revenue', 100, 'r'), entry('expense', 30, 'e')])).toEqual({
+    expect(getLedgerTotals([entry('revenue', 100, 'r'), entry('expense', 30, 'e'), entry('grant', 40, 'g')])).toEqual({
       revenueCents: 100,
       expenseCents: 30,
       penaltiesCents: 0,
       investmentsCents: 0,
       refundsCents: 0,
+      grantsCents: 40,
     });
   });
 

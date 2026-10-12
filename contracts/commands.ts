@@ -30,6 +30,7 @@ export type DomainCommand =
   | (CommandBase & { type: 'MACHINE/COMPLETE_MAINTENANCE'; machineId: EntityId })
   | (CommandBase & { type: 'STAFF/ASSIGN'; assignmentId: EntityId; staffId: EntityId; taskCode: string; entityId: EntityId | null })
   | (CommandBase & { type: 'UPGRADE/PURCHASE'; upgradeId: string })
+  | (CommandBase & { type: 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT' })
   | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId })
 ;
 

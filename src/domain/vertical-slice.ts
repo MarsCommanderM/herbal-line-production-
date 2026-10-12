@@ -14,7 +14,7 @@ import type {
 } from '../../contracts/domain';
 import type { CommandBase, CommandFailureCode, DomainCommand, CommandResult } from '../../contracts/commands';
 import type { DomainEvent } from '../../contracts/events';
-import { createDailyOperatingLedgerEntries, getBalanceCents } from './finance';
+import { calculateDailyOperatingCosts, createDailyOperatingLedgerEntries, getBalanceCents } from './finance';
 import { getEconomyUpgradeDefinition } from './upgrades';
 import { validateGameStateInvariants } from './invariants';
 import { clampScore, roomSupportsStaffRole, validateFacilityInvariants } from './facility';
@@ -42,6 +42,7 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'MACHINE/COMPLETE_MAINTENANCE'
     | 'TIME/END_DAY'
     | 'UPGRADE/PURCHASE'
+    | 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT'
 }>;
 
 const entityId = (value: string): EntityId => value as EntityId;
@@ -157,6 +158,57 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
   if (command.actorId !== state.player.id) return failure(state, 'COMPLIANCE_BLOCKED', 'Nur der aktuelle Kampagnenleiter darf diese Aktion ausführen.');
 
   switch (command.type) {
+    case 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT': {
+      const idempotencyKey = 'distress-support:campaign-1';
+      if (state.economy.ledger.some((entry) => entry.idempotencyKey === idempotencyKey)) {
+        return failure(state, 'DUPLICATE_COMMAND', 'Die einmalige Krisenhilfe wurde bereits verwendet.');
+      }
+      const balance = Number(getBalanceCents(state.economy));
+      if (balance > 0) return failure(state, 'PRECONDITION_FAILED', 'Krisenhilfe ist erst bei ausgeschöpftem Spielbudget verfügbar.');
+      const dailyCosts = calculateDailyOperatingCosts(state).totalCents;
+      const amount = Math.max(2_500_000, -balance + dailyCosts * 7);
+      if (!Number.isSafeInteger(amount) || amount <= 0) {
+        return failure(state, 'PRECONDITION_FAILED', 'Der erforderliche Krisenhilfebetrag liegt außerhalb des zulässigen Zahlenbereichs.');
+      }
+      const ledgerEntry: LedgerEntry = {
+        id: entityId('ledger-distress-support-001'),
+        simulationMinute: state.time.totalMinutes,
+        account: 'grant',
+        amountCents: amount as LedgerEntry['amountCents'],
+        referenceId: state.player.id,
+        reasonCode: 'DISTRESS_SUPPORT_GRANT',
+        idempotencyKey,
+      };
+      const supportEvent: DomainEvent = {
+        ...eventBase(state, command, state.player.id, 1),
+        type: 'economy.distress_support_granted',
+        ledgerEntryId: ledgerEntry.id,
+        amountCents: amount,
+        daysOfRunway: 7,
+      };
+      const ledgerEvent: DomainEvent = {
+        ...eventBase(state, command, state.player.id, 2),
+        type: 'finance.ledger_posted',
+        ledgerEntryId: ledgerEntry.id,
+        amountCents: amount,
+        account: 'grant',
+      };
+      return commit(state, command, {
+        economy: { ...state.economy, ledger: [...state.economy.ledger, ledgerEntry] },
+        ui: {
+          ...state.ui,
+          notifications: [...state.ui.notifications, {
+            id: entityId('notification-distress-support-001'),
+            code: 'DISTRESS_SUPPORT_GRANTED',
+            level: 'success',
+            title: 'Krisenhilfe aktiviert',
+            message: 'Einmalige fiktive Unterstützung wurde gebucht. Der Betrag deckt den bestehenden Fehlbetrag und mindestens sieben Tage Betriebskosten.',
+            createdAt: state.time.totalMinutes,
+            read: false,
+          }],
+        },
+      }, [supportEvent, ledgerEvent], 'DISTRESS_SUPPORT_GRANTED', 'Krisenhilfe gebucht; die Kampagne erhält mindestens sieben Tage Betriebsspielraum.', [state.player.id, ledgerEntry.id]);
+    }
     case 'UPGRADE/PURCHASE': {
       const definition = getEconomyUpgradeDefinition(command.upgradeId);
       if (!definition) return failure(state, 'NOT_FOUND', 'Dieses Spielupgrade ist nicht verfügbar.');

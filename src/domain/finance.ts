@@ -7,6 +7,7 @@ export interface LedgerTotals {
   penaltiesCents: number;
   investmentsCents: number;
   refundsCents: number;
+  grantsCents: number;
   balanceCents: number;
 }
 
@@ -25,6 +26,7 @@ export function getBalanceCents(economy: EconomyState): MoneyCents {
     switch (entry.account) {
       case 'revenue':
       case 'refund':
+      case 'grant':
         balance += entry.amountCents;
         break;
       case 'expense':
@@ -52,6 +54,7 @@ export function getLedgerTotals(entries: readonly LedgerEntry[]): Omit<LedgerTot
     penaltiesCents: 0,
     investmentsCents: 0,
     refundsCents: 0,
+    grantsCents: 0,
   };
   for (const entry of entries) {
     assertNonNegativeSafeInteger(entry.amountCents, 'ledger.amountCents');
@@ -61,6 +64,7 @@ export function getLedgerTotals(entries: readonly LedgerEntry[]): Omit<LedgerTot
       case 'penalty': totals.penaltiesCents += entry.amountCents; break;
       case 'investment': totals.investmentsCents += entry.amountCents; break;
       case 'refund': totals.refundsCents += entry.amountCents; break;
+      case 'grant': totals.grantsCents += entry.amountCents; break;
       default: {
         const exhaustive: never = entry.account;
         throw new TypeError(`Unsupported ledger account: ${String(exhaustive)}`);
