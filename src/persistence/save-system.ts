@@ -318,7 +318,7 @@ export class IndexedDbSaveRepository implements SaveRepository {
     validateSlotId(slotId);
     const validation = validateAndMigrateSave(envelope);
     if (!validation.ok) throw new SaveSystemError('Ungültiger Spielstand: ' + validation.errorCode, validation.errorCode === 'CHECKSUM_MISMATCH' ? 'CHECKSUM_MISMATCH' : validation.errorCode === 'UNSUPPORTED_VERSION' ? 'UNSUPPORTED_VERSION' : 'INVALID_ENVELOPE');
-    const normalized = validation.envelope;
+    const normalized = { ...validation.envelope, checksum: checksumPayload(validation.envelope.payload) };
     const serialized = JSON.stringify(normalized);
     const metadata = toMetadata(slotId, normalized, new TextEncoder().encode(serialized).byteLength);
     try {
