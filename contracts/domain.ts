@@ -63,7 +63,7 @@ export interface TraceEntry {
 }
 export interface QualityAssessment {
   id: EntityId; batchId: EntityId; ruleSetVersion: string; performedAt: SimulationMinute;
-  score: Score0To100; findings: string[]; decision: 'pass' | 'fail' | 'review';
+  score: Score0To100; passed?: boolean; findings: string[]; decision: 'pass' | 'fail' | 'review';
   assessorId: EntityId; traceComplete: boolean;
 }
 export interface BatchState {
@@ -75,7 +75,7 @@ export interface BatchState {
 }
 export interface InventoryLotState {
   id: EntityId; batchId: EntityId; itemDefinitionId: string; quantityAvailable: number;
-  quantityReserved: number; qualityScore: Score0To100; status: 'held' | 'released' | 'depleted' | 'expired' | 'rejected';
+  quantityReserved: number; qualityScore: Score0To100; status: 'held' | 'released' | 'reserved' | 'depleted' | 'expired' | 'rejected';
   createdAt: SimulationMinute; expiresAt: SimulationMinute | null; storageRoomId: EntityId;
 }
 export interface OrderState {
@@ -122,7 +122,11 @@ export interface LedgerEntry {
   id: EntityId; simulationMinute: SimulationMinute; account: 'revenue' | 'expense' | 'penalty' | 'investment' | 'refund' | 'grant';
   amountCents: MoneyCents; referenceId: EntityId | null; reasonCode: string; idempotencyKey: string;
 }
-export interface EconomyState { openingBalanceCents: MoneyCents; ledger: LedgerEntry[]; }
+export interface EconomyState {
+  openingBalanceCents: MoneyCents; ledger: LedgerEntry[];
+  revenueTodayCents?: MoneyCents; expensesTodayCents?: MoneyCents;
+  lifetimeRevenueCents?: MoneyCents; lifetimeExpensesCents?: MoneyCents;
+}
 export interface UpgradeState { id: string; unlocked: boolean; purchasedAt: SimulationMinute | null; }
 export interface NotificationState {
   id: EntityId; code: string; level: 'info' | 'success' | 'warning' | 'danger';
