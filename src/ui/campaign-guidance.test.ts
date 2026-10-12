@@ -26,13 +26,17 @@ describe('campaign guidance', () => {
 
   it('does not imply release is possible when the latest quality decision failed', () => {
     const state = createInitialGameState();
+    const source = state.sourceLots[0];
+    const plant = state.plants[0];
+    const qualityStaff = state.staff.find((staff) => staff.role === 'quality');
+    if (!source || !plant || !qualityStaff) throw new Error('Initial campaign fixtures are incomplete.');
     const batchId = entityId('batch-guidance-test');
     const assessmentId = entityId('assessment-guidance-test');
     state.batches.push({
       id: batchId,
       profileId: 'fictional-test',
-      sourceLotIds: [state.sourceLots[0].id],
-      plantIds: [state.plants[0].id],
+      sourceLotIds: [source.id],
+      plantIds: [plant.id],
       quantity: 1,
       qualityScore: 55 as GameState['batches'][number]['qualityScore'],
       status: 'awaiting_qc',
@@ -52,7 +56,7 @@ describe('campaign guidance', () => {
       score: 55 as QualityAssessment['score'],
       findings: ['FICTIONAL_SCORE_BELOW_RELEASE_THRESHOLD'],
       decision: 'fail',
-      assessorId: state.staff.find((staff) => staff.role === 'quality')?.id ?? entityId('staff-missing'),
+      assessorId: qualityStaff.id,
       traceComplete: true,
     };
     state.qualityAssessments.push(assessment);
@@ -66,7 +70,9 @@ describe('campaign guidance', () => {
 
   it('reports successful campaign completion after delivery', () => {
     const state = createInitialGameState();
-    state.orders[0].status = 'delivered';
+    const order = state.orders[0];
+    if (!order) throw new Error('Initial campaign order is missing.');
+    order.status = 'delivered';
 
     const guidance = getCampaignGuidance(state);
     expect(guidance.title).toBe('Kampagnenziel erreicht');
