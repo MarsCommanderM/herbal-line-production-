@@ -180,7 +180,7 @@ async function exportCampaign(): Promise<void> {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'herbal-line-campaign-01.json';
+    anchor.download = 'dr-green-dump-dopefarm-campaign-01.json';
     document.body.append(anchor);
     anchor.click();
     anchor.remove();
@@ -231,31 +231,56 @@ function showFatalError(error: unknown): void {
 }
 
 
-function createBotanicalPlant(x: number, z: number, variant: number): THREE.Group {
+function createCannabisPlant(x: number, z: number, variant: number): THREE.Group {
   const plant = new THREE.Group();
-  const stemMaterial = new THREE.MeshStandardMaterial({ color: '#527c63', roughness: 0.82 });
+  const stemMaterial = new THREE.MeshStandardMaterial({ color: '#527c55', roughness: 0.86 });
   const leafMaterial = new THREE.MeshStandardMaterial({
-    color: variant % 2 === 0 ? '#4f9470' : '#6ca77b',
-    roughness: 0.78,
+    color: variant % 2 === 0 ? '#286b3b' : '#3d824b',
+    roughness: 0.76,
     side: THREE.DoubleSide,
   });
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.075, 1.45, 8), stemMaterial);
-  stem.position.y = 0.78;
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.055, 1.55, 8), stemMaterial);
+  stem.position.y = 0.8;
   stem.castShadow = true;
   plant.add(stem);
-  for (let level = 0; level < 4; level += 1) {
+
+  // Distinct palmate, serrated-looking leaflets make the plant read as cannabis,
+  // rather than a generic round-leaf botanical placeholder.
+  const leafletGeometry = new THREE.ConeGeometry(0.105, 0.58, 7, 1);
+  leafletGeometry.translate(0, 0.29, 0);
+  for (let level = 0; level < 5; level += 1) {
+    const y = 0.34 + level * 0.235;
     for (const side of [-1, 1]) {
-      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), leafMaterial);
-      leaf.scale.set(0.72, 0.22, 0.42);
-      leaf.position.set(side * (0.16 + level * 0.035), 0.38 + level * 0.28, 0);
-      leaf.rotation.z = side * 0.38;
-      leaf.rotation.y = (variant % 3) * 0.22;
-      leaf.castShadow = true;
-      plant.add(leaf);
+      const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.014, 0.34, 5), stemMaterial);
+      branch.position.set(side * (0.11 + level * 0.018), y, 0);
+      branch.rotation.z = side * 0.82;
+      plant.add(branch);
+      const fan = new THREE.Group();
+      fan.position.set(side * (0.2 + level * 0.018), y + 0.07, 0);
+      fan.rotation.y = (variant % 4) * 0.24 + level * 0.31;
+      const leafletCount = 5 + (level % 3);
+      for (let index = 0; index < leafletCount; index += 1) {
+        const angle = (index / (leafletCount - 1) - 0.5) * 1.9;
+        const leaflet = new THREE.Mesh(leafletGeometry, leafMaterial);
+        leaflet.position.set(Math.sin(angle) * 0.23, Math.cos(angle) * 0.08, Math.cos(angle) * 0.045);
+        leaflet.rotation.z = -angle * 0.9;
+        leaflet.rotation.x = -0.2 - Math.abs(angle) * 0.22;
+        leaflet.scale.set(0.62 + (1 - Math.abs(angle)) * 0.3, 0.68 + (1 - Math.abs(angle)) * 0.2, 0.6);
+        leaflet.castShadow = true;
+        fan.add(leaflet);
+      }
+      plant.add(fan);
     }
   }
-  const crown = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), leafMaterial);
-  crown.position.y = 1.55;
+  const crown = new THREE.Group();
+  for (let index = 0; index < 7; index += 1) {
+    const leaflet = new THREE.Mesh(leafletGeometry, leafMaterial);
+    leaflet.position.set(Math.sin(index * Math.PI * 2 / 7) * 0.08, 1.53, Math.cos(index * Math.PI * 2 / 7) * 0.08);
+    leaflet.rotation.z = -Math.sin(index * Math.PI * 2 / 7) * 0.55;
+    leaflet.rotation.x = -0.28;
+    leaflet.scale.set(0.72, 0.66, 0.65);
+    crown.add(leaflet);
+  }
   plant.add(crown);
   plant.position.set(x, 0, z);
   return plant;
@@ -300,7 +325,7 @@ async function boot(): Promise<() => void> {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.domElement.setAttribute('aria-label', '3D botanical operations facility');
+  renderer.domElement.setAttribute('aria-label', '3D medical cannabis production facility');
   worldRoot.appendChild(renderer.domElement);
 
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -355,9 +380,9 @@ async function boot(): Promise<() => void> {
       station.receiveShadow = true;
       scene.add(station);
 
-      // Fictional generic botanical silhouettes. They are decorative game assets, not real-world plant guidance.
+      // Distinct cannabis silhouettes are fictional game assets; all cultivation and process values are abstract game balance only.
       for (let pod = 0; pod < 3; pod += 1) {
-        const plant = createBotanicalPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
+        const plant = createCannabisPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
         plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
         station.add(plant);
       }
@@ -380,11 +405,11 @@ async function boot(): Promise<() => void> {
 
   const panel = new Graphics();
   const title = new Text({
-    text: 'HERBAL LINE',
+    text: 'DR. GREEN DUMP / DOPEFARM',
     style: { fontFamily: 'Arial, sans-serif', fontSize: 20, fontWeight: 'bold', fill: '#f0f5ff', letterSpacing: 2 },
   });
   const subtitle = new Text({
-    text: 'BOTANICAL OPERATIONS  /  FACILITY VIEW',
+    text: 'MEDICAL CANNABIS OPERATIONS  /  FACILITY VIEW',
     style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#8fa8c6', letterSpacing: 1.4 },
   });
   const stateLine = new Text({
