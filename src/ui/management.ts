@@ -1,5 +1,6 @@
 import type { EntityId, GameState } from '../../contracts/domain';
 import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
+import { getCampaignGuidance } from './campaign-guidance';
 
 type Action = {
   label: string;
@@ -74,7 +75,8 @@ export function renderManagementUI(
   const metricsRoot = document.querySelector<HTMLDivElement>('#game-metrics');
   const actionsRoot = document.querySelector<HTMLDivElement>('#game-actions');
   const logRoot = document.querySelector<HTMLDivElement>('#game-log');
-  if (!metricsRoot || !actionsRoot || !logRoot) return;
+  const guidanceRoot = document.querySelector<HTMLDivElement>('#campaign-guidance');
+  if (!metricsRoot || !actionsRoot || !logRoot || !guidanceRoot) return;
 
   const plant = state.plants[0];
   const batch = state.batches[state.batches.length - 1];
@@ -89,6 +91,25 @@ export function renderManagementUI(
     metric('Batchstatus', batch ? batch.status.replaceAll('_', ' ') : 'Kein Batch'),
     metric('Abnehmernauftrag', order ? order.status.replaceAll('_', ' ') : 'Kein Auftrag'),
   );
+
+  const guidance = getCampaignGuidance(state);
+  guidanceRoot.replaceChildren();
+  guidanceRoot.dataset.tone = guidance.tone;
+  const guidanceCard = document.createElement('article');
+  guidanceCard.className = 'guidance-card';
+  const guidanceTitle = document.createElement('h3');
+  guidanceTitle.textContent = guidance.title;
+  const guidanceDetail = document.createElement('p');
+  guidanceDetail.textContent = guidance.detail;
+  const guidanceNext = document.createElement('p');
+  guidanceNext.className = 'guidance-next';
+  const nextLabel = document.createElement('span');
+  nextLabel.textContent = 'Empfohlener nächster Schritt';
+  const nextValue = document.createElement('strong');
+  nextValue.textContent = guidance.nextStep;
+  guidanceNext.append(nextLabel, nextValue);
+  guidanceCard.append(guidanceTitle, guidanceDetail, guidanceNext);
+  guidanceRoot.append(guidanceCard);
 
   actionsRoot.replaceChildren();
   const actions = availableActions(state);

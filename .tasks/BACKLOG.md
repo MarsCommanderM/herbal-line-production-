@@ -7,7 +7,7 @@
 | P0-003 | P0 | Reproducible TypeScript/CI baseline | P0-002 | Same-revision install, lint, format, typecheck, unit tests, build, browser E2E, preview smoke, pack validation and diff check | VERIFIED on `bce2a0bd0edda036032be03e8dfea3033057ea52`; run 38182289439 green |
 | P1-001 | P1 | Botanical operations vertical slice | P0-003 | Domain transition tests plus real Chromium interaction and WebGL canvas | Functional baseline implemented; negative-path and accessibility acceptance continue |
 | P1-002 | P1 | Save/load, validation and recovery | P0-003 | SHA-256 envelope, IndexedDB tests, reload round-trip, corrupt-primary fallback, import/export E2E | Functional baseline implemented; migration-chain, quota/interrupted-write and cross-browser hardening open |
-| P1-003 | P1 | Operational dashboard and queue UX | P1-001 | Keyboard-accessible core flow with explicit errors, empty states and blocked-action reasons | NEXT |
+| P1-003 | P1 | Operational dashboard and queue UX | P1-001 | State-derived guidance, blocked-action reasons, keyboard and viewport acceptance | Contextual live guidance implemented and CI-verified; full accessibility/responsive audit remains open |
 | P1-004 | P1 | Quality, audit and incident systems | P1-001 | Hold/release gates, audit trail, rejected-batch terminal path and corrective-action tests | Partial; expand integration and E2E evidence |
 | P2-001 | P2 | Facility, capacity, staffing and maintenance | P1-001 | Capacity/assignment invariants and scenario tests | Pending |
 | P2-002 | P2 | Economy and progression | P2-001 | Ledger invariants and multi-stage balancing simulation | Partial finance selector; balancing pending |

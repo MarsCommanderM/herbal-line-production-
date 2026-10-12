@@ -77,3 +77,21 @@ body { min-width: 320px; min-height: 480px; }
 #save-status[data-level="success"] { color: #9ce0bd; }
 #save-status[data-level="error"] { color: #ffb8bf; }
 #save-status[data-level="info"] { color: #9fb1c8; }
+
+#campaign-guidance { min-width: 0; }
+.guidance-card { padding: 12px; border: 1px solid #38516a; border-radius: 10px; background: linear-gradient(145deg, rgba(23, 40, 59, 0.95), rgba(13, 25, 40, 0.95)); }
+#campaign-guidance[data-tone="success"] .guidance-card { border-color: #3d7965; }
+#campaign-guidance[data-tone="warning"] .guidance-card { border-color: #98733f; }
+#campaign-guidance[data-tone="danger"] .guidance-card { border-color: #94505a; }
+.guidance-card h3 { margin: 0 0 7px; color: #f0f5fc; font-size: 13px; line-height: 1.35; }
+.guidance-card > p { margin: 0; color: #bac9d9; font-size: 11px; line-height: 1.5; }
+.guidance-card .guidance-next { display: grid; gap: 4px; margin-top: 10px; padding-top: 9px; border-top: 1px solid rgba(117, 145, 171, 0.25); }
+.guidance-next span { color: #8fa6bd; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.guidance-next strong { color: #a8e0c7; font-size: 11px; line-height: 1.4; }
+@media (prefers-reduced-motion: no-preference) {
+  .guidance-card { animation: guidance-enter 160ms ease-out; }
+  @keyframes guidance-enter { from { opacity: 0.75; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guidance-card { animation: none; }
+}

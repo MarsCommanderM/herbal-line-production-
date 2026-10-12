@@ -5,12 +5,15 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
   await expect(page.locator('#world-root canvas')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Kampagnenstatus' })).toBeVisible();
+  await expect(page.locator('#campaign-guidance')).toContainText('Produktionseinheit aktiv');
 
   await page.getByRole('button', { name: 'Spielstand speichern' }).click();
   await expect(page.locator('#game-feedback')).toContainText('Spielstand gespeichert');
 
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
+  await expect(page.locator('#campaign-guidance')).toContainText('Nächster Prozessschritt bereit');
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
 
   await page.getByRole('button', { name: 'Spielstand laden' }).click();

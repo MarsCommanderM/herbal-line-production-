@@ -60,3 +60,6 @@ The latest verified revision is `bce2a0bd0edda036032be03e8dfea3033057ea52`. [Git
 Persistence currently supports manual save/load, autosave after successful actions, last-known-good backup recovery, JSON export/import, and SHA-256 validation. Schema migration beyond v1, quota/interrupted-write recovery, cross-browser testing, accessibility review, final asset/license review and release acceptance remain open.
 
 The supplied master pack is **not yet proven byte-for-byte identical** to the GitHub implementation tree. The 42-file archive is identified by SHA-256 `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`. Exact per-path parity remains a P0 task; see [the baseline audit](docs/audits/BASELINE.md), [contract reconciliation](docs/audits/CONTRACT_RECONCILIATION.md), and [implementation status](docs/audits/IMPLEMENTATION_STATUS.md).
+
+
+The management panel provides state-derived campaign guidance, including quality/compliance holds and a recommended next step. This is UI guidance only; domain transition guards remain authoritative.

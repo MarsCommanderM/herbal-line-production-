@@ -1,3 +1,8 @@
+## Unreleased
+
+- Added an accessible, state-derived campaign guidance panel with next-step recommendations and explanations for quality, compliance, and availability blockers.
+- Added unit and Chromium E2E coverage for campaign guidance and progression.
+
 # Changelog
 
 ## [1.0.0] — 2026-10-11
