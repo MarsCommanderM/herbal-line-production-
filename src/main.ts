@@ -116,37 +116,47 @@ async function autosaveCampaign(): Promise<void> {
   persistenceBusy = true;
   setPersistenceControlsDisabled(true);
   const revision = gameState.revision;
+  let status: { level: 'success' | 'error'; message: string } | null = null;
   try {
     const envelope = await createSaveEnvelope(gameState);
     await writePrimarySave(envelope);
-    if (gameState.revision === revision) setSaveStatus('success', 'Autosave gespeichert · Revision ' + revision + '.');
+    if (gameState.revision === revision) status = { level: 'success', message: 'Autosave gespeichert · Revision ' + revision + '.' };
   } catch (error) {
-    if (gameState.revision === revision) setSaveStatus('error', 'Autosave fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
+    if (gameState.revision === revision) {
+      status = { level: 'error', message: 'Autosave fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)) };
+    }
   } finally {
     persistenceBusy = false;
     setPersistenceControlsDisabled(false);
   }
+  // Completion feedback is emitted only after the controls are usable again.
+  if (status) setSaveStatus(status.level, status.message);
 }
 
 async function saveCampaign(): Promise<void> {
   if (persistenceBusy) return;
   persistenceBusy = true;
   setPersistenceControlsDisabled(true);
+  let feedback: { level: 'success' | 'error'; message: string } | null = null;
+  let status: { level: 'success' | 'error'; message: string } | null = null;
   try {
     const envelope = await createSaveEnvelope(gameState);
     const metadata = await writePrimarySave(envelope).then(async () => saveRepository.load('campaign-01')).then((saved) => {
       if (!saved) throw new Error('Gespeicherter Datensatz ist nach dem Schreiben nicht lesbar.');
       return { revision: saved.revision, byteLength: JSON.stringify(saved).length };
     });
-    setFeedback('success', 'Spielstand gespeichert · Revision ' + metadata.revision + ' · ' + metadata.byteLength + ' Byte.');
-    setSaveStatus('success', 'Manueller Spielstand gespeichert · Revision ' + metadata.revision + '.');
+    feedback = { level: 'success', message: 'Spielstand gespeichert · Revision ' + metadata.revision + ' · ' + metadata.byteLength + ' Byte.' };
+    status = { level: 'success', message: 'Manueller Spielstand gespeichert · Revision ' + metadata.revision + '.' };
   } catch (error) {
-    setFeedback('error', 'Speichern fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
-    setSaveStatus('error', 'Speichern fehlgeschlagen.');
+    feedback = { level: 'error', message: 'Speichern fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)) };
+    status = { level: 'error', message: 'Speichern fehlgeschlagen.' };
   } finally {
     persistenceBusy = false;
     setPersistenceControlsDisabled(false);
   }
+  // Completion feedback is emitted only after the controls are usable again.
+  if (feedback) setFeedback(feedback.level, feedback.message);
+  if (status) setSaveStatus(status.level, status.message);
 }
 
 async function applyLoadedSave(): Promise<void> {

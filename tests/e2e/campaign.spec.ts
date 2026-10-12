@@ -87,8 +87,9 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   await expect(page.locator('#campaign-guidance')).toContainText('Nächster Prozessschritt bereit');
   await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 2 von 6');
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
-
-  await page.getByRole('button', { name: 'Spielstand laden' }).click();
+  const loadButton = page.getByRole('button', { name: 'Spielstand laden' });
+  await expect(loadButton).toBeEnabled();
+  await loadButton.click();
   await expect(page.locator('#game-feedback')).toContainText('Spielstand geladen');
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
 });
