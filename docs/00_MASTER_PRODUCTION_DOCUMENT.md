@@ -1,12 +1,12 @@
-# Herbal Line — Master Production Document
+# Dr. Green Dump / DopeFarm — Master Production Document
 
 **Version:** 1.0.0 | **Stand:** 11.10.2026 | **Verantwortungsmetadaten:** Michael Braunschweig
 
 ## 1. Produktauftrag
 
-Herbal Line ist ein hochwertiges Web-Managementspiel über den Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler plant einen fiktiven Betrieb, koordiniert Räume und Personal, verwaltet abstrahierte Pflanzen- und Chargenzustände, steuert Qualitätsprüfungen, sichert Rückverfolgbarkeit, verwaltet Lagerbestände und erfüllt fiktive Apothekenaufträge zuverlässig.
+Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert Anbau und ausführliche, direkt an den erkennbaren Cannabis-Pflanzen ausgeführte Pflege, simulierte Verarbeitung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lager, Logistik und Auslieferung an Apotheken. Apothekeninterne Abläufe gehören nicht zum Spielumfang.
 
-Das Spiel ist eine Simulation, keine Anbau-, Arzneimittelherstellungs- oder Vertriebsanleitung. Alle Pflanzenzustände und Prozessparameter sind abstrahierte fiktive Spielwerte. Das Spiel enthält keine realen Kultivierungsrezepte, Klimasetpoints, Nährstoffpläne, Ernte-/Aushärtungsprotokolle, Extraktionsmethoden, Herstellungsbedingungen oder realen Liefer-/Vertriebsverfahren.
+Die Welt zeigt eindeutig erkennbare Cannabis-Pflanzen in einer professionellen Indoor-Produktionsanlage mit Beleuchtung, Bewässerung, Klima-/Lüftungstechnik und sichtbaren Pflegeinteraktionen. Der Spieler kann Pflanzen im Spiel visuell kontrollieren und Pflegeaktionen auslösen, beispielsweise Bewässerung, Licht-/Klimaeinstellungen, Nährstoffversorgung, Beschneiden und Stecklingspflege. Diese Aktionen sind ausschließlich abstrahierte, erfundene Spielmechaniken; alle Zahlen, Grenzwerte und Effekte sind fiktive Balancewerte. Das Spiel enthält keine realen Kultivierungsrezepte, exakten Klimasollwerte, Nährstoffpläne, Ernte-/Aushärtungsprotokolle, Extraktionsmethoden, Herstellungsbedingungen oder realen Liefer-/Vertriebsverfahren.
 
 ## 2. Spielversprechen
 
@@ -74,7 +74,7 @@ Diese Labels dürfen nur nach Erfüllung ihrer Gates verwendet werden.
 
 ## 8. Feststehende Entscheidungen
 
-- Spielname: Herbal Line; Plattform: Browser/Web.
+- Spielname: Dr. Green Dump / DopeFarm; Plattform: Browser/Web.
 - Stack: Vite, TypeScript, Three.js, PixiJS, Rapier 3D, IndexedDB.
 - Projektverantwortungs-Metadaten und gewünschte Copyright-Zeile: Michael Braunschweig / Copyright © 2026.
 - Welt: medizinische Cannabis-Pflanzenproduktion; Pflanzen- und Prozessmechaniken bleiben abstrahiert/fiktiv.
@@ -84,4 +84,4 @@ Diese Labels dürfen nur nach Erfüllung ihrer Gates verwendet werden.
 
 ## 9. Beweispflichtige Punkte — keine Rückfrage
 
-Der Agent stellt durch Audit und Prüfung fest: tatsächliche Repository-Wahrheit, Zielbrowser, Abhängigkeitsversionen, konkrete Asset-Rechte, Markenstatus von Herbal Line, Deploymentziel, Hardware-Baseline und Testergebnisse. Ungeklärte Rechte-/Markenfragen blockieren öffentliche kommerzielle Veröffentlichung, nicht die lokale Umsetzung abstrakter Spielsysteme.
+Der Agent stellt durch Audit und Prüfung fest: tatsächliche Repository-Wahrheit, Zielbrowser, Abhängigkeitsversionen, konkrete Asset-Rechte, Markenstatus von Dr. Green Dump / DopeFarm, Deploymentziel, Hardware-Baseline und Testergebnisse. Ungeklärte Rechte-/Markenfragen blockieren öffentliche kommerzielle Veröffentlichung, nicht die lokale Umsetzung abstrakter Spielsysteme.
