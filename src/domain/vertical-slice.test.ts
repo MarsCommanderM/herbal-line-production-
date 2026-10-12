@@ -192,4 +192,77 @@ describe('botanical operations vertical slice', () => {
     expect(result.state.inventoryLots[0]?.quantityReserved).toBe(0);
     expect(result.state.orders[0]?.status).toBe('accepted');
   });
+  it('reassigns staff atomically and rejects incompatible room roles', () => {
+    const initial = createInitialGameState();
+    const moved = applyOk(initial, 'FACILITY/ASSIGN_STAFF', {
+      staffId: entity('staff-operations-001'),
+      roomId: entity('room-storage-01'),
+    });
+    expect(moved.staff.find((staff) => staff.id === entity('staff-operations-001'))?.assignedRoomId).toBe(entity('room-storage-01'));
+    expect(moved.rooms.find((room) => room.id === entity('room-production-01'))?.assignedStaffIds).not.toContain(entity('staff-operations-001'));
+    expect(moved.rooms.find((room) => room.id === entity('room-storage-01'))?.assignedStaffIds).toContain(entity('staff-operations-001'));
+
+    const invalid = dispatch(moved, 'FACILITY/ASSIGN_STAFF', {
+      staffId: entity('staff-quality-001'),
+      roomId: entity('room-production-01'),
+    });
+    expect(invalid.ok).toBe(false);
+    if (invalid.ok) throw new Error('Quality staff must not be assigned to a production room.');
+    expect(invalid.error.code).toBe('PRECONDITION_FAILED');
+    expect(invalid.state).toEqual(moved);
+  });
+
+  it('requires a maintenance specialist and returns a maintained machine to idle', () => {
+    const initial = createInitialGameState();
+    const started = applyOk(initial, 'MACHINE/START_MAINTENANCE', { machineId: entity('machine-processing-001') });
+    expect(started.machines[0]?.status).toBe('maintenance');
+    expect(started.machines[0]?.activeJobId).toBeNull();
+
+    const completed = applyOk(started, 'MACHINE/COMPLETE_MAINTENANCE', { machineId: entity('machine-processing-001') });
+    expect(completed.machines[0]?.status).toBe('idle');
+    expect(completed.machines[0]?.condition).toBe(100);
+    expect(completed.logs.at(-1)?.code).toBe('MACHINE_MAINTENANCE_COMPLETED');
+  });
+
+  it('blocks maintenance during an active job and blocks machine moves while busy', () => {
+    let state = createInitialGameState();
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', { batchId: entity('batch-active'), plantIds: [entity('plant-001')], profileId: 'fictional-profile' });
+    state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-active'), roomId: entity('room-processing-01') });
+    state = applyOk(state, 'BATCH/START_PROCESSING', { batchId: entity('batch-active'), machineId: entity('machine-processing-001') });
+
+    for (const [type, payload] of [
+      ['MACHINE/START_MAINTENANCE', { machineId: entity('machine-processing-001') }],
+      ['FACILITY/MOVE_MACHINE', { machineId: entity('machine-processing-001'), roomId: entity('room-production-01') }],
+    ] as const) {
+      const result = dispatch(state, type, payload);
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error('Busy machines cannot be maintained or moved.');
+      expect(result.error.code).toBe('PRECONDITION_FAILED');
+      expect(result.state).toEqual(state);
+    }
+  });
+
+  it('refuses to commit any command that would preserve an invalid facility state', () => {
+    const initial = createInitialGameState();
+    const invalid = {
+      ...initial,
+      rooms: initial.rooms.map((room) => room.id === entity('room-production-01')
+        ? { ...room, occupied: room.capacity + 1 }
+        : room),
+    };
+    const result = dispatch(invalid, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Invalid facility state must not be committed.');
+    expect(result.error.code).toBe('PRECONDITION_FAILED');
+    expect(result.state).toEqual(invalid);
+  });
+
+  it('keeps facility invariants valid after the full campaign batch transition sequence', () => {
+    const state = progressToReleasedInventory();
+    expect(state.rooms.every((room) => Number.isSafeInteger(room.occupied) && room.occupied >= 0 && room.occupied <= room.capacity)).toBe(true);
+    expect(state.machines.every((machine) => machine.status !== 'active' || machine.activeJobId !== null)).toBe(true);
+  });
+
 });
