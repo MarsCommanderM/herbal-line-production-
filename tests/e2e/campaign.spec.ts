@@ -24,6 +24,21 @@ function applyOk(
   return result.state;
 }
 
+test('third-person avatar moves with keyboard and camera target follows', async ({ page }) => {
+  await page.goto('/');
+  const worldCanvas = page.locator('#world-root canvas');
+  await expect(worldCanvas).toBeVisible();
+  await expect(worldCanvas).toHaveAttribute('data-third-person', 'true');
+  const initialZ = Number(await worldCanvas.getAttribute('data-player-z'));
+  await page.keyboard.down('w');
+  await expect.poll(async () => Number(await worldCanvas.getAttribute('data-player-z'))).not.toBe(initialZ);
+  await page.keyboard.up('w');
+  await expect(worldCanvas).toHaveAttribute('data-camera-target-z', /.+/);
+  const playerZ = await worldCanvas.getAttribute('data-player-z');
+  const cameraTargetZ = await worldCanvas.getAttribute('data-camera-target-z');
+  expect(cameraTargetZ).toBe(playerZ);
+});
+
 test('campaign controls run a step and restore a saved state', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();

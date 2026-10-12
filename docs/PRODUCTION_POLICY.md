@@ -18,6 +18,8 @@ Diese Beschreibung ist als Produktwahrheit für README, Manifest, Startscreen, G
 
 Die 3D-Welt muss die medizinische Cannabis-Pflanzenproduktion klar erkennbar darstellen: sichtbare Cannabis-Pflanzen in einer professionellen Indoor-Anlage, Pflanzenreihen, Beleuchtung, Bewässerungsinfrastruktur, Klima-/Lüftungstechnik und funktionale Arbeitsbereiche. Ein neutraler Raum mit nicht identifizierbaren Pflanzen erfüllt die Produktanforderung nicht.
 
+Die Spielperspektive ist verbindlich **Third Person**: Eine sichtbare, steuerbare Spielfigur befindet sich in der 3D-Anlage; die Kamera folgt ihr aus einer einstellbaren Perspektive hinter/über der Figur. WASD und Pfeiltasten steuern die Bewegung. Die Spielfigur darf nicht durch ein reines Orbit-/Freiflug-Kameramodell ersetzt werden. Bewegung muss an Anlagenbegrenzungen und kollidierbaren Einrichtungsobjekten enden; Pflanzeninteraktionen müssen aus der 3D-Ansicht und innerhalb einer definierten Spielreichweite erfolgen. Prozedurale Platzhalter-Figuren sind ein technischer Übergang, kein Nachweis für finale Charakterkunst oder Animation.
+
 Pflanzen sind interaktive Spielobjekte, nicht nur Dekoration. Die aktuelle Auswahl muss zwischen 3D-Welt und Managementoberfläche konsistent bleiben. Eine erfolgreiche Pflegeaktion muss den Zustand der ausgewählten Pflanze verändern und eine sichtbare Reaktion am passenden Objekt zeigen. Ein Textlog oder Toast allein ersetzt die visuelle Reaktion nicht.
 
 ## 3. Direkte Pflanzenpflege — verbindlicher Gameplayumfang

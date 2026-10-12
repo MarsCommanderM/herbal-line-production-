@@ -366,9 +366,87 @@ async function boot(): Promise<() => void> {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.target.set(0, 0, 0);
-  controls.minDistance = 8;
-  controls.maxDistance = 38;
+  controls.minDistance = 3.5;
+  controls.maxDistance = 13;
   controls.maxPolarAngle = Math.PI * 0.47;
+  controls.enablePan = false;
+
+  // A visible, controllable third-person avatar. Geometry is intentionally a temporary
+  // procedural placeholder; production character art and animation remain a separate asset task.
+  const avatar = new THREE.Group();
+  avatar.name = 'third-person-player';
+  avatar.position.set(0, 0, 6);
+  avatar.userData.isPlayerAvatar = true;
+  const avatarClothing = new THREE.MeshStandardMaterial({ color: '#2e8b78', roughness: 0.78 });
+  const avatarTrim = new THREE.MeshStandardMaterial({ color: '#c4d6df', roughness: 0.62 });
+  const avatarSkin = new THREE.MeshStandardMaterial({ color: '#c99573', roughness: 0.86 });
+  const avatarHair = new THREE.MeshStandardMaterial({ color: '#302b2a', roughness: 0.92 });
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.58, 4, 8), avatarClothing);
+  torso.position.y = 1.13;
+  torso.castShadow = true;
+  avatar.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), avatarSkin);
+  head.position.y = 1.82;
+  head.castShadow = true;
+  avatar.add(head);
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.195, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), avatarHair);
+  hair.position.y = 1.91;
+  hair.castShadow = true;
+  avatar.add(hair);
+  const leftLeg = new THREE.Group();
+  const rightLeg = new THREE.Group();
+  for (const [leg, x] of [[leftLeg, -0.13], [rightLeg, 0.13]] as const) {
+    const limb = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.48, 3, 6), avatarTrim);
+    limb.position.set(x, 0.48, 0);
+    limb.castShadow = true;
+    leg.add(limb);
+    avatar.add(leg);
+  }
+  const leftArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.075, 0.48, 3, 6), avatarClothing);
+  leftArm.position.set(-0.34, 1.2, 0);
+  leftArm.rotation.z = -0.12;
+  leftArm.castShadow = true;
+  avatar.add(leftArm);
+  const rightArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.075, 0.48, 3, 6), avatarClothing);
+  rightArm.position.set(0.34, 1.2, 0);
+  rightArm.rotation.z = 0.12;
+  rightArm.castShadow = true;
+  avatar.add(rightArm);
+  scene.add(avatar);
+
+  const movementKeys = new Set<string>();
+  const movementObstacles: THREE.Mesh[] = [];
+  const cameraTargetOffset = new THREE.Vector3(0, 1.2, 0);
+  const previousAvatarPosition = avatar.position.clone();
+  const movementForward = new THREE.Vector3();
+  const movementRight = new THREE.Vector3();
+  const movementVector = new THREE.Vector3();
+  const worldUp = new THREE.Vector3(0, 1, 0);
+  const movementRaycaster = new THREE.Raycaster();
+  const walkClock = new THREE.Clock();
+  let walkPhase = 0;
+  renderer.domElement.dataset.thirdPerson = 'true';
+  renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
+  renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
+  renderer.domElement.dataset.cameraTargetZ = avatar.position.z.toFixed(3);
+  camera.position.copy(avatar.position).add(new THREE.Vector3(0, 4.4, 8));
+  controls.target.copy(avatar.position).add(cameraTargetOffset);
+  controls.update();
+
+  const onMovementKeyDown = (event: KeyboardEvent): void => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest('input, textarea, select, [contenteditable="true"]')) return;
+    const key = event.key.toLowerCase();
+    if (['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'].includes(key)) {
+      event.preventDefault();
+      movementKeys.add(key);
+    }
+  };
+  const onMovementKeyUp = (event: KeyboardEvent): void => movementKeys.delete(event.key.toLowerCase());
+  const clearMovementKeys = (): void => movementKeys.clear();
+  window.addEventListener('keydown', onMovementKeyDown);
+  window.addEventListener('keyup', onMovementKeyUp);
+  window.addEventListener('blur', clearMovementKeys);
 
   scene.add(new THREE.HemisphereLight(0xc8ddff, 0x172235, 2.0));
   const keyLight = new THREE.DirectionalLight(0xf4f7ff, 3.0);
@@ -402,6 +480,7 @@ async function boot(): Promise<() => void> {
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add(mesh);
+    movementObstacles.push(mesh);
   }
 
   const stationMaterial = new THREE.MeshStandardMaterial({ color: '#33465c', roughness: 0.45, metalness: 0.35 });
@@ -410,6 +489,7 @@ async function boot(): Promise<() => void> {
   propagationSurface.castShadow = true;
   propagationSurface.receiveShadow = true;
   scene.add(propagationSurface);
+  movementObstacles.push(propagationSurface);
   for (let row = 0; row < 3; row += 1) {
     for (let column = 0; column < 4; column += 1) {
       const x = -7.5 + column * 5;
@@ -419,6 +499,7 @@ async function boot(): Promise<() => void> {
       station.castShadow = true;
       station.receiveShadow = true;
       scene.add(station);
+      movementObstacles.push(station);
 
       // Distinct cannabis silhouettes are fictional game assets; all cultivation and process values are abstract game balance only.
       for (let pod = 0; pod < 3; pod += 1) {
@@ -566,8 +647,8 @@ async function boot(): Promise<() => void> {
   });
   hud.addChild(panel, title, subtitle, stateLine);
   const resetCamera = (): void => {
-    camera.position.set(15, 13, 18);
-    controls.target.set(0, 0, 0);
+    camera.position.copy(avatar.position).add(new THREE.Vector3(0, 4.4, 8));
+    controls.target.copy(avatar.position).add(cameraTargetOffset);
     controls.update();
   };
   resetCameraButton?.addEventListener('click', resetCamera);
@@ -606,6 +687,11 @@ async function boot(): Promise<() => void> {
       let target: THREE.Object3D | null = intersection.object;
       while (target && typeof target.userData.plantId !== 'string') target = target.parent;
       if (target && typeof target.userData.plantId === 'string') {
+        const plantWorldPosition = target.getWorldPosition(new THREE.Vector3());
+        if (avatar.position.distanceTo(plantWorldPosition) > 5.5) {
+          setFeedback('error', 'Pflanze außerhalb der Interaktionsreichweite. Gehe näher heran.');
+          return;
+        }
         selectPlant(target.userData.plantId as EntityId);
         return;
       }
@@ -623,13 +709,61 @@ async function boot(): Promise<() => void> {
   window.addEventListener('resize', resize);
   resize();
   renderer.setAnimationLoop(() => {
+    const delta = Math.min(walkClock.getDelta(), 0.05);
+    movementVector.set(0, 0, 0);
+    const forwardInput = Number(movementKeys.has('w') || movementKeys.has('arrowup')) -
+      Number(movementKeys.has('s') || movementKeys.has('arrowdown'));
+    const rightInput = Number(movementKeys.has('d') || movementKeys.has('arrowright')) -
+      Number(movementKeys.has('a') || movementKeys.has('arrowleft'));
+    if (forwardInput !== 0 || rightInput !== 0) {
+      movementForward.subVectors(camera.position, controls.target);
+      movementForward.y = 0;
+      if (movementForward.lengthSq() > 0) movementForward.normalize();
+      movementForward.negate();
+      movementRight.crossVectors(movementForward, worldUp).normalize();
+      movementVector.addScaledVector(movementForward, forwardInput);
+      movementVector.addScaledVector(movementRight, rightInput);
+      movementVector.normalize().multiplyScalar(3.4 * delta);
+
+      const candidate = avatar.position.clone().add(movementVector);
+      candidate.x = THREE.MathUtils.clamp(candidate.x, -10.4, 10.4);
+      candidate.z = THREE.MathUtils.clamp(candidate.z, -7.4, 7.4);
+      const avatarRadius = 0.32;
+      let blocked = false;
+      for (const obstacle of movementObstacles) {
+        const bounds = new THREE.Box3().setFromObject(obstacle);
+        if (candidate.x + avatarRadius > bounds.min.x && candidate.x - avatarRadius < bounds.max.x &&
+            candidate.z + avatarRadius > bounds.min.z && candidate.z - avatarRadius < bounds.max.z) {
+          blocked = true;
+          break;
+        }
+      }
+      if (!blocked) avatar.position.copy(candidate);
+      avatar.rotation.y = Math.atan2(-movementVector.x, -movementVector.z);
+      walkPhase += delta * 8;
+      leftLeg.rotation.x = Math.sin(walkPhase) * 0.42;
+      rightLeg.rotation.x = -Math.sin(walkPhase) * 0.42;
+    } else {
+      leftLeg.rotation.x = THREE.MathUtils.damp(leftLeg.rotation.x, 0, 10, delta);
+      rightLeg.rotation.x = THREE.MathUtils.damp(rightLeg.rotation.x, 0, 10, delta);
+    }
+    const avatarDelta = new THREE.Vector3().subVectors(avatar.position, previousAvatarPosition);
+    camera.position.add(avatarDelta);
+    previousAvatarPosition.copy(avatar.position);
+    controls.target.copy(avatar.position).add(cameraTargetOffset);
     controls.update();
+    renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
+    renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
+    renderer.domElement.dataset.cameraTargetZ = controls.target.z.toFixed(3);
     renderer.render(scene, camera);
   });
 
   return () => {
     renderer.setAnimationLoop(null);
     renderer.domElement.removeEventListener('pointerdown', onWorldPointerDown);
+    window.removeEventListener('keydown', onMovementKeyDown);
+    window.removeEventListener('keyup', onMovementKeyUp);
+    window.removeEventListener('blur', clearMovementKeys);
     window.removeEventListener('resize', resize);
     window.removeEventListener('resize', layout);
     resetCameraButton?.removeEventListener('click', resetCamera);
@@ -639,6 +773,13 @@ async function boot(): Promise<() => void> {
     importGameButton?.removeEventListener('click', handleImportClick);
     importSaveInput?.removeEventListener('change', handleImportChange);
     controls.dispose();
+    avatar.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      object.geometry.dispose();
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      for (const material of materials) material.dispose();
+    });
+    movementObstacles.length = 0;
     plantVisuals.clear();
     cuttingVisuals.clear();
     ui.destroy({ removeView: true }, { children: true, texture: true, textureSource: true });
