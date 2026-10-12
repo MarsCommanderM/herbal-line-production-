@@ -422,7 +422,6 @@ async function boot(): Promise<() => void> {
   const movementRight = new THREE.Vector3();
   const movementVector = new THREE.Vector3();
   const worldUp = new THREE.Vector3(0, 1, 0);
-  const movementRaycaster = new THREE.Raycaster();
   const walkClock = new THREE.Clock();
   let walkPhase = 0;
   renderer.domElement.dataset.thirdPerson = 'true';
@@ -442,7 +441,9 @@ async function boot(): Promise<() => void> {
       movementKeys.add(key);
     }
   };
-  const onMovementKeyUp = (event: KeyboardEvent): void => movementKeys.delete(event.key.toLowerCase());
+  const onMovementKeyUp = (event: KeyboardEvent): void => {
+    movementKeys.delete(event.key.toLowerCase());
+  }
   const clearMovementKeys = (): void => movementKeys.clear();
   window.addEventListener('keydown', onMovementKeyDown);
   window.addEventListener('keyup', onMovementKeyUp);
