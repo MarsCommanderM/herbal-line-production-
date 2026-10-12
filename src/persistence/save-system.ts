@@ -43,6 +43,17 @@ export function stableStringify(value: unknown): string {
  * Synchronous SHA-256 over canonical JSON. This detects accidental corruption;
  * it is not an authenticity mechanism because an editor can recompute the hash.
  */
+/** Compatibility verifier for schema-v1 saves written before SHA-256 was introduced. */
+function legacyFNV1aChecksum(payload: unknown): string {
+  const bytes = new TextEncoder().encode(stableStringify(payload));
+  let hash = 0x811c9dc5;
+  for (const byte of bytes) {
+    hash ^= byte;
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return 'fnv1a32:' + hash.toString(16).padStart(8, '0');
+}
+
 export function checksumPayload(payload: unknown): string {
   const input = new TextEncoder().encode(stableStringify(payload));
   const bitLength = input.length * 8;
@@ -207,7 +218,7 @@ function isEnvelopeShape(value: unknown): value is SaveEnvelopeV1 {
     && Number.isSafeInteger(value.revision) && Number(value.revision) >= 0
     && typeof value.savedAtRealTime === 'string' && Number.isFinite(Date.parse(value.savedAtRealTime))
     && Number.isSafeInteger(value.rngState) && Number(value.rngState) >= 0
-    && typeof value.checksum === 'string' && /^sha256:[0-9a-f]{64}$/.test(value.checksum)
+    && typeof value.checksum === 'string' && /^(?:sha256:[0-9a-f]{64}|fnv1a32:[0-9a-f]{8})$/.test(value.checksum)
     && isPersistedPayload(value.payload)
     && value.revision === value.payload.revision
     && value.rngState === value.payload.rngState
@@ -239,7 +250,10 @@ export function validateAndMigrateSave(input: unknown): MigrationResult {
     return { ok: false, errorCode: 'UNSUPPORTED_VERSION' };
   }
   if (!isEnvelopeShape(input)) return { ok: false, errorCode: 'INVALID_ENVELOPE' };
-  if (checksumPayload(input.payload) !== input.checksum) {
+  const expectedChecksum = input.checksum.startsWith('fnv1a32:')
+    ? legacyFNV1aChecksum(input.payload)
+    : checksumPayload(input.payload);
+  if (expectedChecksum !== input.checksum) {
     return { ok: false, errorCode: 'CHECKSUM_MISMATCH' };
   }
   try {
