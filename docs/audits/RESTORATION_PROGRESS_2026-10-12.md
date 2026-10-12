@@ -63,14 +63,14 @@ The archive's expected Git blob SHA-1s were calculated from the actual file byte
 | `scripts/validate_masterpack.py` | `76d27059c3dbbccd19704adc4a4a29fc5e2ff44f` | Exact match restored |
 | `docs/13_PRODUCTION_PHASE_PLAN.md` | `68f50765410ed4cff85c05e944297613b53fbb6a` | Exact match restored |
 
-Total currently verified exact archive files: **42 of 42**. This is a verified subset, not full parity.
+Historical note: the per-path 42/42 claim above referred to an earlier revision. It is **not valid for the current branch head** because product identity and implementation-facing contracts were subsequently corrected. Do not claim current full archive parity. The four original contract files were preserved verbatim under `masterpack/canonical/contracts/`; the canonical archive remains available by its recorded SHA-256, but the remaining original archive files have not all been retained as byte-identical copies inside this repository.
 
 The current parity report preserves the earlier `4/42` comparison as historical evidence for `main@6ddb8849886f35ece5f3d784d06714b4054f5116` only. It is not being represented as a fresh comparison of this restoration branch.
 
 ## Current verified limitations
 
 - All 42 canonical archive paths have individually verified exact Git blob matches against the source archive manifest. A single end-to-end parity-verifier run against a clean checkout of the latest GitHub commit remains to be executed; the exact per-path results are recorded in this report.
-- Canonical restoration of all 42 archive files is complete by per-path Git blob SHA verification. The clean-checkout aggregate parity run and implementation reconciliation remain open.
+- Canonical restoration is **not currently claimed complete**. Product-name corrections intentionally changed several docs; runtime contracts now track the existing app implementation, while the original four contract files are preserved verbatim under `masterpack/canonical/contracts/`. A fresh, accurate per-path parity report must be regenerated before any parity claim.
 - The application HTML title/description, package description, and initial campaign's source/customer labels have been corrected toward the original medical-cannabis identity. These are implementation edits, not archive files.
 - The current application implementation has not yet been reconciled end-to-end against the restored canonical docs.
 - Latest observed CI after restoring the canonical contracts: [run 38290153329](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153329) failed at strict TypeScript typecheck; tests, build and browser E2E were skipped. The separate [Master Pack Validation run 38290153248](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153248) passed only the pack-file/metadata gate. No application CI pass is claimed.
@@ -78,9 +78,10 @@ The current parity report preserves the earlier `4/42` comparison as historical 
 
 ## Required next sequence
 
-1. Restore every remaining canonical archive file byte-for-byte on this branch, verifying each resulting Git blob SHA against the archive manifest.
-2. Run the parity verifier against the exact resulting commit and retain per-path output; do not call parity complete before this is reproduced.
-3. Audit the current GitHub source tree and reconcile product identity, domain contracts, economy/progression, cannabis-specific world/content, UI and persistence against the canonical pack.
-4. Implement only changes supported by canonical requirements and existing compatible code; do not invent upgrade costs/effects or progression rules.
-5. Run fresh clean-install, lint/format, typecheck, unit, integration/E2E, production build and targeted regression gates. Record exact commit, commands, exit statuses and results.
-6. Keep `main` untouched until the restoration diff and required gates have been reviewed.
+1. Preserve the original ZIP by SHA-256 and keep the exact source files available for reconstruction.
+2. Generate a fresh per-path parity report for the current branch; do not reuse stale 42/42 claims.
+3. Finish global naming/scope audit: no user-facing Herbal Line or generic botanical replacement remains.
+4. Implement visible cannabis plant-care interactions and tests against fictional game values.
+5. Reconcile domain, economy/progression, save compatibility and UI without changing the approved product scope.
+6. Run clean-install, lint/format, typecheck, unit, integration/E2E, production build and targeted regression gates on one exact final commit.
+7. Keep `main` untouched until the restoration diff and all required gates have been reviewed.
