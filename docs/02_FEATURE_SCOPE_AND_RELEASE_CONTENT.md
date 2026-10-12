@@ -47,3 +47,12 @@ Cloud-Sync, Multiplayer, Community-Inhalte, Modding-Portal, Live-Service-Saisons
 ## Release-Ausschluss
 
 Jede sichtbare oder beworbene Funktion muss im Release funktionieren. Nicht fertige Elemente werden fertig implementiert oder aus Releaseumfang und Präsentation entfernt. Fehlende Assets dürfen nicht durch graue Boxen, Stockbilder mit unklaren Rechten oder Dummy-Texte ersetzt werden.
+
+
+## Sichtbare Cannabis-Pflege — verbindlicher Releaseumfang
+
+- Professionelle Indoor-Anlage mit klar erkennbaren Cannabis-Pflanzen, Beleuchtungs-, Bewässerungs-, Klima- und Lüftungssystemen.
+- Direkt sichtbare Pflegeinteraktionen an Pflanzen: Bewässerung, Licht einstellen, simulierte Temperatur-/Luftfeuchtigkeitsregelung, Nährstoffversorgung, Beschneiden und Stecklinge setzen/verwalten.
+- Pflanzenzustand, gewählte Aktion, simuliertes Ergebnis und Statusänderung müssen visuell nachvollziehbar sein.
+- Die Apotheken sind Kunden der Lieferkette; interne Apothekenprozesse sind außerhalb des Umfangs.
+- Alle numerischen Parameter sind erfundene Spielwerte. Keine realen Anbauanleitungen.
