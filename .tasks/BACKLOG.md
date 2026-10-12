@@ -9,7 +9,7 @@
 | P1-002 | P1 | Save/load, validation and recovery | P0-003 | SHA-256 envelope, IndexedDB tests, reload round-trip, corrupt-primary fallback, import/export E2E | Functional baseline implemented; migration-chain, quota/interrupted-write and cross-browser hardening open |
 | P1-003 | P1 | Operational dashboard and queue UX | P1-001 | State-derived guidance, blocked-action reasons, keyboard and viewport acceptance | Keyboard order, mobile geometry, live regions and reduced motion covered by 7 Chromium E2E tests; full WCAG review open |
 | P1-004 | P1 | Quality, audit and incident systems | P1-001 | Hold/release gates, audit trail, rejected-batch terminal path and corrective-action tests | Terminal rejection and UI recovery path merged and CI-verified; corrective-action/incident review remains open |
-| P2-001 | P2 | Facility, capacity, staffing and maintenance | P1-001 | Capacity/assignment invariants and scenario tests | Pending |
+| P2-001 | P2 | Facility, capacity, staffing and maintenance | P1-001 | Capacity/assignment invariants, maintenance state machine, unit and Chromium E2E scenarios | IN PROGRESS on `production/facility-capacity-staffing-20261012`; acceptance pending CI |
 | P2-002 | P2 | Economy and progression | P2-001 | Ledger invariants and multi-stage balancing simulation | Partial finance selector; balancing pending |
 | P2-003 | P2 | Content, tutorial and contextual notices | P1-003 | Content review, source register, UX tests | Pending |
 | P3-001 | P3 | Visual/audio polish and asset pipeline | P1-003 | Asset/license manifest, visual QA, performance evidence | Pending; current facility view is a foundation, not final art |
