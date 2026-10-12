@@ -80,9 +80,9 @@ function commit(
     logs: [...state.logs, logEntry(state, command, code, message, relatedEntityIds)],
   };
   const violations = validateGameStateInvariants(next);
-  if (violations.length > 0) {
-    const first = violations[0];
-    return failure(state, 'PRECONDITION_FAILED', 'Die Aktion verletzt eine Zustandsinvariante (' + first.code + '): ' + first.message);
+  const firstViolation = violations[0];
+  if (firstViolation) {
+    return failure(state, 'PRECONDITION_FAILED', 'Die Aktion verletzt eine Zustandsinvariante (' + firstViolation.code + '): ' + firstViolation.message);
   }
   return { ok: true, state: next, events };
 }
