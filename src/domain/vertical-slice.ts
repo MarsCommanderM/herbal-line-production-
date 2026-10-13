@@ -21,6 +21,7 @@ import { validateGameStateInvariants } from './invariants';
 import { clampScore, roomSupportsStaffRole, validateFacilityInvariants } from './facility';
 import { reserveInventory, transitionBatch } from './transitions';
 import { DEFAULT_PLANT_CARE, getPlantCareState, isCareLevel } from './plant-care';
+import { GAME_BALANCE } from './balance';
 
 export type VerticalSliceCommand = Extract<DomainCommand, {
   type:
@@ -563,7 +564,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       if (qualityRoom.occupied >= qualityRoom.capacity) return failure(state, 'CAPACITY_EXCEEDED', 'Die Qualitätssicherung hat keine freie Spielkapazität.');
       const scoreValue = qualityScoreFor(state, batch);
       const traceComplete = hasCompleteTrace(state, batch);
-      const decision: QualityAssessment['decision'] = scoreValue >= 75 && traceComplete ? 'pass' : scoreValue >= 60 ? 'review' : 'fail';
+      const decision: QualityAssessment['decision'] = scoreValue >= GAME_BALANCE.qcPassThreshold && traceComplete ? 'pass' : scoreValue >= GAME_BALANCE.qcReviewThreshold ? 'review' : 'fail';
       const assessmentId = command.assessmentId;
       if (state.batches.some((item) => item.assessmentIds.includes(assessmentId))) return failure(state, 'DUPLICATE_COMMAND', 'Diese Prüf-ID existiert bereits.');
       const assessment: QualityAssessment = {

@@ -93,8 +93,8 @@ describe('ledger-derived finance', () => {
 
   it('classifies campaign financial health using balance and runway', () => {
     const state = createInitialGameState();
-    expect(getFinancialHealth(state)).toBe('stable');
-    const lowRunway = { ...state, economy: { ...state.economy, openingBalanceCents: cents(1_000_000) } };
+    expect(getFinancialHealth(state)).toBe('watch');
+    const lowRunway = { ...state, economy: { ...state.economy, openingBalanceCents: cents(1_500_000) } };
     expect(getFinancialHealth(lowRunway)).toBe('watch');
     const negative = { ...state, economy: { ...state.economy, openingBalanceCents: cents(0) } };
     expect(getFinancialHealth(negative)).toBe('critical');
@@ -106,20 +106,20 @@ describe('ledger-derived finance', () => {
     expect(projection).toHaveLength(30);
     expect(projection[0]).toEqual({
       dayOffset: 1,
-      openingBalanceCents: 25_000_000,
+      openingBalanceCents: 2_500_000,
       expectedRevenueCents: 0,
-      operatingCostsCents: 88_000,
-      closingBalanceCents: 24_912_000,
+      operatingCostsCents: 154_000,
+      closingBalanceCents: 2_346_000,
     });
-    expect(projection[29]?.closingBalanceCents).toBe(22_360_000);
+    expect(projection[29]?.closingBalanceCents).toBe(-2_120_000);
     expect(state.economy.ledger).toEqual([]);
   });
 
   it('models explicit daily revenue and estimates cash runway without hiding distress', () => {
     const state = createInitialGameState();
-    expect(projectCampaignBalance(state, 30, 100_000).at(-1)?.closingBalanceCents).toBe(25_360_000);
-    expect(getCashRunwayDays(state)).toBe(284);
-    expect(getCashRunwayDays(state, 100_000)).toBeNull();
+    expect(projectCampaignBalance(state, 30, 200_000).at(-1)?.closingBalanceCents).toBe(3_880_000);
+    expect(getCashRunwayDays(state)).toBe(16);
+    expect(getCashRunwayDays(state, 200_000)).toBeNull();
 
     const lowFunds = { ...state, economy: { ...state.economy, openingBalanceCents: cents(1) } };
     expect(getCashRunwayDays(lowFunds)).toBe(0);

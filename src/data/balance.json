@@ -1,0 +1,12 @@
+{
+  "version": "fictional-game-balance-v1",
+  "initialMoneyCents": 2500000,
+  "initialReputation": 100,
+  "initialComplianceRisk": 0,
+  "licenseWarningRisk": 40,
+  "licenseSuspendedRisk": 80,
+  "qcPassThreshold": 70,
+  "qcReviewThreshold": 60,
+  "fixedStepHz": 20,
+  "autosaveIntervalMs": 30000
+}

@@ -88,7 +88,7 @@ Fehlerpfade: `available → expired`, `accepted|allocated|ready_to_ship → canc
 
 `valid ↔ warning → suspended → recovery_review → valid|warning`
 
-Die Spezifikation sieht eine versionierte `src/data/balance.json` für diese spielinternen Schwellenwerte vor. **Implementierungslücke:** Diese Datei existiert im aktuellen Repository nicht; die Laufzeit lädt daher noch keine zentrale Balance-Datei. Die dokumentierte Design-Baseline ist Risiko 0–100, `warning` ab 40 und `suspended` ab 80. Diese Werte dürfen erst dann als zentral konfiguriert gelten, wenn Datenquelle, Validator und Runtime-Verbrauch implementiert und getestet sind. Suspendierung muss alle fachlich als kritisch markierten Transaktionen blockieren; es gibt keinen UI-Bypass.
+Die versionierte `src/data/balance.json` ist jetzt die Quelle für Startgeld, Start-Reputation, Start-Compliance-Risiko und die spielinternen QC-Schwellen. `src/domain/balance.ts` validiert die Datei beim Laden; Tests sichern Wertebereiche und Reihenfolge der Schwellen. Die dokumentierte Design-Baseline bleibt Risiko 0–100, `warning` ab 40 und `suspended` ab 80. **Offene Runtime-Lücke:** Die Lizenzschwellen werden noch nicht durch einen vollständigen Audit-/Recovery-Command angewendet; außerdem sind `fixedStepHz` und `autosaveIntervalMs` noch keine aktive Simulationstakt-/Timersteuerung. Suspendierung muss alle fachlich als kritisch markierten Transaktionen blockieren; es gibt keinen UI-Bypass.
 
 ### 3.6 Save-Sitzung
 
