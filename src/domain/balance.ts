@@ -1,4 +1,4 @@
-import rawBalance from '../data/balance.json';
+import rawBalance from '../data/balance.json' with { type: 'json' };
 
 export interface RuntimeBalanceConfig {
   version: string;
