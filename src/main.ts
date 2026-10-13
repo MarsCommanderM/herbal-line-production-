@@ -662,6 +662,40 @@ async function boot(): Promise<() => void> {
       }
       cuttingVisuals.set(statePlant.id, existing);
     }
+    const selectedPlant = state.plants.find((item) => item.id === state.ui.selectedEntityId);
+    const selectedVisual = selectedPlant ? plantVisuals.get(selectedPlant.id)?.[0] : undefined;
+    if (selectedPlant && selectedVisual) {
+      const care = getPlantCareState(selectedPlant);
+      const soilMaterial = selectedVisual.userData.soilMaterial as THREE.MeshStandardMaterial | undefined;
+      const growLight = selectedVisual.userData.growLight as THREE.PointLight | undefined;
+      const careRing = selectedVisual.userData.careRing as THREE.Mesh | undefined;
+      const careRingMaterial = selectedVisual.userData.careRingMaterial as THREE.MeshStandardMaterial | undefined;
+      let leafMaterial: THREE.MeshStandardMaterial | undefined;
+      selectedVisual.traverse((object) => {
+        if (leafMaterial || !(object instanceof THREE.Mesh) || object.userData.isCannabisLeaflet !== true) return;
+        const material = Array.isArray(object.material) ? object.material[0] : object.material;
+        if (material instanceof THREE.MeshStandardMaterial) leafMaterial = material;
+      });
+      renderer.domElement.dataset.visualPlantId = selectedPlant.id;
+      renderer.domElement.dataset.visualWaterColor = soilMaterial?.color.getHexString() ?? '';
+      renderer.domElement.dataset.visualLightIntensity = growLight?.intensity.toFixed(2) ?? '';
+      renderer.domElement.dataset.visualNutrientColor = leafMaterial?.color.getHexString() ?? '';
+      renderer.domElement.dataset.visualCareRingColor = careRingMaterial?.color.getHexString() ?? '';
+      renderer.domElement.dataset.visualCareRingVisible = String(careRing?.visible ?? false);
+      renderer.domElement.dataset.visualPruningCount = String(care.pruningCount);
+      renderer.domElement.dataset.visualPruningScaleY = selectedVisual.scale.y.toFixed(3);
+      renderer.domElement.dataset.visualCareLastAction = care.lastAction ?? 'none';
+    } else {
+      delete renderer.domElement.dataset.visualPlantId;
+      delete renderer.domElement.dataset.visualWaterColor;
+      delete renderer.domElement.dataset.visualLightIntensity;
+      delete renderer.domElement.dataset.visualNutrientColor;
+      delete renderer.domElement.dataset.visualCareRingColor;
+      delete renderer.domElement.dataset.visualCareRingVisible;
+      delete renderer.domElement.dataset.visualPruningCount;
+      delete renderer.domElement.dataset.visualPruningScaleY;
+      delete renderer.domElement.dataset.visualCareLastAction;
+    }
     renderer.domElement.dataset.statePlantCount = String(state.plants.length);
     renderer.domElement.dataset.plantVisualCount = String([...plantVisuals.values()].reduce((sum, visuals) => sum + visuals.length, 0));
     renderer.domElement.dataset.cuttingVisualCount = String([...cuttingVisuals.values()].reduce((sum, visuals) => sum + visuals.length, 0));
