@@ -25,9 +25,12 @@ class FakeObjectStore {
         request.onsuccess?.(new Event('success'));
         queueMicrotask(() => this.transaction.oncomplete?.(new Event('complete')));
       } catch (error) {
-        Object.defineProperty(request, 'error', { value: error, configurable: true });
+        const transactionError = error instanceof DOMException ? error : new DOMException(String(error), 'UnknownError');
+        Object.defineProperty(request, 'error', { value: transactionError, configurable: true });
         request.onerror?.(new Event('error'));
-        this.transaction.onerror?.(new Event('error'));
+        this.transaction.error = transactionError;
+        if (transactionError.name === 'AbortError') this.transaction.onabort?.(new Event('abort'));
+        else this.transaction.onerror?.(new Event('error'));
       }
     });
     return request;
@@ -38,6 +41,10 @@ class FakeObjectStore {
       if (this.database.failNextPut) {
         this.database.failNextPut = false;
         throw new DOMException('Simulated storage quota exhaustion.', 'QuotaExceededError');
+      }
+      if (this.database.abortNextPut) {
+        this.database.abortNextPut = false;
+        throw new DOMException('Simulated interrupted transaction.', 'AbortError');
       }
       this.database.records.set(value.slotId, clone(value));
       return value.slotId;
@@ -79,6 +86,7 @@ class FakeTransaction {
 
 class FakeDatabase {
   failNextPut = false;
+  abortNextPut = false;
   readonly records = new Map<string, FakeStoredRecord>();
   readonly stores = new Set<string>();
   readonly objectStoreNames = {
@@ -191,6 +199,21 @@ describe('IndexedDbSaveRepository', () => {
     database.failNextPut = true;
 
     await expect(repository.save('campaign-01', newerEnvelope)).rejects.toThrow();
+    expect(await repository.load('campaign-01')).toEqual(goodEnvelope);
+  });
+
+  it('surfaces an aborted write and preserves the last committed save', async () => {
+    const { repository, factory } = createRepository();
+    const initial = createInitialGameState();
+    const goodEnvelope = await createSaveEnvelope(initial, '2026-10-12T12:00:00.000Z');
+    await repository.save('campaign-01', goodEnvelope);
+
+    const newerEnvelope = await createSaveEnvelope({ ...initial, revision: 1 }, '2026-10-12T12:01:00.000Z');
+    const database = factory.databases.get('herbal-line-test');
+    if (!database) throw new Error('Test database was not created.');
+    database.abortNextPut = true;
+
+    await expect(repository.save('campaign-01', newerEnvelope)).rejects.toThrow('Simulated interrupted transaction.');
     expect(await repository.load('campaign-01')).toEqual(goodEnvelope);
   });
 

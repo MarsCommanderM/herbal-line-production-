@@ -114,6 +114,27 @@ describe('medical cannabis operations vertical slice', () => {
     if (!malformed.ok) expect(malformed.state).toBe(initial);
   });
 
+  it('blocks visible plant care while the license is suspended without mutating campaign state', () => {
+    const initial = createInitialGameState();
+    const blockedState = {
+      ...initial,
+      compliance: { ...initial.compliance, licenseStatus: 'suspended' as const },
+    };
+    const result = dispatch(blockedState, 'PLANT/CARE_ACTION', {
+      plantId: entity('plant-001'),
+      action: 'water',
+      setting: 'balanced',
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Plant care must be blocked while the license is suspended.');
+    expect(result.error.code).toBe('COMPLIANCE_BLOCKED');
+    expect(result.state).toBe(blockedState);
+    expect(result.state.plants).toEqual(initial.plants);
+    expect(result.state.logs).toEqual(initial.logs);
+    expect(result.state.revision).toBe(initial.revision);
+  });
+
   it('cuts and sets a fictional propagation cutting with traceable parent linkage and room-capacity accounting', () => {
     let state = applyOk(createInitialGameState(), 'PLANT/CARE_ACTION', { plantId: entity('plant-001'), action: 'take_cutting' });
     expect(state.plants[0]?.care?.cuttingsTaken).toBe(1);

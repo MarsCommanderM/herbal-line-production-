@@ -8,7 +8,7 @@ Ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau
 
 - Genre: Management, Operations Simulation, Tycoon, leichtes Zeitmanagement.
 - Plattform: moderner Desktop-Browser als Primärziel; responsive Managementansicht auf kleineren Displays, wenn Lesbarkeit erhalten bleibt.
-- Weltansicht: schwenk- und zoombare isometrische/taktische 3D-Kamera, Raumfokus und Detailansichten.
+- Weltansicht: verbindliche Third-Person-3D-Perspektive mit sichtbarer, steuerbarer Spielfigur innerhalb der Anlage; die Kamera folgt hinter/oberhalb der Figur. Bewegung erfolgt über WASD/Pfeiltasten; Pflanzenaktionen werden direkt aus der Weltansicht und nur innerhalb der Interaktionsreichweite ausgelöst.
 - UI: Operations-Dashboard mit HUD, Dock/Sidebar, Datenpanels, Produktionspipeline und Ereigniszentrum.
 - Single-player, lokale Save-Kampagne. Multiplayer/Cloud-Sync sind keine Release-Abhängigkeit.
 

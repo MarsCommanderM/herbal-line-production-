@@ -63,12 +63,12 @@ if (packageData.name !== 'dr-green-dump-dopefarm') failures.push('Package name i
 const requiredPhrases = new Map([
   ['README.md', ['Dr. Green Dump / DopeFarm', 'medizinischen Cannabis-Pflanzenproduktion', 'Stecklingen']],
   ['AGENTS.md', ['Dr. Green Dump / DopeFarm', 'generische Kräuter', 'sichtbare Spielaktionen']],
-  ['docs/PRODUCTION_POLICY.md', ['Dr. Green Dump / DopeFarm', 'Direkte Pflanzenpflege', 'Apotheken']],
+  ['docs/PRODUCTION_POLICY.md', ['Dr. Green Dump / DopeFarm', 'Direkte Pflanzenpflege', 'Apotheken', 'Third Person', 'WASD'] ],
   ['docs/00_MASTER_PRODUCTION_DOCUMENT.md', ['Dr. Green Dump / DopeFarm', 'erkennbaren Cannabis-Pflanzen ausgeführte Pflege']],
-  ['docs/01_GAME_VISION_AND_GDD.md', ['Dr. Green Dump / DopeFarm', 'Cannabis-Pflanzen']],
+  ['docs/01_GAME_VISION_AND_GDD.md', ['Dr. Green Dump / DopeFarm', 'Cannabis-Pflanzen', 'Third Person', 'WASD/Pfeiltasten']],
   ['docs/02_FEATURE_SCOPE_AND_RELEASE_CONTENT.md', ['Dr. Green Dump / DopeFarm', 'Cannabis-Pflege']],
   ['docs/03_CORE_LOOP_AND_USER_FLOWS.md', ['Dr. Green Dump / DopeFarm', 'Pflanzenpflege']],
-  ['docs/09_VISUAL_ART_AUDIO_UX.md', ['erkennbarer Cannabis-Pflanzen', 'Bewässerung']],
+  ['docs/09_VISUAL_ART_AUDIO_UX.md', ['erkennbarer Cannabis-Pflanzen', 'Bewässerung', 'Third-Person-Perspektive', 'sichtbaren Spielfigur']],
   ['index.html', ['Dr. Green Dump / DopeFarm', 'Sichtbare Pflanzenpflege', 'medizinischen Cannabis']],
   ['src/domain/vertical-slice.ts', ['PLANT/CARE_ACTION', 'plant.care_applied', 'set_cutting']],
   ['src/ui/management.ts', ['Bewässerung', 'Steckling setzen']],
@@ -102,6 +102,18 @@ for (const file of uiFiles) {
   const contents = read(file);
   for (const pattern of forbiddenVisibleLabels) {
     if (pattern.test(contents)) failures.push(file + ' contains a forbidden generic botanical product label: ' + pattern);
+  }
+}
+
+const perspectiveFiles = ['docs/01_GAME_VISION_AND_GDD.md', 'docs/09_VISUAL_ART_AUDIO_UX.md'];
+const forbiddenPerspectiveDescriptions = [
+  /isometrische\/taktische 3D-Kamera/i,
+  /managementorientierte isometrische/i,
+];
+for (const file of perspectiveFiles) {
+  const contents = read(file);
+  for (const pattern of forbiddenPerspectiveDescriptions) {
+    if (pattern.test(contents)) failures.push(file + ' contradicts the required third-person camera: ' + pattern);
   }
 }
 

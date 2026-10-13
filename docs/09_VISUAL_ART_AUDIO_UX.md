@@ -6,7 +6,7 @@
 
 - Materialien: PBR mit überprüfbarer Roughness/Metalness, sauberen Normalen, korrekter Skalierung und konsistenter Texeldichte.
 - Beleuchtung: definierte Key/Fill/Rim-Lichtrollen; Schatten selektiv und nach Leistungsbudget. Bloom nur für tatsächliche Emissive-Quellen und UI-Akzente, nicht als Ersatz für Materialqualität.
-- Kamera: managementorientierte isometrische/perspektivische Ansicht mit weichem Pan/Zoom, Fokus auf Raum oder Entität, stabilen Grenzen und gut lesbaren Arbeitsflächen.
+- Kamera: verbindliche Third-Person-Perspektive hinter/oberhalb der sichtbaren Spielfigur, mit weicher Nachführung, begrenzter Rotation/Zoom um die Figur und stabilen Anlagen-Grenzen. Keine reine isometrische Übersicht und kein freier Orbit als Ersatz für die Spielerperspektive.
 - Produktionsobjekte besitzen tatsächliche Silhouette, Material, Maßstab und Interaktion. Platzhalterformen sind in Dev-Tools zulässig, niemals als endgültige Visuals einer als abgeschlossen deklarierten Release-Feature.
 - Animationsprinzip: minimal, lesbar, ursachenbezogen; kein permanentes Pulsieren oder jitterndes UI.
 
