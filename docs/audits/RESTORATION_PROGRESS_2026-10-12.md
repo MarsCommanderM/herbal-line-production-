@@ -40,14 +40,21 @@ Das ist **kein** bestätigtes Gesamt-CI-PASS. Frühere rote Typecheck-Läufe geh
 - Generische Profil-/Auftragsbezeichner in der sichtbaren Produktstrecke bereinigt.
 - Überholte CI-/Paritätsaussagen in Auditdokumenten werden als historisch gekennzeichnet, nicht als aktueller Status ausgegeben.
 
+## Verifizierter CI-Baseline-Stand
+
+Commit `981baa43067e818757309ed79820438a77eba107`:
+- [DopeFarm CI 38325272366](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38325272366): **SUCCESS**. Locked install, Source-Lint, Formatcheck, strikter TypeScript-Typecheck, Domain-Tests, Produktionsbuild, Chromium/Firefox/WebKit-E2E, Preview-Smoke, Master-Pack-Validierung, archivierter Source-Snapshot, Produkt-Policy-Validierung und Whitespace-Check sind alle erfolgreich.
+- [Master Pack Validation 38325272353](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38325272353): **SUCCESS** auf demselben SHA.
+- Frühere fehlgeschlagene oder abgebrochene Läufe beziehen sich auf ältere Commits und werden nicht als Ergebnis des Baseline-SHA gezählt.
+
 ## Noch offene Release-Gates
 
-1. Den gebündelten Commit durchlaufen lassen: Source-Lint, Format, Typecheck, Unit-Tests, Produktionsbuild, Browser-E2E, Preview-Smoke, Pack-Validierung und Whitespace-Check.
-2. Die E2E-Ergebnisse untersuchen und alle neuen Fehler auf demselben Branch korrigieren.
-3. Sichtbare Pflegeaktionen vollständig im Domain-State, in UI/3D-Feedback, Logs, Save/Load und Tests integrieren; reine Dokumentation zählt nicht als Implementierung.
-4. Economy-/Progression-Regeln nur anhand der autorisierten Anforderungen betreiben; nicht belegte Preise, Upgradeeffekte und XP-/Levelregeln dürfen nicht als genehmigt gelten.
-5. Auf dem finalen Commit Produktnamen-/Scope-Suche, Asset-/Rechtecheck, Save-Recovery und Regressionen durchführen.
-6. `main` bleibt bis Review und durchgehend grünen Pflichtgates unverändert.
+1. Actionable Review-Funde umsetzen: eindeutige Workflow-Concurrency, Save-Schema an den tatsächlich serialisierten GameState angleichen, Validatoren gegen falsche PASS-Ergebnisse härten, verwaiste 3D-Pflanzen-/Stecklingsmeshes nach Load/Import entfernen und Evidenzdokumente aktualisieren.
+2. Nach diesen Änderungen vollständige CI und Master-Pack-Validierung erneut auf demselben neuen SHA ausführen; Baseline-Erfolg allein ist kein Nachweis für spätere Commits.
+3. Pflanzenpflege-E2E gezielt prüfen: fiktive Leveländerungen, sichtbares Feedback, Save/Autosave/Reload und ungültige Eingaben; fehlende Fälle ergänzen.
+4. Nicht belegte Wirtschafts-/Progressionswerte bleiben offen; keine Upgradepreise, Effekte, XP-/Levelregeln oder Unlock-Schedules erfinden.
+5. Visuelle Qualität/Asset-Fidelity, Rechte-/Provenienzprüfung, Sicherheits-/Accessibility-Abnahme und offene unabhängige Review-Punkte vor Merge abschließen.
+6. `main` bleibt bis zum vollständigen Nachweis und Abschluss der Review-Blocker unverändert.
 
 ## Statusregel
 
