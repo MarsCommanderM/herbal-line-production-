@@ -617,7 +617,7 @@ async function boot(): Promise<() => void> {
   }
 
   function syncPlantVisuals(state: ReturnType<typeof createInitialGameState>): void {
-    const livePlantIds = new Set(state.plants.map((plant) => plant.id));
+    const livePlantIds = new Set<string>(state.plants.map((plant) => plant.id));
     for (const [plantId, visuals] of plantVisuals) {
       if (livePlantIds.has(plantId)) continue;
       for (const visual of visuals) disposeSceneObject(visual);

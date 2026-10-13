@@ -184,6 +184,7 @@ test('importing an older save removes stale propagated plant and cutting visuals
   await expect.poll(async () => (await canvas.isVisible()) || (await graphicsFallback.isVisible())).toBe(true);
   test.skip(!(await canvas.isVisible()), 'WebGL is unavailable; graphics fallback is covered separately.');
 
+  await expect.poll(async () => await canvas.getAttribute('data-state-plant-count')).not.toBeNull();
   const initialPlantCount = Number(await canvas.getAttribute('data-state-plant-count'));
   const initialVisualCount = Number(await canvas.getAttribute('data-plant-visual-count'));
   const saveButton = page.getByRole('button', { name: 'Spielstand speichern' });
