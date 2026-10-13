@@ -29,7 +29,7 @@ Exact source revision: `41ff3d43f01da61fa54a645e685a3361c685cab6`.
 2. **P1-004 — Quality/compliance incidents:** current tests cover suspended-license actions, held inventory and terminal QC rejection. A formal incident/corrective-action lifecycle requires an authoritative product contract before implementation.
 3. **P2-002 — Economy/progression:** source-listed upgrades remain unavailable until authoritative fictional prices, effects, XP/level thresholds and unlock rules are documented. Do not invent balance values.
 4. **P3-001 — Final art/audio/asset pipeline:** replace procedural placeholders only with assets whose provenance and commercial-use rights are verified; add animation, visual QA and performance evidence.
-5. **P3-002 — Release candidate QA/security/rights:** dependency advisory audit and CycloneDX/license-metadata inventory are now automated; still complete secret scanning, accessibility, privacy/security, legal license compatibility/required license texts, and release artifact verification.
+5. **P3-002 — Release candidate QA/security/rights:** dependency advisory audit, CycloneDX/license-metadata inventory, high-confidence credential-pattern scanning across reachable Git history, and Axe WCAG 2.1/2.2 A/AA browser checks are automated. The new checks require a green exact-SHA run; legal license compatibility/required license texts, privacy/security review, final asset rights, release artifact identity and rollback evidence remain separate release gates.
 6. **P4-001 — Release/operations:** document artifact identity, rollback, production smoke and incident response; run a rollback drill.
 
 ## Operating rules

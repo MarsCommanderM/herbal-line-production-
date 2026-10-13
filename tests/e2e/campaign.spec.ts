@@ -2,6 +2,7 @@ import type { CommandId, EntityId, Score0To100 } from '../../contracts/domain';
 import { createInitialGameState } from '../../src/domain/initial-state';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from '../../src/domain/vertical-slice';
 import { createSaveEnvelope, stableStringify } from '../../src/persistence/save-codec';
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 const entity = (value: string): EntityId => value as EntityId;
@@ -699,4 +700,21 @@ test('full browser campaign loop delivers once and restores the ledger after rel
   await expect(page.locator('#campaign-guidance')).toContainText('Kampagnenziel erreicht');
   await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 6 von 6');
   expect(await countRevenuePostings()).toBe(1);
+});
+
+test('campaign interface has no WCAG 2.1/2.2 A/AA axe violations', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
+
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  const violations = results.violations.map((violation) => ({
+    id: violation.id,
+    impact: violation.impact,
+    help: violation.help,
+    targets: violation.nodes.map((node) => node.target),
+  }));
+
+  expect(violations, JSON.stringify(violations, null, 2)).toEqual([]);
 });

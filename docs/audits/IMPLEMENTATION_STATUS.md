@@ -104,3 +104,15 @@ Verified source revision: `41ff3d43f01da61fa54a645e685a3361c685cab6`.
 - The CI-generated CycloneDX SBOM contained 58 components, each with SPDX license metadata. The SBOM content SHA-256 is `6bc6940c06cb7ae50979181c287cda28da6fd6eb09dd0b67a43db5e91f8c48ea`.
 - This verifies automated dependency/security metadata and the configured engineering gates only. It does not substitute for secret scanning, legal compatibility/notice review, accessibility/privacy review, final asset rights, or release/rollback acceptance.
 - The subsequent commit adds deterministic license-inventory validation and branch-trigger coverage. Its own SHA must be verified by fresh CI; do not transfer this baseline's PASS to a later revision.
+
+
+## Expanded security and accessibility gates
+
+The subsequent QA revision adds:
+
+- a high-confidence credential-pattern scan across Git objects reachable from the full-history checkout (findings report path/category/blob ID, never secret values);
+- a full `npm audit` gate rather than only high/critical severity;
+- a Playwright Axe scan for WCAG 2.1/2.2 A/AA on the primary campaign interface;
+- deterministic CycloneDX/SPDX dependency license inventory comparison and artifact upload.
+
+The earlier `41ff3d43f01da61fa54a645e685a3361c685cab6` and `e28dd9977a63a290728f24d370b43bd5851e41c1` results are historical baselines only. The current head's own full CI and Master Pack Validation runs are the acceptance evidence for these added gates. Legal compatibility/notice review, final asset rights, privacy/security review and release/rollback evidence remain distinct release gates.

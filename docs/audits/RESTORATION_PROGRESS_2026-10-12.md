@@ -67,3 +67,8 @@ A green CI establishes technical acceptance for this commit only. It does not cl
 - [Master Pack Validation 38417104628](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38417104628): **SUCCESS** on the same revision.
 - `npm audit --audit-level=high` reported 0 vulnerabilities; the generated CycloneDX SBOM contains 58 components with SPDX license metadata (SBOM SHA-256: `6bc6940c06cb7ae50979181c287cda28da6fd6eb09dd0b67a43db5e91f8c48ea`).
 - The subsequent commit adds deterministic license-inventory validation and enables the standalone Master Pack workflow on the restoration branch. These changes require their own exact-SHA CI proof.
+
+
+## Security/accessibility acceptance expansion
+
+The subsequent QA revision adds full-history high-confidence credential scanning, a full-severity `npm audit` gate, a Playwright Axe WCAG 2.1/2.2 A/AA scan, and deterministic SBOM/license-inventory comparison. Earlier successful run IDs do not prove these newly added checks; use only the current head's own full CI and Master Pack Validation results. Legal license compatibility/required texts, final asset rights, privacy/security review and release/rollback acceptance remain separate.

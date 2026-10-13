@@ -17,7 +17,8 @@
     "test:e2e": "playwright test",
     "smoke:preview": "node scripts/smoke-preview.mjs",
     "validate:product-policy": "node scripts/validate-product-policy.mjs",
-    "verify:masterpack-source": "python scripts/verify_masterpack_source_snapshot.py"
+    "verify:masterpack-source": "python scripts/verify_masterpack_source_snapshot.py",
+    "scan:secrets": "node scripts/scan-secrets.mjs"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "0.17.3",
