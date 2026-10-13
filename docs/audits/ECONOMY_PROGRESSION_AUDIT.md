@@ -46,7 +46,7 @@
 
 ## Required acceptance evidence
 
-1. Restore the four canonical `contracts/*.ts` files and all relevant source documents exactly from the archive.
+1. Verify the four original contract files byte-for-byte under `masterpack/canonical/contracts/` and `masterpack/source/contracts/`; preserve the approved, tested runtime extensions under active `contracts/` as documented in `docs/audits/CONTRACT_RECONCILIATION.md`.
 2. Reconcile upgrade IDs and behavior against the restored contracts without deleting compatible ledger/audit logic.
 3. Add data/schema validation for upgrade definitions and references.
 4. Add tests proving insufficient funds, duplicate purchase prevention, one ledger posting per purchase, and effect application only after a valid purchase.
