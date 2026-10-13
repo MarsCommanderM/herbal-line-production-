@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://herbal-line.invalid/schemas/order-template.schema.json",
+  "title": "Order Template",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "customerId", "itemDefinitionId", "quantity", "minQuality", "deadlineGameMinutes", "contractValueCents", "latePenaltyCents", "unlockReputation"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$" },
+    "customerId": { "type": "string", "minLength": 1 },
+    "itemDefinitionId": { "type": "string", "minLength": 1 },
+    "quantity": { "type": "integer", "minimum": 1 },
+    "minQuality": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "deadlineGameMinutes": { "type": "integer", "minimum": 1 },
+    "contractValueCents": { "type": "integer", "minimum": 0 },
+    "latePenaltyCents": { "type": "integer", "minimum": 0 },
+    "unlockReputation": { "type": "integer", "minimum": 0, "maximum": 1000 }
+  }
+}

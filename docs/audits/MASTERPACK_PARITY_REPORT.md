@@ -48,3 +48,18 @@ Auf dem vorherigen Integrationsstand `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38` 
 3. Wirtschaft, Progression, Save-/Load und Compliance stimmen mit dokumentierten, belegbaren Spielregeln überein.
 4. Frischer PR-Workflow besteht Typecheck, Unit-Tests, Build, Browser-E2E, Preview-Smoke, Pack-Validation und Whitespace-Check auf demselben Commit.
 5. Erst nach Review und durchgehend grünen Pflichtgates darf ein Merge erwogen werden.
+
+
+## Reconciliation refresh — 2026-10-13
+
+The exact file-level comparison is reproducible from the recorded manifest at branch head 22e60941981bc168c020ae55213b7eab61a486aa:
+
+- Expected original files: 42.
+- Active project-root files with an exact expected Git blob SHA-1: 20/42.
+- Active project-root files with a different blob: 22/42; every differing path is classified in docs/audits/MASTERPACK_PARITY_CLASSIFICATION.md.
+- Additional application/CI/test/audit paths outside the 42-file source pack: 53.
+- The active project root is intentionally not claimed as a byte-identical archive mirror.
+
+The 42 original file contents are preserved separately under masterpack/source/ by referencing the exact Git blob IDs from docs/audits/MASTERPACK_EXPECTED_BLOBS.json. The new source-snapshot verifier recomputes each Git blob SHA-1 from the file bytes, checks all 42 entries, and rejects missing or extra snapshot files. This proves per-file source-snapshot identity against the recorded manifest. The historical ZIP SHA-256 remains a recorded provenance value; the ZIP binary itself is not stored here, so this execution does not independently re-hash the archive container.
+
+Latest application CI before adding the source snapshot: PASS on 22e60941981bc168c020ae55213b7eab61a486aa, run https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38324074349. The separate master-pack validator also passed on that same commit, run https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38324074272. The snapshot-verification gates added in this refresh must pass on the new commit before it can be considered green.

@@ -28,5 +28,7 @@ jobs:
           python-version: "3.13"
       - name: Validate required files, metadata and JSON
         run: python scripts/validate_masterpack.py
+      - name: Verify preserved original Master Pack source snapshot
+        run: python scripts/verify_masterpack_source_snapshot.py
       - name: Check patch whitespace
         run: git diff --check

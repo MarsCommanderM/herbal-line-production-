@@ -32,3 +32,12 @@ Auf dem Integrationsstand `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38` liefen Inst
 ## Decision rule
 
 Produktname und Produktumfang werden durch die neueste ausdrückliche Owner-Anweisung festgelegt. Das historische Archiv wird mit seinem originalen Hash als Quelle dokumentiert, aber nicht als Grund verwendet, eine spätere, bestätigte Produktidentität zurückzusetzen. Änderungen an technischen Verträgen bleiben kontrolliert, nachvollziehbar und mit Tests belegt. `main` wird erst nach Review und erfolgreichen Pflichtgates geändert.
+
+
+## Exact original-source and runtime-extension decision log — 2026-10-13
+
+The recorded 42-file original source manifest is used to preserve an exact source snapshot under masterpack/source/. Active application files remain at their normal project paths. This is a deliberate separation, not a claim that the application root is byte-identical to the old pack.
+
+The four active runtime contract files differ from the original pack because the approved application requires typed plant-care commands, domain state, events and persistence for visible third-person plant-care gameplay. The exact original versions are retained in the source snapshot and in the existing canonical contract copies. Active runtime extensions must continue to be backed by domain, persistence and browser tests.
+
+The original-path reconciliation classifies all 22 root-file mismatches: product identity/scope and work-tracking overlays; the four runtime-contract extensions; and the adapted master-pack validator. No mismatch is silently treated as an original blob. The exact source snapshot is checked by scripts/verify_masterpack_source_snapshot.py and wired into both application CI and the dedicated Master Pack validation workflow. The active root remains intentionally non-identical to the historical archive.

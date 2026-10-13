@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://herbal-line.invalid/schemas/plant-profile.schema.json",
+  "title": "Fictional Plant Profile — Game-Only Parameters",
+  "description": "Abstract fictional simulation data only; not suitable as real-world cultivation or manufacturing guidance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "displayName", "rulesVersion", "baseDurationGameMinutes", "baseValueCents", "qualitySensitivity", "visualAssetId"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$" },
+    "displayName": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "rulesVersion": { "type": "string", "minLength": 1 },
+    "baseDurationGameMinutes": { "type": "integer", "minimum": 1 },
+    "baseValueCents": { "type": "integer", "minimum": 0 },
+    "qualitySensitivity": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "visualAssetId": { "type": "string", "minLength": 1 },
+    "abstractModifiers": { "type": "object", "additionalProperties": { "type": "integer", "minimum": -100, "maximum": 100 } }
+  }
+}

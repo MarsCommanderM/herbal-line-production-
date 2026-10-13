@@ -48,6 +48,8 @@ jobs:
         run: npm run smoke:preview
       - name: Validate master-pack documents and JSON
         run: npm run validate:masterpack
+      - name: Verify preserved original Master Pack source snapshot
+        run: npm run verify:masterpack-source
       - name: Validate active product policy and visible-care contract
         run: npm run validate:product-policy
       - name: Check whitespace

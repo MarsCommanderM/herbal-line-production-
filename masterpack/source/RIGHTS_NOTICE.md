@@ -1,0 +1,13 @@
+# Projektverantwortung, Urheberrecht und Rechteverwaltung
+
+**Projekt-/Spielname:** Herbal Line  
+**Vom Auftraggeber benannter Projektverantwortlicher:** Michael Braunschweig  
+**Vorgesehene Hinweiszeile:** `Copyright © 2026 Michael Braunschweig. All rights reserved, subject to applicable law and documented third-party licenses.`
+
+Die Eintragung des Namens dokumentiert die vom Projektauftrag vorgegebene Projekt-Metadaten- und Copyright-Präferenz. Sie ist keine unabhängige Rechtsprüfung und beweist nicht automatisch, dass sämtliche Beiträge aller Personen, Agenten, Auftragnehmer, Drittanbieter oder Rechteinhaber wirksam exklusiv übertragen wurden.
+
+Für den Release muss eine nachvollziehbare Rechtekette vorliegen: eigene Werke, Contributor-Beiträge, Code, Dokumentation, Musik, Sound, Fonts, Logos, 3D-Modelle, Texturen, Animationen, Videos, Daten, Marken, Domains und Bibliotheken werden mit Herkunft, Lizenz, erlaubter Nutzung, erforderlichem Attribution-Text und Nachweis dokumentiert. Inhalte mit unklaren Rechten werden nicht ausgeliefert.
+
+Der Name **Herbal Line** wird als Arbeitstitel geführt, bis die Markenrecherche für die vorgesehenen Territorien und Waren-/Dienstleistungsklassen abgeschlossen ist. Keine Agenten dürfen behaupten, eine Marke sei frei oder registriert, solange dafür kein belastbarer Register- und Rechtsprüfungsnachweis vorliegt.
+
+Dieses Dokument ist eine operative Rechtepolitik und keine Rechtsberatung. Vor kommerzieller Veröffentlichung sind die konkrete Rechtekette, Contributor-Verträge, Kennzeichenrecherche und relevante lokale Anforderungen qualifiziert zu prüfen.
