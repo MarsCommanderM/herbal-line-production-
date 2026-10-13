@@ -1,6 +1,6 @@
 # Dr. Green Dump / DopeFarm — Wiederherstellungs- und Produktionsstatus
 
-**Stand:** 2026-10-12  
+**Zuletzt aktualisiert:** 2026-10-13  
 **Arbeitsbranch:** `restore/original-masterpack-product-scope-20261012`  
 **Produktname:** Dr. Green Dump / DopeFarm  
 **Produktumfang:** legales, kontrolliertes Management einer streng regulierten medizinischen Cannabis-Pflanzenproduktion mit sichtbaren Pflegeaktionen.
@@ -40,22 +40,21 @@ Das ist **kein** bestätigtes Gesamt-CI-PASS. Frühere rote Typecheck-Läufe geh
 - Generische Profil-/Auftragsbezeichner in der sichtbaren Produktstrecke bereinigt.
 - Überholte CI-/Paritätsaussagen in Auditdokumenten werden als historisch gekennzeichnet, nicht als aktueller Status ausgegeben.
 
-## Verifizierter CI-Baseline-Stand
+## Verifizierter CI-Stand des aktuellen PR-Heads
 
-Commit `db6eb92e27f10177fad42d7e6597345a77a2f773`:
-- [DopeFarm CI 38348389937](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38348389937): **SUCCESS**. Locked install, Source-Lint, Formatcheck, strikter TypeScript-Typecheck, Domain-Tests, Produktionsbuild, Chromium/Firefox/WebKit-E2E, Preview-Smoke, Master-Pack-Validierung, Source-Snapshot-Check, Produkt-Policy-Validierung und Whitespace-Check sind alle erfolgreich.
-- [Master Pack Validation 38348394537](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38348394537): **SUCCESS** auf demselben SHA.
-- [PR-getriggerter Duplikatlauf 38348394747](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38348394747): ebenfalls **SUCCESS** auf demselben SHA.
-- Die Browser-E2E umfasst jetzt auch eine Regression, die nach Import eines älteren Spielstands verwaiste propagierte Pflanzen- und Stecklingsmeshes prüft.
-- Frühere fehlgeschlagene/abgebrochene Läufe gehören zu älteren SHAs und werden nicht als Ergebnis des Baseline-SHA gezählt.
+Commit `48d7cce195aa7bdc756cee67977111c05f066b1f`:
+- [DopeFarm CI 38353059424](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059424): **SUCCESS** auf exakt diesem SHA. Locked install, Source-Lint, Formatcheck, strikter TypeScript-Typecheck, Domain-Tests, Produktionsbuild, Chromium/Firefox/WebKit-E2E, Preview-Smoke, Master-Pack-Validierung, Source-Snapshot-Check, Produkt-Policy-Validierung und Whitespace-Check sind alle erfolgreich.
+- [Master Pack Validation 38353059561](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059561): **SUCCESS** auf demselben SHA.
+- Die E2E umfasst alle fünf fiktiven Pflegeeinstellungen, Beschneiden, Stecklinge schneiden und setzen, sichtbares Feedback sowie Autosave-/Reload-Persistenz. Die bestehenden Cross-Browser-Pfade bleiben Bestandteil des erfolgreichen Laufs.
+- Frühere fehlgeschlagene oder abgebrochene Läufe gehören zu älteren SHAs und werden nicht als Ergebnis des aktuellen SHA gezählt.
 
 ## Noch offene Release-Gates
 
-1. Die nächste E2E-Erweiterung deckt alle fünf fiktiven Pflegeeinstellungen, Beschneiden, Stecklingschnitt, sichtbares Feedback und Save/Reload ab. Der dadurch entstehende neue Commit benötigt seine eigene vollständige grüne CI.
-2. Nicht belegte Wirtschafts-/Progressionswerte bleiben offen; keine Upgradepreise, Effekte, XP-/Levelregeln oder Unlock-Schedules erfinden.
-3. Finale Produktionskunst, Audio, Asset-Pipeline, Lizenz-/Provenienzregister und Rechteprüfung fehlen noch; der prozedurale Third-Person-Avatar ist ausdrücklich ein Platzhalter.
-4. Persistenz-Fault-Injection (Quota, abgebrochene Transaktionen), Migration und browserübergreifende Recovery weiter ausbauen; negative Pfade für Compliance, gehaltene Bestände und doppelte Finanz-/Lieferereignisse ergänzen.
-5. `main` bleibt unverändert, bis die aktuelle Revision vollständig grün ist und verbleibende Release-Blocker abgeschlossen oder ausdrücklich akzeptiert wurden. Die historischen Archivabweichungen sind klassifiziert; eine 1:1-Parität des aktiven Roots wird nicht behauptet.
+1. **Erledigt auf aktuellem CI-SHA:** E2E-Erweiterung für Pflegeeinstellungen, Beschneiden, Stecklinge, sichtbares Feedback und Save/Reload; beide Pflicht-Workflows sind grün.
+2. **Offen — Wirtschafts-/Progressionsregeln:** Nicht belegte Upgradepreise/-effekte, XP-/Levelregeln und Unlock-Schedules bleiben gesperrt, bis eine autoritative Quelle oder dokumentierte Balanceentscheidung vorliegt. Keine Werte erfinden.
+3. **Offen — finale Produktion:** Finale Charakterkunst/-animation, Umgebungsassets, Audio, Asset-Pipeline, Lizenz-/Provenienzregister und Rechteprüfung fehlen; der prozedurale Third-Person-Avatar ist ein Platzhalter.
+4. **Offen — Resilienz:** Persistenz-Fault-Injection (Quota, abgebrochene Transaktionen), Migration und browserübergreifende Recovery weiter ausbauen; negative Pfade für Compliance, gehaltene Bestände und doppelte Finanz-/Lieferereignisse ergänzen.
+5. `main` bleibt unverändert, bis verbleibende Release-Blocker abgeschlossen oder ausdrücklich akzeptiert wurden. Die historischen Archivabweichungen sind klassifiziert; eine 1:1-Parität des aktiven Roots wird nicht behauptet.
 
 ## Statusregel
 
