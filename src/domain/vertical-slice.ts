@@ -480,7 +480,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
       if (Number(state.compliance.risk) >= GAME_BALANCE.licenseSuspendedRisk) return failure(state, 'COMPLIANCE_BLOCKED', 'Das Compliance-Risiko liegt weiterhin im Lizenzsperrbereich.');
       const licenseStatus = Number(state.compliance.risk) >= GAME_BALANCE.licenseWarningRisk ? 'warning' as const : 'valid' as const;
       const events: DomainEvent[] = [{ ...eventBase(state, command, state.player.id), type: 'compliance.recovery_finalized', code: 'LICENSE_RECOVERY_FINALIZED', status: licenseStatus }];
-      if (licenseStatus !== state.compliance.licenseStatus) events.push({
+      events.push({
         ...eventBase(state, command, state.player.id, 2), type: 'compliance.license_changed', code: 'LICENSE_RECOVERY_FINALIZED', status: licenseStatus,
       });
       return commit(state, command, { compliance: { ...state.compliance, licenseStatus } }, events, 'LICENSE_RECOVERY_FINALIZED', 'Lizenz-Wiederherstellung abgeschlossen; Status: ' + licenseStatus + '.', [state.player.id, latestAudit.id]);
