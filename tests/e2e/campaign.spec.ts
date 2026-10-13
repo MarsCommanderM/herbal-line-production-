@@ -97,19 +97,40 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
 });
 
-test('visible plant-care controls update fictional state and survive reload', async ({ page }) => {
+test('all visible plant-care settings and actions persist through autosave and reload', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
-  const lowLight = page.getByRole('button', { name: 'Licht: niedrig' });
-  await expect(lowLight).toHaveAttribute('aria-pressed', 'false');
-  await lowLight.click();
-  await expect(lowLight).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('#game-feedback')).toContainText('Lichteinstellung');
-  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
+
+  const settings = [
+    { label: 'Bewässerung: hoch', feedback: 'Bewässerung · Spielstufe hoch', revision: 1 },
+    { label: 'Licht: niedrig', feedback: 'Lichteinstellung · Spielstufe niedrig', revision: 2 },
+    { label: 'Temperatur: hoch', feedback: 'Temperatursimulation · Spielstufe hoch', revision: 3 },
+    { label: 'Luftfeuchtigkeit: niedrig', feedback: 'Luftfeuchtigkeitssimulation · Spielstufe niedrig', revision: 4 },
+    { label: 'Nährstoffniveau: hoch', feedback: 'Nährstoffsimulation · Spielstufe hoch', revision: 5 },
+  ];
+  for (const setting of settings) {
+    const button = page.getByRole('button', { name: setting.label, exact: true });
+    await button.click();
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#game-feedback')).toContainText(setting.feedback);
+    await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision ' + setting.revision);
+  }
+
+  await page.getByRole('button', { name: 'Beschneiden', exact: true }).click();
+  await expect(page.locator('#game-feedback')).toContainText('Beschneiden ausgeführt');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 6');
+
+  await page.getByRole('button', { name: 'Steckling schneiden', exact: true }).click();
+  await expect(page.locator('#game-feedback')).toContainText('Steckling schneiden ausgeführt');
+  await expect(page.getByRole('button', { name: 'Steckling setzen (1)', exact: true })).toBeVisible();
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 7');
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Licht: niedrig' })).toHaveAttribute('aria-pressed', 'true');
+  for (const setting of settings) {
+    await expect(page.getByRole('button', { name: setting.label, exact: true })).toHaveAttribute('aria-pressed', 'true');
+  }
+  await expect(page.getByRole('button', { name: 'Steckling setzen (1)', exact: true })).toBeVisible();
 });
 
 test('autosave survives reload and corrupt primary recovers the last valid backup', async ({ page }) => {

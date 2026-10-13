@@ -42,19 +42,20 @@ Das ist **kein** bestätigtes Gesamt-CI-PASS. Frühere rote Typecheck-Läufe geh
 
 ## Verifizierter CI-Baseline-Stand
 
-Commit `981baa43067e818757309ed79820438a77eba107`:
-- [DopeFarm CI 38325272366](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38325272366): **SUCCESS**. Locked install, Source-Lint, Formatcheck, strikter TypeScript-Typecheck, Domain-Tests, Produktionsbuild, Chromium/Firefox/WebKit-E2E, Preview-Smoke, Master-Pack-Validierung, archivierter Source-Snapshot, Produkt-Policy-Validierung und Whitespace-Check sind alle erfolgreich.
-- [Master Pack Validation 38325272353](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38325272353): **SUCCESS** auf demselben SHA.
-- Frühere fehlgeschlagene oder abgebrochene Läufe beziehen sich auf ältere Commits und werden nicht als Ergebnis des Baseline-SHA gezählt.
+Commit `db6eb92e27f10177fad42d7e6597345a77a2f773`:
+- [DopeFarm CI 38348389937](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38348389937): **SUCCESS**. Locked install, Source-Lint, Formatcheck, strikter TypeScript-Typecheck, Domain-Tests, Produktionsbuild, Chromium/Firefox/WebKit-E2E, Preview-Smoke, Master-Pack-Validierung, Source-Snapshot-Check, Produkt-Policy-Validierung und Whitespace-Check sind alle erfolgreich.
+- [Master Pack Validation 38348394537](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38348394537): **SUCCESS** auf demselben SHA.
+- [PR-getriggerter Duplikatlauf 38348394747](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38348394747): ebenfalls **SUCCESS** auf demselben SHA.
+- Die Browser-E2E umfasst jetzt auch eine Regression, die nach Import eines älteren Spielstands verwaiste propagierte Pflanzen- und Stecklingsmeshes prüft.
+- Frühere fehlgeschlagene/abgebrochene Läufe gehören zu älteren SHAs und werden nicht als Ergebnis des Baseline-SHA gezählt.
 
 ## Noch offene Release-Gates
 
-1. Actionable Review-Funde umsetzen: eindeutige Workflow-Concurrency, Save-Schema an den tatsächlich serialisierten GameState angleichen, Validatoren gegen falsche PASS-Ergebnisse härten, verwaiste 3D-Pflanzen-/Stecklingsmeshes nach Load/Import entfernen und Evidenzdokumente aktualisieren.
-2. Nach diesen Änderungen vollständige CI und Master-Pack-Validierung erneut auf demselben neuen SHA ausführen; Baseline-Erfolg allein ist kein Nachweis für spätere Commits.
-3. Pflanzenpflege-E2E gezielt prüfen: fiktive Leveländerungen, sichtbares Feedback, Save/Autosave/Reload und ungültige Eingaben; fehlende Fälle ergänzen.
-4. Nicht belegte Wirtschafts-/Progressionswerte bleiben offen; keine Upgradepreise, Effekte, XP-/Levelregeln oder Unlock-Schedules erfinden.
-5. Visuelle Qualität/Asset-Fidelity, Rechte-/Provenienzprüfung, Sicherheits-/Accessibility-Abnahme und offene unabhängige Review-Punkte vor Merge abschließen.
-6. `main` bleibt bis zum vollständigen Nachweis und Abschluss der Review-Blocker unverändert.
+1. Die nächste E2E-Erweiterung deckt alle fünf fiktiven Pflegeeinstellungen, Beschneiden, Stecklingschnitt, sichtbares Feedback und Save/Reload ab. Der dadurch entstehende neue Commit benötigt seine eigene vollständige grüne CI.
+2. Nicht belegte Wirtschafts-/Progressionswerte bleiben offen; keine Upgradepreise, Effekte, XP-/Levelregeln oder Unlock-Schedules erfinden.
+3. Finale Produktionskunst, Audio, Asset-Pipeline, Lizenz-/Provenienzregister und Rechteprüfung fehlen noch; der prozedurale Third-Person-Avatar ist ausdrücklich ein Platzhalter.
+4. Persistenz-Fault-Injection (Quota, abgebrochene Transaktionen), Migration und browserübergreifende Recovery weiter ausbauen; negative Pfade für Compliance, gehaltene Bestände und doppelte Finanz-/Lieferereignisse ergänzen.
+5. `main` bleibt unverändert, bis die aktuelle Revision vollständig grün ist und verbleibende Release-Blocker abgeschlossen oder ausdrücklich akzeptiert wurden. Die historischen Archivabweichungen sind klassifiziert; eine 1:1-Parität des aktiven Roots wird nicht behauptet.
 
 ## Statusregel
 

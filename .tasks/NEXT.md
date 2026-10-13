@@ -41,14 +41,14 @@ The historical Master-Pack tasks remain the task catalogue. The current user-app
 
 ### Immediate execution queue
 
-**Verified baseline:** Commit `981baa43067e818757309ed79820438a77eba107` passed the full DopeFarm CI workflow [run 38325272366](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38325272366) and separate Master Pack Validation [run 38325272353](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38325272353). The next code or documentation commit must receive its own full green run before it can replace this baseline.
+**Letzter vollständig verifizierter Stand:** Commit `db6eb92e27f10177fad42d7e6597345a77a2f773` passed [DopeFarm CI run 38348389937](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38348389937) and [Master Pack Validation run 38348394537](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38348394537). A duplicate PR-triggered CI run on the same SHA also passed: [38348394747](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38348394747). All mandatory CI steps completed successfully on that exact SHA.
 
-1. **Completed for baseline SHA only:** locked install, source lint, format check, strict typecheck, unit tests, production build, Chromium/Firefox/WebKit E2E, preview smoke, Master-Pack validation, preserved-source snapshot verification, product-policy validation and whitespace check.
-2. **In progress:** address actionable review findings (workflow concurrency isolation, save schema/runtime alignment, validator false-pass prevention, stale 3D visuals after load/import, and audit/queue evidence accuracy); rerun every gate on the resulting exact commit.
-3. **Open:** inspect whether plant-care E2E proves fictional level changes, visible feedback, save/autosave/reload and rejected invalid input; add any missing regression cases before marking P1-005 done.
-4. **Open:** economy/progression remains intentionally incomplete until authoritative fictional prices/effects, XP/level thresholds and unlock rules are supplied; do not invent them.
-5. **Open:** review remaining asset/art fidelity, license/provenance, release security/accessibility and canonical source parity classifications. Exact historical source is preserved under `masterpack/source/` and `masterpack/canonical/contracts/`; active runtime extensions are intentionally not byte-identical.
-6. **Merge gate:** keep `main` untouched until all current-head CI checks are green, actionable review findings are resolved or explicitly dispositioned, and remaining release blockers are classified.
+1. **Resolved on verified SHA:** locked install, lint, format, strict TypeScript, unit tests, production build, Chromium/Firefox/WebKit E2E (including stale 3D-visual cleanup after importing an older save), preview smoke, Master-Pack validation, preserved-source verification, product-policy validation and whitespace.
+2. **Current task:** expand plant-care E2E to cover all five fictional setting controls, pruning, cutting, visible feedback and persisted reload state; the resulting commit must receive a new full green CI run before it replaces the verified baseline.
+3. **Open:** economy/progression remains intentionally incomplete until authoritative fictional prices/effects, XP/level thresholds and unlock rules are supplied; do not invent them.
+4. **Open:** complete production art/audio and asset pipeline, asset provenance/licensing and release rights review; current procedural avatar is a placeholder, not final art.
+5. **Open:** persistence fault-injection for quota exhaustion/interrupted writes, migration chain and cross-browser recovery; expand negative-path acceptance for held inventory, compliance blocks and duplicate financial/delivery events.
+6. **Merge gate:** keep `main` untouched until all current-head CI checks are green, actionable review findings are resolved, and remaining release blockers are either completed or explicitly accepted by the project owner. Historical archive parity is intentionally not claimed as 1:1; original source files remain preserved and validated separately.
 
 ### Current status rule
 No workflow result from a parent commit counts as proof for a newer commit. Running, cancelled, skipped or failed jobs are not green. Do not mark any queue item complete from documentation alone.
