@@ -80,3 +80,15 @@ Verified code revision: `41ae376e527a79d28ff1692fd19d6db2a4052631`.
 - The E2E suite includes third-person movement/direct plant selection, plant-care state and visual feedback, save/load/recovery, compliance holds, held inventory, QC rejection, keyboard/mobile/accessibility paths, maintenance, settlement/delivery and an explicit WebGL initialization failure-injection test.
 - WebGL-dependent world tests may be skipped in browser environments that expose no WebGL canvas; the explicit fallback test is the acceptance path for renderer failure. Skipped tests are not counted as passes.
 - This is the latest verified engineering baseline, not a release-ready declaration. Product-contract, balance, final art/audio/licensing, security/rights and release-operations blockers remain open as recorded in `.tasks/NEXT.md`.
+
+
+## Latest exact-commit verification — restoration branch head
+
+Verified source revision: `341344b8f29be93f8f979056ed33b55c7bb9a1c6`.
+
+- [Full DopeFarm CI, run 38405281308](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38405281308): **SUCCESS** on the exact SHA.
+- [Master Pack Validation, run 38405263958](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38405263958): **SUCCESS** on the same SHA.
+- Every configured job step completed successfully: locked install, source lint, format, strict TypeScript, unit tests, production build, browser E2E, preview smoke, master-pack validation, original source snapshot verification, product-policy validation and whitespace.
+- The branch head is green for the configured engineering gates. This does not mean all release blockers are resolved or authorize a merge.
+- Open blockers remain exactly as recorded in `.tasks/NEXT.md`: evidenced legacy-save schema, authoritative incident/corrective-action contract, approved fictional economy/progression table, final licensed art/audio, and security/privacy/rights/release-operation evidence.
+- `main` remains unchanged at `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`.
