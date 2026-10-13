@@ -1,0 +1,5 @@
+# Save migration contract
+
+The preserved historical source is `masterpack/canonical/contracts/persistence.ts` and `masterpack/canonical/contracts/domain.ts`. Historical V1 contains top-level `moneyCents`, no global `qualityAssessments` array, and required daily/lifetime economy summaries. The first active app V1 format instead omitted `moneyCents` and included `qualityAssessments`; both used envelope version 1. Active writes now use envelope and payload V2.
+
+Historical Master Pack V1 migrates only when the ledger-derived balance exactly matches `moneyCents` and every batch has no assessment references requiring missing assessment records. Conflicting balance snapshots or unreconstructable assessment references return `MIGRATION_FAILED`; the original stored record is not overwritten. The previous active-app V1 shape is also migrated after checksum, payload and invariant validation. IndexedDB rewrites a V1 record only after successful migration. UI state remains transient. No missing financial or quality data is synthesized.

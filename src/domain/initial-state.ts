@@ -33,7 +33,7 @@ export function createInitialGameState(): GameState {
   const sourceAcceptedEventId = eventId('event-seed-source-accepted-001');
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     gameVersion: '0.1.0',
     revision: 0,
     rngState: 17321,

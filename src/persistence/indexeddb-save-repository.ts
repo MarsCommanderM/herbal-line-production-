@@ -1,9 +1,9 @@
-import type { SaveMetadata, SaveRepository, SaveEnvelopeV1 } from '../../contracts/persistence';
+import type { SaveMetadata, SaveRepository, SaveEnvelopeV1, SaveEnvelopeV2 } from '../../contracts/persistence';
 import { stableStringify, verifySaveEnvelope } from './save-codec';
 
 interface StoredSaveRecord {
   slotId: string;
-  envelope: SaveEnvelopeV1;
+  envelope: SaveEnvelopeV1 | SaveEnvelopeV2;
   metadata: SaveMetadata;
 }
 
@@ -71,28 +71,29 @@ export class IndexedDbSaveRepository implements SaveRepository {
     return this.databasePromise;
   }
 
-  async save(slotId: string, envelope: SaveEnvelopeV1): Promise<SaveMetadata> {
+  async save(slotId: string, envelope: SaveEnvelopeV2): Promise<SaveMetadata> {
     validateSlotId(slotId);
     const verification = await verifySaveEnvelope(envelope);
     if (!verification.ok) throw new Error('Refusing to save an invalid envelope: ' + verification.errorCode);
 
-    const serialized = stableStringify(envelope);
+    const normalized = verification.envelope;
+    const serialized = stableStringify(normalized);
     const metadata: SaveMetadata = {
       slotId,
-      revision: envelope.revision,
-      savedAtRealTime: envelope.savedAtRealTime,
-      gameVersion: envelope.gameVersion,
+      revision: normalized.revision,
+      savedAtRealTime: normalized.savedAtRealTime,
+      gameVersion: normalized.gameVersion,
       byteLength: new TextEncoder().encode(serialized).byteLength,
     };
     const database = await this.openDatabase();
     const transaction = database.transaction(STORE_NAME, 'readwrite');
     const completed = transactionDone(transaction);
-    transaction.objectStore(STORE_NAME).put({ slotId, envelope, metadata } satisfies StoredSaveRecord);
+    transaction.objectStore(STORE_NAME).put({ slotId, envelope: normalized, metadata } satisfies StoredSaveRecord);
     await completed;
     return metadata;
   }
 
-  async load(slotId: string): Promise<SaveEnvelopeV1 | null> {
+  async load(slotId: string): Promise<SaveEnvelopeV2 | null> {
     validateSlotId(slotId);
     const database = await this.openDatabase();
     const transaction = database.transaction(STORE_NAME, 'readonly');
@@ -105,6 +106,7 @@ export class IndexedDbSaveRepository implements SaveRepository {
     if (!verification.ok) {
       throw new Error('Saved data failed validation: ' + verification.errorCode + '. The stored record was left unchanged.');
     }
+    if (record.envelope.schemaVersion !== 2) await this.save(slotId, verification.envelope);
     return verification.envelope;
   }
 

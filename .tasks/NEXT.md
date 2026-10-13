@@ -16,7 +16,7 @@ Exact implementation revision: `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`.
 
 ## Remaining work, in priority order
 
-1. **P1-002 — Save migration:** identify a real legacy save format from an actual shipped/recovered artifact or documented schema. Until then, reject unsupported versions safely; do not fabricate a migration.
+1. **P1-002 — Save migration:** documented historical Master Pack V1 and prior active-app V1 shapes now migrate into active V2. Saves with unreconstructable assessment references or ledger/balance mismatch are rejected with `MIGRATION_FAILED` without overwriting source data. Exact-SHA CI is pending.
 2. **P1-004 — Incident/corrective-action lifecycle:** reconcile the documented `ComplianceCase`, `AuditRun`, `Violation` and license recovery state machine with runtime contracts. Implement only transitions supported by the project contract, with typed commands/events, persistence, audit log, UI, invalid-transition tests and browser coverage. Do not add real-world operating procedures.
 3. **P1-005 — WebGL acceptance:** eliminate or explicitly isolate the four renderer-dependent skipped E2E cases. Keep world interaction acceptance mandatory in at least the supported Chromium/SwiftShader path; retain fallback testing in all three engines. No skipped case is a pass.
 4. **P2-002 — Economy/progression:** keep upgrades locked until an approved fictional balance table defines prices, effects, prerequisites, XP thresholds and unlock rules. No invented numbers.

@@ -14,7 +14,7 @@ REQUIRED = [
     "docs/15_TEST_AND_QA_STRATEGY.md", "docs/18_CI_CD_RELEASE_RUNBOOK.md",
     ".tasks/NEXT.md", ".tasks/BACKLOG.md", "rights/LICENSE_REGISTER.md",
     "contracts/commands.ts", "contracts/domain.ts", "contracts/events.ts",
-    "contracts/persistence.ts", "schemas/save-envelope-v1.schema.json",
+    "contracts/persistence.ts", "schemas/save-envelope-v1.schema.json", "schemas/save-envelope-v2.schema.json", "schemas/legacy-masterpack-save-v1.schema.json",
 ]
 
 def main() -> int:
@@ -33,14 +33,15 @@ def main() -> int:
                 errors.append("manifest title does not match expected game title")
         except (json.JSONDecodeError, OSError) as exc:
             errors.append(f"manifest cannot be parsed: {exc}")
-    schema_path = ROOT / "schemas/save-envelope-v1.schema.json"
-    if schema_path.is_file():
-        try:
-            schema = json.loads(schema_path.read_text(encoding="utf-8"))
-            if not isinstance(schema, dict) or schema.get("type") != "object":
-                errors.append("save envelope schema must be a JSON object schema")
-        except (json.JSONDecodeError, OSError) as exc:
-            errors.append(f"save envelope schema cannot be parsed: {exc}")
+    for schema_name in ("save-envelope-v1.schema.json", "save-envelope-v2.schema.json", "legacy-masterpack-save-v1.schema.json"):
+        schema_path = ROOT / "schemas" / schema_name
+        if schema_path.is_file():
+            try:
+                schema = json.loads(schema_path.read_text(encoding="utf-8"))
+                if not isinstance(schema, dict) or schema.get("type") != "object":
+                    errors.append(f"{schema_name} must be a JSON object schema")
+            except (json.JSONDecodeError, OSError) as exc:
+                errors.append(f"{schema_name} cannot be parsed: {exc}")
     for path in (ROOT / "docs").glob("*.md"):
         if path.stat().st_size < 100:
             errors.append(f"suspiciously small documentation file: {path.relative_to(ROOT)}")

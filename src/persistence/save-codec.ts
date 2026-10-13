@@ -1,13 +1,14 @@
-import type { GameState, UIState } from '../../contracts/domain';
+import type { EconomyState, GameState, UIState } from '../../contracts/domain';
+import type { MigrationResult, SaveEnvelopeV2 } from '../../contracts/persistence';
+import { getBalanceCents } from '../domain/finance';
 import { validateGameStateInvariants } from '../domain/invariants';
-import type { MigrationResult, SaveEnvelopeV1 } from '../../contracts/persistence';
 
 const FORMAT = 'herbal-line-save' as const;
-const SCHEMA_VERSION = 1 as const;
+const SCHEMA_VERSION = 2 as const;
 const SHA256_HEX = /^[0-9a-f]{64}$/i;
 
 type SavePayload = Omit<GameState, 'ui'>;
-type EnvelopeBody = Omit<SaveEnvelopeV1, 'checksum'>;
+type EnvelopeBody = Omit<SaveEnvelopeV2, 'checksum'>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -358,6 +359,14 @@ const isEconomyState: Guard = (value) => hasShape(value, {
   lifetimeExpensesCents: isSafeInteger,
 });
 
+const isLegacyLedgerEntry: Guard = (value) => isLedgerEntry(value) && isRecord(value)
+  && ['revenue', 'expense', 'penalty', 'investment', 'refund'].includes(String(value.account));
+const isLegacyEconomyState: Guard = (value) => hasShape(value, {
+  openingBalanceCents: isSafeNonNegativeIntegerGuard, ledger: arrayOf(isLegacyLedgerEntry),
+  revenueTodayCents: isSafeNonNegativeIntegerGuard, expensesTodayCents: isSafeNonNegativeIntegerGuard,
+  lifetimeRevenueCents: isSafeNonNegativeIntegerGuard, lifetimeExpensesCents: isSafeNonNegativeIntegerGuard,
+});
+
 const isUpgradeState: Guard = (value) => hasShape(value, {
   id: isNonEmptyString,
   unlocked: isBoolean,
@@ -382,9 +391,9 @@ const PAYLOAD_KEYS = [
   'lifetimeRevenueCents', 'lifetimeExpensesCents',
 ] as const;
 
-function validPayload(value: unknown): value is SavePayload {
+function validPayloadForVersion(value: unknown, expectedVersion: number): value is Record<string, unknown> {
   if (!hasShape(value, {
-    schemaVersion: (item) => item === SCHEMA_VERSION,
+    schemaVersion: (item) => item === expectedVersion,
     gameVersion: isNonEmptyString,
     revision: isSafeNonNegativeIntegerGuard,
     rngState: isSafeNonNegativeIntegerGuard,
@@ -415,25 +424,75 @@ function validPayload(value: unknown): value is SavePayload {
   })) return false;
   return hasOnlyKeys(value, PAYLOAD_KEYS);
 }
+function validPayload(value: unknown): value is SavePayload { return validPayloadForVersion(value, SCHEMA_VERSION); }
 const ENVELOPE_KEYS = ['format', 'schemaVersion', 'gameVersion', 'revision', 'savedAtRealTime', 'rngState', 'checksum', 'payload'] as const;
 
-function validEnvelopeBody(value: unknown): value is SaveEnvelopeV1 {
+function validEnvelopeShell(value: unknown, expectedVersion: number): value is Record<string, unknown> {
   if (!isRecord(value) || !hasOnlyKeys(value, ENVELOPE_KEYS)) return false;
-  if (value.format !== FORMAT || value.schemaVersion !== SCHEMA_VERSION) return false;
-  if (typeof value.gameVersion !== 'string' || value.gameVersion.length === 0) return false;
+  if (value.format !== FORMAT || value.schemaVersion !== expectedVersion || !isNonEmptyString(value.gameVersion)) return false;
   if (!isSafeNonNegativeInteger(value.revision) || !isSafeNonNegativeInteger(value.rngState)) return false;
   if (typeof value.savedAtRealTime !== 'string' || Number.isNaN(Date.parse(value.savedAtRealTime))) return false;
   if (typeof value.checksum !== 'string' || !SHA256_HEX.test(value.checksum)) return false;
-  if (!validPayload(value.payload)) return false;
-  return value.payload.gameVersion === value.gameVersion
-    && value.payload.revision === value.revision
-    && value.payload.rngState === value.rngState;
+  return isRecord(value.payload);
+}
+async function checksumMatches(value: Record<string, unknown>): Promise<boolean> {
+  const { checksum, ...body } = value;
+  if (typeof checksum !== 'string') return false;
+  return (await sha256Hex(stableStringify(body))) === checksum.toLowerCase();
+}
+function validEnvelopeBody(value: unknown): value is SaveEnvelopeV2 {
+  if (!validEnvelopeShell(value, SCHEMA_VERSION) || !validPayload(value.payload)) return false;
+  return value.payload.gameVersion === value.gameVersion && value.payload.revision === value.revision && value.payload.rngState === value.rngState;
+}
+const LEGACY_PAYLOAD_KEYS = [
+  'schemaVersion', 'gameVersion', 'revision', 'rngState', 'time', 'player', 'moneyCents', 'reputation',
+  'rooms', 'sourceLots', 'plants', 'batches', 'inventoryLots', 'orders', 'customers', 'deliveries',
+  'staff', 'assignments', 'machines', 'upgrades', 'compliance', 'economy', 'logs', 'ui',
+] as const;
+const DEFAULT_UI: UIState = { selectedEntityId: null, activeScreen: 'facility', notifications: [] };
+async function migrateV1Envelope(value: Record<string, unknown>): Promise<MigrationResult> {
+  if (!validEnvelopeShell(value, 1)) return { ok: false, errorCode: 'INVALID_ENVELOPE' };
+  let checksumValid = false;
+  try { checksumValid = await checksumMatches(value); } catch { return { ok: false, errorCode: 'INVALID_ENVELOPE' }; }
+  if (!checksumValid) return { ok: false, errorCode: 'CHECKSUM_MISMATCH' };
+  const payload = value.payload;
+  if (!isRecord(payload) || payload.gameVersion !== value.gameVersion || payload.revision !== value.revision || payload.rngState !== value.rngState) {
+    return { ok: false, errorCode: 'INVALID_ENVELOPE' };
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'moneyCents')) {
+    if (Object.prototype.hasOwnProperty.call(payload, 'qualityAssessments') || !hasOnlyKeys(payload, LEGACY_PAYLOAD_KEYS)
+      || payload.schemaVersion !== 1 || !isSafeNonNegativeInteger(payload.moneyCents) || !isLegacyEconomyState(payload.economy)) {
+      return { ok: false, errorCode: 'INVALID_ENVELOPE' };
+    }
+    const { moneyCents, ui: _transientUi, ...legacyPayload } = payload;
+    void _transientUi;
+    const migratedPayload = { ...legacyPayload, schemaVersion: SCHEMA_VERSION, qualityAssessments: [] };
+    if (!validPayload(migratedPayload)) return { ok: false, errorCode: 'INVALID_ENVELOPE' };
+    const batches = migratedPayload.batches as Array<{ assessmentIds: string[] }>;
+    if (batches.some((batch) => batch.assessmentIds.length > 0)) return { ok: false, errorCode: 'MIGRATION_FAILED' };
+    try {
+      if (Number(getBalanceCents(migratedPayload.economy as unknown as EconomyState)) !== moneyCents) return { ok: false, errorCode: 'MIGRATION_FAILED' };
+    } catch { return { ok: false, errorCode: 'MIGRATION_FAILED' }; }
+    const state = { ...migratedPayload, ui: DEFAULT_UI } as unknown as GameState;
+    if (validateGameStateInvariants(state).length > 0) return { ok: false, errorCode: 'MIGRATION_FAILED' };
+    try { return { ok: true, envelope: await createSaveEnvelope(state, value.savedAtRealTime as string) }; } catch {
+      return { ok: false, errorCode: 'MIGRATION_FAILED' };
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'qualityAssessments') && !Object.prototype.hasOwnProperty.call(payload, 'moneyCents') && validPayloadForVersion(payload, 1)) {
+    const state = { ...payload, schemaVersion: SCHEMA_VERSION, ui: DEFAULT_UI } as unknown as GameState;
+    if (validateGameStateInvariants(state).length > 0) return { ok: false, errorCode: 'INVALID_ENVELOPE' };
+    try { return { ok: true, envelope: await createSaveEnvelope(state, value.savedAtRealTime as string) }; } catch {
+      return { ok: false, errorCode: 'MIGRATION_FAILED' };
+    }
+  }
+  return { ok: false, errorCode: 'INVALID_ENVELOPE' };
 }
 
 export async function createSaveEnvelope(
   state: GameState,
   savedAtRealTime = new Date().toISOString(),
-): Promise<SaveEnvelopeV1> {
+): Promise<SaveEnvelopeV2> {
   if (Number.isNaN(Date.parse(savedAtRealTime))) throw new TypeError('savedAtRealTime must be a valid ISO date-time.');
   const body: EnvelopeBody = {
     format: FORMAT,
@@ -452,37 +511,23 @@ export async function createSaveEnvelope(
 export async function verifySaveEnvelope(input: string | unknown): Promise<MigrationResult> {
   let value: unknown = input;
   if (typeof input === 'string') {
-    try {
-      value = JSON.parse(input) as unknown;
-    } catch {
-      return { ok: false, errorCode: 'INVALID_ENVELOPE' };
-    }
+    try { value = JSON.parse(input) as unknown; } catch { return { ok: false, errorCode: 'INVALID_ENVELOPE' }; }
   }
-
-  if (isRecord(value) && typeof value.schemaVersion === 'number' && value.schemaVersion !== SCHEMA_VERSION) {
-    return { ok: false, errorCode: 'UNSUPPORTED_VERSION' };
-  }
+  if (!isRecord(value)) return { ok: false, errorCode: 'INVALID_ENVELOPE' };
+  if (typeof value.schemaVersion === 'number' && value.schemaVersion !== 1 && value.schemaVersion !== SCHEMA_VERSION) return { ok: false, errorCode: 'UNSUPPORTED_VERSION' };
+  if (value.schemaVersion === 1) return migrateV1Envelope(value);
   if (!validEnvelopeBody(value)) return { ok: false, errorCode: 'INVALID_ENVELOPE' };
-
-  const { checksum, ...body } = value;
-  try {
-    const expected = await sha256Hex(stableStringify(body));
-    if (expected !== checksum.toLowerCase()) return { ok: false, errorCode: 'CHECKSUM_MISMATCH' };
-  } catch {
+  try { if (!await checksumMatches(value)) return { ok: false, errorCode: 'CHECKSUM_MISMATCH' }; } catch {
     return { ok: false, errorCode: 'INVALID_ENVELOPE' };
   }
-
-  const validationState: GameState = {
-    ...value.payload,
-    ui: { selectedEntityId: null, activeScreen: 'facility', notifications: [] },
-  };
+  const validationState: GameState = { ...value.payload, ui: DEFAULT_UI };
   if (validateGameStateInvariants(validationState).length > 0) return { ok: false, errorCode: 'INVALID_ENVELOPE' };
   return { ok: true, envelope: value };
 }
 
 /** UI state is deliberately reconstructed rather than persisted in the save payload. */
 export function restoreGameState(
-  envelope: SaveEnvelopeV1,
+  envelope: SaveEnvelopeV2,
   ui: UIState = { selectedEntityId: null, activeScreen: 'facility', notifications: [] },
 ): GameState {
   return { ...envelope.payload, ui };

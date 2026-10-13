@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://herbal-line.invalid/schemas/legacy-masterpack-save-v1.schema.json",
+  "title": "Historical Master Pack Save Envelope V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "schemaVersion",
+    "gameVersion",
+    "revision",
+    "savedAtRealTime",
+    "rngState",
+    "checksum",
+    "payload"
+  ],
+  "properties": {
+    "format": {
+      "const": "herbal-line-save"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "gameVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "savedAtRealTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rngState": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checksum": {
+      "type": "string",
+      "minLength": 8
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "gameVersion",
+        "revision",
+        "rngState",
+        "time",
+        "player",
+        "reputation",
+        "rooms",
+        "sourceLots",
+        "plants",
+        "batches",
+        "inventoryLots",
+        "orders",
+        "customers",
+        "deliveries",
+        "staff",
+        "assignments",
+        "machines",
+        "upgrades",
+        "compliance",
+        "economy",
+        "logs",
+        "moneyCents",
+        "ui"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "gameVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rngState": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "time": {
+          "type": "object"
+        },
+        "player": {
+          "type": "object"
+        },
+        "reputation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "rooms": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "sourceLots": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "plants": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "batches": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "inventoryLots": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "customers": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "deliveries": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "staff": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "assignments": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "machines": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "upgrades": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "compliance": {
+          "type": "object",
+          "properties": {
+            "risk": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "licenseStatus": {
+              "enum": [
+                "valid",
+                "warning",
+                "suspended",
+                "recovery_review"
+              ]
+            },
+            "violations": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "auditDueAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lastAuditAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "blockedOperationCodes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "risk",
+            "licenseStatus",
+            "violations",
+            "auditDueAt",
+            "lastAuditAt",
+            "blockedOperationCodes"
+          ]
+        },
+        "economy": {
+          "type": "object",
+          "properties": {
+            "openingBalanceCents": {
+              "type": "integer"
+            },
+            "ledger": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "revenueTodayCents": {
+              "type": "integer"
+            },
+            "expensesTodayCents": {
+              "type": "integer"
+            },
+            "lifetimeRevenueCents": {
+              "type": "integer"
+            },
+            "lifetimeExpensesCents": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "openingBalanceCents",
+            "ledger",
+            "revenueTodayCents",
+            "expensesTodayCents",
+            "lifetimeRevenueCents",
+            "lifetimeExpensesCents"
+          ]
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "moneyCents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

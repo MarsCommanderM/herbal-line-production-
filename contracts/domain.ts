@@ -138,7 +138,7 @@ export interface GameLogEntry {
 }
 export interface UIState { selectedEntityId: EntityId | null; activeScreen: string; notifications: NotificationState[]; }
 export interface GameState {
-  schemaVersion: 1; gameVersion: string; revision: number; rngState: number; time: TimeState;
+  schemaVersion: 2; gameVersion: string; revision: number; rngState: number; time: TimeState;
   player: PlayerState; reputation: Reputation0To1000;
   rooms: RoomState[]; sourceLots: SourceLotState[]; plants: PlantState[]; batches: BatchState[];
   inventoryLots: InventoryLotState[]; qualityAssessments: QualityAssessment[]; orders: OrderState[]; customers: CustomerState[];
