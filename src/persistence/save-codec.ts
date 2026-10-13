@@ -5,10 +5,6 @@ import type { MigrationResult, SaveEnvelopeV1 } from '../../contracts/persistenc
 const FORMAT = 'herbal-line-save' as const;
 const SCHEMA_VERSION = 1 as const;
 const SHA256_HEX = /^[0-9a-f]{64}$/i;
-const ARRAY_FIELDS = [
-  'rooms', 'sourceLots', 'plants', 'batches', 'inventoryLots', 'qualityAssessments',
-  'orders', 'customers', 'deliveries', 'staff', 'assignments', 'machines', 'upgrades', 'logs',
-] as const;
 
 type SavePayload = Omit<GameState, 'ui'>;
 type EnvelopeBody = Omit<SaveEnvelopeV1, 'checksum'>;
