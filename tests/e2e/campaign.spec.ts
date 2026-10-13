@@ -3,10 +3,21 @@ import { createInitialGameState } from '../../src/domain/initial-state';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from '../../src/domain/vertical-slice';
 import { createSaveEnvelope, stableStringify } from '../../src/persistence/save-codec';
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
 
 const entity = (value: string): EntityId => value as EntityId;
 const commandId = (value: string): CommandId => value as CommandId;
+
+async function requireWebGLCanvas(page: Page, testInfo: TestInfo, canvas: Locator): Promise<void> {
+  const graphicsFallback = page.locator('#fatal-error');
+  await expect.poll(async () => (await canvas.isVisible()) || (await graphicsFallback.isVisible())).toBe(true);
+  if (await canvas.isVisible()) return;
+  const reason = 'WebGL is unavailable in this non-reference browser context; the explicit management fallback is tested separately.';
+  if (testInfo.project.name === 'chromium') {
+    throw new Error('Chromium/SwiftShader WebGL is required for third-person and direct plant-care acceptance. ' + reason);
+  }
+  test.skip(true, reason);
+}
 
 function applyOk(
   state: ReturnType<typeof createInitialGameState>,
@@ -63,9 +74,7 @@ async function seedCampaignSave(page: Page, state: ReturnType<typeof createIniti
 test('third-person avatar moves with keyboard and camera target follows', async ({ page }) => {
   await page.goto('/');
   const worldCanvas = page.locator('#world-root canvas');
-  const graphicsFallback = page.locator('#fatal-error');
-  await expect.poll(async () => (await worldCanvas.isVisible()) || (await graphicsFallback.isVisible())).toBe(true);
-  test.skip(!(await worldCanvas.isVisible()), 'WebGL is unavailable in this browser context; the documented graphics fallback is tested separately.');
+  await requireWebGLCanvas(page, testInfo, worldCanvas);
   await expect(worldCanvas).toHaveAttribute('data-third-person', 'true');
   const initialZ = Number(await worldCanvas.getAttribute('data-player-z'));
   await page.keyboard.down('w');
@@ -77,12 +86,10 @@ test('third-person avatar moves with keyboard and camera target follows', async 
   expect(cameraTargetZ).toBe(playerZ);
 });
 
-test('nearby cannabis plant can be selected directly from the third-person world', async ({ page }) => {
+test('nearby cannabis plant can be selected directly from the third-person world', async ({ page }, testInfo) => {
   await page.goto('/');
   const canvas = page.locator('#world-root canvas');
-  const graphicsFallback = page.locator('#fatal-error');
-  await expect.poll(async () => (await canvas.isVisible()) || (await graphicsFallback.isVisible())).toBe(true);
-  test.skip(!(await canvas.isVisible()), 'WebGL is unavailable in this browser context; the documented graphics fallback is tested separately.');
+  await requireWebGLCanvas(page, testInfo, canvas);
   await expect(canvas).toHaveAttribute('data-third-person', 'true');
   await expect.poll(async () => await canvas.getAttribute('data-interactable-plant-x')).not.toBeNull();
   const x = Number(await canvas.getAttribute('data-interactable-plant-x'));
@@ -153,7 +160,7 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
 });
 
-test('all visible plant-care settings and actions persist through autosave and reload', async ({ page }) => {
+test('all visible plant-care settings and actions persist through autosave and reload', async ({ page }, testInfo) => {
   // Chromium WebGL initialization and repeated checksum-verified IndexedDB writes
   // make this cross-browser persistence test slower than a standard UI test.
   test.setTimeout(90_000);
@@ -161,9 +168,7 @@ test('all visible plant-care settings and actions persist through autosave and r
   await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
 
   const canvas = page.locator('#world-root canvas');
-  const graphicsFallback = page.locator('#fatal-error');
-  await expect.poll(async () => (await canvas.isVisible()) || (await graphicsFallback.isVisible())).toBe(true);
-  test.skip(!(await canvas.isVisible()), 'WebGL is unavailable in this browser context; the documented graphics fallback is tested separately.');
+  await requireWebGLCanvas(page, testInfo, canvas);
   await expect(canvas).toHaveAttribute('data-visual-plant-id', 'plant-001');
   await expect(canvas).toHaveAttribute('data-visual-care-ring-visible', 'true');
   const settings = [
@@ -430,12 +435,10 @@ test('exported saves can be imported after a later campaign change', async ({ pa
 });
 
 
-test('importing an older save removes stale propagated plant and cutting visuals', async ({ page }) => {
+test('importing an older save removes stale propagated plant and cutting visuals', async ({ page }, testInfo) => {
   await page.goto('/');
   const canvas = page.locator('#world-root canvas');
-  const graphicsFallback = page.locator('#fatal-error');
-  await expect.poll(async () => (await canvas.isVisible()) || (await graphicsFallback.isVisible())).toBe(true);
-  test.skip(!(await canvas.isVisible()), 'WebGL is unavailable; graphics fallback is covered separately.');
+  await requireWebGLCanvas(page, testInfo, canvas);
 
   await expect.poll(async () => await canvas.getAttribute('data-state-plant-count')).not.toBeNull();
   const initialPlantCount = Number(await canvas.getAttribute('data-state-plant-count'));
