@@ -1,18 +1,150 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://herbal-line.invalid/schemas/save-envelope-v1.schema.json",
-  "title": "Herbal Line Save Envelope V1",
+  "title": "Dr. Green Dump / DopeFarm Save Envelope V1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["format", "schemaVersion", "gameVersion", "revision", "savedAtRealTime", "rngState", "checksum", "payload"],
+  "required": [
+    "format",
+    "schemaVersion",
+    "gameVersion",
+    "revision",
+    "savedAtRealTime",
+    "rngState",
+    "checksum",
+    "payload"
+  ],
   "properties": {
-    "format": { "const": "herbal-line-save" },
-    "schemaVersion": { "const": 1 },
-    "gameVersion": { "type": "string", "minLength": 1 },
-    "revision": { "type": "integer", "minimum": 0 },
-    "savedAtRealTime": { "type": "string", "format": "date-time" },
-    "rngState": { "type": "integer", "minimum": 0 },
-    "checksum": { "type": "string", "minLength": 8 },
-    "payload": { "type": "object", "required": ["schemaVersion", "gameVersion", "revision", "rngState", "time", "player", "moneyCents", "reputation", "rooms", "sourceLots", "plants", "batches", "inventoryLots", "orders", "customers", "deliveries", "staff", "assignments", "machines", "upgrades", "compliance", "economy", "logs", "ui"], "properties": { "schemaVersion": { "const": 1 }, "gameVersion": { "type": "string" }, "revision": { "type": "integer", "minimum": 0 }, "rngState": { "type": "integer", "minimum": 0 }, "moneyCents": { "type": "integer", "minimum": 0 }, "reputation": { "type": "integer", "minimum": 0, "maximum": 1000 }, "rooms": { "type": "array" }, "sourceLots": { "type": "array" }, "plants": { "type": "array" }, "batches": { "type": "array" }, "inventoryLots": { "type": "array" }, "orders": { "type": "array" }, "customers": { "type": "array" }, "deliveries": { "type": "array" }, "staff": { "type": "array" }, "assignments": { "type": "array" }, "machines": { "type": "array" }, "upgrades": { "type": "array" }, "logs": { "type": "array" } }, "additionalProperties": true }
+    "format": {
+      "const": "herbal-line-save"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "gameVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "savedAtRealTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rngState": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checksum": {
+      "type": "string",
+      "minLength": 8
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "gameVersion",
+        "revision",
+        "rngState",
+        "time",
+        "player",
+        "reputation",
+        "rooms",
+        "sourceLots",
+        "plants",
+        "batches",
+        "inventoryLots",
+        "qualityAssessments",
+        "orders",
+        "customers",
+        "deliveries",
+        "staff",
+        "assignments",
+        "machines",
+        "upgrades",
+        "compliance",
+        "economy",
+        "logs"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "gameVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rngState": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "time": {
+          "type": "object"
+        },
+        "player": {
+          "type": "object"
+        },
+        "reputation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "rooms": {
+          "type": "array"
+        },
+        "sourceLots": {
+          "type": "array"
+        },
+        "plants": {
+          "type": "array"
+        },
+        "batches": {
+          "type": "array"
+        },
+        "inventoryLots": {
+          "type": "array"
+        },
+        "qualityAssessments": {
+          "type": "array"
+        },
+        "orders": {
+          "type": "array"
+        },
+        "customers": {
+          "type": "array"
+        },
+        "deliveries": {
+          "type": "array"
+        },
+        "staff": {
+          "type": "array"
+        },
+        "assignments": {
+          "type": "array"
+        },
+        "machines": {
+          "type": "array"
+        },
+        "upgrades": {
+          "type": "array"
+        },
+        "compliance": {
+          "type": "object"
+        },
+        "economy": {
+          "type": "object"
+        },
+        "logs": {
+          "type": "array"
+        }
+      },
+      "additionalProperties": false
+    }
   }
 }
