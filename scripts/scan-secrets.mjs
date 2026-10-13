@@ -4,7 +4,10 @@ const MAX_TEXT_BLOB_BYTES = 2 * 1024 * 1024;
 const MAX_OUTPUT_BYTES = 128 * 1024 * 1024;
 
 const patterns = [
-  { name: 'private-key material', expression: /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----|-----BEGIN PGP PRIVATE KEY BLOCK-----/ },
+  {
+    name: 'private-key material',
+    expression: new RegExp(`${'-'.repeat(5)}BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY${'-'.repeat(5)}|${'-'.repeat(5)}BEGIN PGP PRIVATE KEY BLOCK${'-'.repeat(5)}`),
+  },
   { name: 'AWS access-key identifier', expression: /\bAKIA[0-9A-Z]{16}\b/ },
   { name: 'GitHub access token', expression: /\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,})\b/ },
   { name: 'GitLab access token', expression: /\bglpat-[A-Za-z0-9_-]{20,}\b/ },
