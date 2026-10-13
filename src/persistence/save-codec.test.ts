@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SaveEnvelopeV1 } from '../../contracts/persistence';
 import { createInitialGameState } from '../domain/initial-state';
-import { createSaveEnvelope, restoreGameState, stableStringify, verifySaveEnvelope } from './save-codec';
+import { createSaveEnvelope, restoreGameState, sha256Hex, stableStringify, verifySaveEnvelope } from './save-codec';
 
 describe('versioned save codec', () => {
   it('creates a checksummed envelope without transient UI state and restores a valid game state', async () => {
@@ -47,6 +47,44 @@ describe('versioned save codec', () => {
     expect(await verifySaveEnvelope('{broken')).toEqual({ ok: false, errorCode: 'INVALID_ENVELOPE' });
     expect(await verifySaveEnvelope({ schemaVersion: 99 })).toEqual({ ok: false, errorCode: 'UNSUPPORTED_VERSION' });
     expect(await verifySaveEnvelope({ format: 'herbal-line-save', schemaVersion: 1 })).toEqual({ ok: false, errorCode: 'INVALID_ENVELOPE' });
+  });
+
+  it('rejects malformed nested entities even when the supplied checksum is recomputed', async () => {
+    const envelope = await createSaveEnvelope(createInitialGameState(), '2026-10-12T12:00:00.000Z');
+    const { checksum: _checksum, ...body } = envelope;
+    const malformedBody = {
+      ...body,
+      payload: { ...body.payload, rooms: [null] },
+    };
+    const malformed = {
+      ...malformedBody,
+      checksum: await sha256Hex(stableStringify(malformedBody)),
+    } as SaveEnvelopeV1;
+
+    expect(await verifySaveEnvelope(malformed)).toEqual({ ok: false, errorCode: 'INVALID_ENVELOPE' });
+  });
+
+  it('rejects a checksummed save that violates cross-entity plant-care invariants', async () => {
+    const state = createInitialGameState();
+    const plant = state.plants[0];
+    if (!plant) throw new Error('Initial campaign must contain a plant.');
+    state.plants[0] = {
+      ...plant,
+      care: {
+        waterLevel: 'balanced',
+        lightLevel: 'balanced',
+        temperatureLevel: 'balanced',
+        humidityLevel: 'balanced',
+        nutrientLevel: 'balanced',
+        pruningCount: 0,
+        cuttingsTaken: 0,
+        cuttingsSet: 1,
+        lastAction: 'set_cutting',
+      },
+    };
+    const envelope = await createSaveEnvelope(state, '2026-10-12T12:00:00.000Z');
+
+    expect(await verifySaveEnvelope(envelope)).toEqual({ ok: false, errorCode: 'INVALID_ENVELOPE' });
   });
 
   it('preserves prototype-named JSON keys without mutating object prototypes', () => {
