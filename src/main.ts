@@ -662,7 +662,7 @@ async function boot(): Promise<() => void> {
       }
       cuttingVisuals.set(statePlant.id, existing);
     }
-    const selectedPlant = state.plants.find((item) => item.id === state.ui.selectedEntityId);
+    const selectedPlant = state.plants.find((item) => item.id === state.ui.selectedEntityId) ?? state.plants[0];
     const selectedVisual = selectedPlant ? plantVisuals.get(selectedPlant.id)?.[0] : undefined;
     if (selectedPlant && selectedVisual) {
       const care = getPlantCareState(selectedPlant);
