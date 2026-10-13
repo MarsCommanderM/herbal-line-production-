@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
+import ts from 'typescript';
 
 const failures = [];
 const title = 'Dr. Green Dump / DopeFarm';
@@ -105,7 +106,18 @@ for (const file of uiFiles) {
 }
 
 const upgradeSource = read('src/domain/upgrades.ts');
-if (!/ECONOMY_UPGRADES:\s*readonly EconomyUpgradeDefinition\[\]\s*=\s*\[\]/.test(upgradeSource)) {
+const upgradeFile = ts.createSourceFile('src/domain/upgrades.ts', upgradeSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+let activeUpgradeCatalog;
+function findUpgradeCatalog(node) {
+  if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === 'ECONOMY_UPGRADES') {
+    activeUpgradeCatalog = node.initializer;
+  }
+  ts.forEachChild(node, findUpgradeCatalog);
+}
+findUpgradeCatalog(upgradeFile);
+if (upgradeFile.parseDiagnostics.length > 0) {
+  failures.push('src/domain/upgrades.ts cannot be parsed as TypeScript.');
+} else if (!activeUpgradeCatalog || !ts.isArrayLiteralExpression(activeUpgradeCatalog) || activeUpgradeCatalog.elements.length !== 0) {
   failures.push('Unapproved upgrade prices/effects must not be active in the economy catalog.');
 }
 if (/energy-efficiency-[12]/i.test(upgradeSource)) {
