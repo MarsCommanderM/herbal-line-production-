@@ -33,6 +33,14 @@ def main() -> int:
                 errors.append("manifest title does not match expected game title")
         except (json.JSONDecodeError, OSError) as exc:
             errors.append(f"manifest cannot be parsed: {exc}")
+    schema_path = ROOT / "schemas/save-envelope-v1.schema.json"
+    if schema_path.is_file():
+        try:
+            schema = json.loads(schema_path.read_text(encoding="utf-8"))
+            if not isinstance(schema, dict) or schema.get("type") != "object":
+                errors.append("save envelope schema must be a JSON object schema")
+        except (json.JSONDecodeError, OSError) as exc:
+            errors.append(f"save envelope schema cannot be parsed: {exc}")
     for path in (ROOT / "docs").glob("*.md"):
         if path.stat().st_size < 100:
             errors.append(f"suspiciously small documentation file: {path.relative_to(ROOT)}")
