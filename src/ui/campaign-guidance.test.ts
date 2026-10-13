@@ -78,4 +78,20 @@ describe('campaign guidance', () => {
     expect(guidance.title).toBe('Kampagnenziel erreicht');
     expect(guidance.tone).toBe('success');
   });
+
+  it('provides a safe generic next step when the campaign has no plant, batch, or order', () => {
+    const state = createInitialGameState();
+    state.plants = [];
+    state.batches = [];
+    state.orders = [];
+    const before = structuredClone(state);
+
+    expect(getCampaignGuidance(state)).toMatchObject({
+      title: 'Kampagne bereit',
+      tone: 'info',
+      nextStep: 'Verfügbare Aktionen prüfen',
+    });
+    expect(state).toEqual(before);
+  });
+
 });

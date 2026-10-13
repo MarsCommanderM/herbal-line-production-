@@ -1,14 +1,14 @@
 # Content source register
 
-**Status:** authored tutorial and UI content; verify on the exact release revision.  
+**Status:** authored tutorial and contextual UI guidance have unit and browser acceptance on the verified production branch; content approval remains a release gate.  
 **Scope:** Dr. Green Dump / DopeFarm's fictional medical-cannabis management-game UI only.
 
 | Content family | Canonical source | External sources | Validation | Release status |
 |---|---|---|---|---|
-| Core-loop tutorial | `docs/03_CORE_LOOP_AND_USER_FLOWS.md`, `docs/02_FEATURE_SCOPE_AND_RELEASE_CONTENT.md`, `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md` | None used | Pure selector unit tests and Playwright UI flow | Pending same-revision CI and content review |
-| Contextual campaign guidance | `src/ui/campaign-guidance.ts` and the canonical domain state | None used | Existing domain-state assertions; broader empty/error-state review remains open | Partial |
+| Core-loop tutorial | `docs/03_CORE_LOOP_AND_USER_FLOWS.md`, `docs/02_FEATURE_SCOPE_AND_RELEASE_CONTENT.md`, `docs/04_DOMAIN_MODEL_AND_STATE_MACHINES.md` | None used | Pure selector unit tests and Playwright UI flow, including missing-entity safe state | Verified in exact-SHA CI 38355313631; content review remains a release gate |
+| Contextual campaign guidance | `src/ui/campaign-guidance.ts` and the canonical domain state | None used | State-derived tests cover active, compliance-blocked, QC-failed, delivered and missing-entity states; UI E2E asserts guidance/tutorial rendering | Expanded with missing-entity non-mutation tests; verify on the next exact-SHA CI |
 | Upgrade/economy descriptions | `docs/07_DATA_AND_RULES_CATALOG.md` | None used | Unconfigured IDs stay unavailable until prices/effects are authoritatively specified; regression tests reject purchases | Open — numeric balance not specified |
-| Visible plant-care gameplay | `docs/PRODUCTION_POLICY.md`, `docs/07_DATA_AND_RULES_CATALOG.md`, runtime care commands | No external factual sources; invented balance only | Domain tests, 3D state synchronization and save/reload E2E required | Implementation present; same-commit CI acceptance pending |
+| Visible plant-care gameplay | `docs/PRODUCTION_POLICY.md`, `docs/07_DATA_AND_RULES_CATALOG.md`, runtime care commands | No external factual sources; invented balance only | Domain tests, 3D state synchronization and save/reload E2E | Verified on exact SHA 41ae376e527a79d28ff1692fd19d6db2a4052631; current changes require a new exact-SHA run |
 
 ## Editorial and safety rules
 

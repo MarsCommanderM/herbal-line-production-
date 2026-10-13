@@ -89,4 +89,21 @@ describe('state-derived core-loop tutorial', () => {
     const delivered = { ...state, orders: state.orders.map((item) => item.id === order.id ? { ...item, status: 'delivered' as const } : item) };
     expect(getTutorialProgress(delivered)).toMatchObject({ step: 6, total: 6, status: 'complete', title: 'Kampagnenziel erreicht' });
   });
+
+  it('keeps the first step safe and non-mutating when campaign entities are absent', () => {
+    const state = createInitialGameState();
+    state.plants = [];
+    state.batches = [];
+    state.orders = [];
+    const before = structuredClone(state);
+
+    expect(getTutorialProgress(state)).toMatchObject({
+      step: 1,
+      total: 6,
+      status: 'active',
+      title: 'Simulation und Zustand',
+    });
+    expect(state).toEqual(before);
+  });
+
 });
