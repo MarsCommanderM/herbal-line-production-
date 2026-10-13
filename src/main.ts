@@ -606,7 +606,29 @@ async function boot(): Promise<() => void> {
     });
   }
 
+  function disposeSceneObject(object: THREE.Object3D): void {
+    scene.remove(object);
+    object.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return;
+      child.geometry.dispose();
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      for (const material of materials) material.dispose();
+    });
+  }
+
   function syncPlantVisuals(state: ReturnType<typeof createInitialGameState>): void {
+    const livePlantIds = new Set(state.plants.map((plant) => plant.id));
+    for (const [plantId, visuals] of plantVisuals) {
+      if (livePlantIds.has(plantId)) continue;
+      for (const visual of visuals) disposeSceneObject(visual);
+      plantVisuals.delete(plantId);
+    }
+    for (const [plantId, cuttings] of cuttingVisuals) {
+      if (livePlantIds.has(plantId)) continue;
+      for (const cutting of cuttings) disposeSceneObject(cutting);
+      cuttingVisuals.delete(plantId);
+    }
+
     for (const statePlant of state.plants) {
       let visuals = plantVisuals.get(statePlant.id);
       if (!visuals && statePlant.propagatedFromPlantId) {
@@ -636,16 +658,13 @@ async function boot(): Promise<() => void> {
       while (existing.length > targetCuttings) {
         const removed = existing.pop();
         if (!removed) continue;
-        scene.remove(removed);
-        removed.traverse((object) => {
-          if (!(object instanceof THREE.Mesh)) return;
-          object.geometry.dispose();
-          const materials = Array.isArray(object.material) ? object.material : [object.material];
-          for (const material of materials) material.dispose();
-        });
+        disposeSceneObject(removed);
       }
       cuttingVisuals.set(statePlant.id, existing);
     }
+    renderer.domElement.dataset.statePlantCount = String(state.plants.length);
+    renderer.domElement.dataset.plantVisualCount = String([...plantVisuals.values()].reduce((sum, visuals) => sum + visuals.length, 0));
+    renderer.domElement.dataset.cuttingVisualCount = String([...cuttingVisuals.values()].reduce((sum, visuals) => sum + visuals.length, 0));
   }
 
   const ui = new Application();

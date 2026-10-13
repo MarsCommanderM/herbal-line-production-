@@ -176,6 +176,48 @@ test('exported saves can be imported after a later campaign change', async ({ pa
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toHaveCount(0);
 });
 
+
+test('importing an older save removes stale propagated plant and cutting visuals', async ({ page }) => {
+  await page.goto('/');
+  const canvas = page.locator('#world-root canvas');
+  const graphicsFallback = page.locator('#fatal-error');
+  await expect.poll(async () => (await canvas.isVisible()) || (await graphicsFallback.isVisible())).toBe(true);
+  test.skip(!(await canvas.isVisible()), 'WebGL is unavailable; graphics fallback is covered separately.');
+
+  const initialPlantCount = Number(await canvas.getAttribute('data-state-plant-count'));
+  const initialVisualCount = Number(await canvas.getAttribute('data-plant-visual-count'));
+  const saveButton = page.getByRole('button', { name: 'Spielstand speichern' });
+  await saveButton.click();
+  await expect(page.locator('#game-feedback')).toContainText('Spielstand gespeichert');
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Spielstand exportieren' }).click();
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  if (!stream) throw new Error('Export download stream was not created.');
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  const originalSave = Buffer.concat(chunks);
+
+  await page.getByRole('button', { name: 'Steckling schneiden', exact: true }).click();
+  await expect(page.locator('#game-feedback')).toContainText('Steckling');
+  await page.getByRole('button', { name: 'Steckling setzen (1)', exact: true }).click();
+  await expect.poll(async () => Number(await canvas.getAttribute('data-state-plant-count'))).toBeGreaterThan(initialPlantCount);
+  await expect.poll(async () => Number(await canvas.getAttribute('data-plant-visual-count'))).toBeGreaterThan(initialVisualCount);
+
+  await page.getByRole('button', { name: 'Steckling schneiden', exact: true }).click();
+  await expect.poll(async () => Number(await canvas.getAttribute('data-cutting-visual-count'))).toBeGreaterThan(0);
+
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Spielstand importieren' }).click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles({ name: 'older-campaign-save.json', mimeType: 'application/json', buffer: originalSave });
+  await expect(page.locator('#game-feedback')).toContainText('Spielstand importiert');
+  await expect.poll(async () => Number(await canvas.getAttribute('data-state-plant-count'))).toBe(initialPlantCount);
+  await expect.poll(async () => Number(await canvas.getAttribute('data-plant-visual-count'))).toBe(initialVisualCount);
+  await expect.poll(async () => Number(await canvas.getAttribute('data-cutting-visual-count'))).toBe(0);
+});
+
 test('failed or unresolved QC offers a documented terminal rejection instead of a dead end', async ({ page }) => {
   let state = createInitialGameState();
   state = {
