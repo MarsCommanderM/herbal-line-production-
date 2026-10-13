@@ -521,6 +521,70 @@ test('failed or unresolved QC offers a documented terminal rejection instead of 
   await expect(page.locator('#game-log')).toContainText('BATCH REJECTED');
 });
 
+test('suspended license disables queueing and preserves the created batch', async ({ page }) => {
+  let state = createInitialGameState();
+  state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+  state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+  state = applyOk(state, 'BATCH/CREATE', {
+    batchId: entity('batch-compliance-hold'),
+    plantIds: [entity('plant-001')],
+    profileId: 'fictional-botanical-batch',
+  });
+  state.compliance.licenseStatus = 'suspended';
+
+  await seedCampaignSave(page, state);
+  const queueButton = page.getByRole('button', { name: 'Verarbeitung einplanen' });
+  await expect(page.locator('#campaign-tutorial')).toContainText('Einführung pausiert: Compliance');
+  await expect(queueButton).toBeDisabled();
+  await expect(queueButton).toHaveAttribute('title', /Compliance-Sperre aktiv/);
+  await expect(page.locator('#game-actions')).toContainText('Compliance-Sperre aktiv');
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision ' + state.revision);
+
+  const persisted = await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      return await new Promise<{ revision: number; batchStatus: string; roomOccupancy: number }>((resolve, reject) => {
+        const request = database.transaction('saves', 'readonly').objectStore('saves').get('campaign-01');
+        request.onsuccess = () => {
+          const record = request.result as { envelope: { payload: GameState } };
+          const savedState = record.envelope.payload;
+          resolve({
+            revision: savedState.revision,
+            batchStatus: savedState.batches[0]?.status ?? 'missing',
+            roomOccupancy: savedState.rooms.find((room) => room.id === 'room-processing-01')?.occupied ?? -1,
+          });
+        };
+        request.onerror = () => reject(request.error);
+      });
+    } finally {
+      database.close();
+    }
+  });
+  expect(persisted).toEqual({ revision: state.revision, batchStatus: 'created', roomOccupancy: 0 });
+});
+
+test('explicit operation hold disables the affected action while leaving unrelated actions available', async ({ page }) => {
+  let state = createInitialGameState();
+  state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+  state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+  state = applyOk(state, 'BATCH/CREATE', {
+    batchId: entity('batch-operation-hold'),
+    plantIds: [entity('plant-001')],
+    profileId: 'fictional-botanical-batch',
+  });
+  state.compliance.blockedOperationCodes = ['BATCH/QUEUE'];
+
+  await seedCampaignSave(page, state);
+  await expect(page.getByRole('button', { name: 'Verarbeitung einplanen' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Verarbeitung einplanen' })).toHaveAttribute('title', /Compliance-Sperre aktiv/);
+  await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Tag abschließen' })).toBeEnabled();
+});
+
 test('keyboard navigation reaches primary controls in a predictable order', async ({ page }, testInfo) => {
   await page.goto('/');
   // Focus the first control explicitly; Firefox also tabs to its scrollable management landmark.

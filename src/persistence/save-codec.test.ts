@@ -102,4 +102,9 @@ describe('versioned save codec', () => {
     circular.self = circular;
     expect(() => stableStringify(circular)).toThrow(TypeError);
   });
+
+  it('rejects unsupported schema versions before validating payload fields', async () => {
+    expect(await verifySaveEnvelope({ schemaVersion: 99 })).toEqual({ ok: false, errorCode: 'UNSUPPORTED_VERSION' });
+  });
+
 });
