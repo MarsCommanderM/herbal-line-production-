@@ -32,15 +32,18 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Audit locked dependencies for high and critical advisories
         run: npm audit --audit-level=high
-      - name: Generate and validate CycloneDX software bill of materials
+      - name: Generate CycloneDX SBOM and verify dependency license metadata
         run: |
           npm sbom --sbom-format=cyclonedx > "$RUNNER_TEMP/dopefarm-sbom.cdx.json"
-          node -e "const fs=require('node:fs'); const bom=JSON.parse(fs.readFileSync(process.argv[1],'utf8')); if (bom.bomFormat !== 'CycloneDX' || !Array.isArray(bom.components) || bom.components.length === 0) { throw new Error('CycloneDX SBOM is missing or invalid'); }" "$RUNNER_TEMP/dopefarm-sbom.cdx.json"
-      - name: Upload CycloneDX SBOM
+          node scripts/generate-dependency-license-inventory.mjs "$RUNNER_TEMP/dopefarm-sbom.cdx.json" > "$RUNNER_TEMP/dopefarm-dependency-license-inventory.md"
+          diff -u rights/DEPENDENCY_LICENSE_INVENTORY.md "$RUNNER_TEMP/dopefarm-dependency-license-inventory.md"
+      - name: Upload CycloneDX SBOM and license inventory
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: dopefarm-sbom-${{ github.sha }}
-          path: ${{ runner.temp }}/dopefarm-sbom.cdx.json
+          path: |
+            ${{ runner.temp }}/dopefarm-sbom.cdx.json
+            ${{ runner.temp }}/dopefarm-dependency-license-inventory.md
           if-no-files-found: error
           retention-days: 30
       - name: Source policy lint

@@ -58,3 +58,12 @@ Verified code revision: `41ae376e527a79d28ff1692fd19d6db2a4052631`.
 5. **Release QA/operations:** dependency/secret review, accessibility, privacy/security, IP/license review, artifact identity and rollback/incident-response evidence remain open.
 
 A green CI establishes technical acceptance for this commit only. It does not close the product decisions, asset approvals or release operations listed above. Do not merge or claim release-ready status until those blockers are resolved or explicitly accepted through the project's decision process.
+
+
+## Dependency security verification — exact source revision
+
+- Source revision: `41ff3d43f01da61fa54a645e685a3361c685cab6`.
+- [Full CI 38417104774](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38417104774): **SUCCESS** on the exact revision.
+- [Master Pack Validation 38417104628](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38417104628): **SUCCESS** on the same revision.
+- `npm audit --audit-level=high` reported 0 vulnerabilities; the generated CycloneDX SBOM contains 58 components with SPDX license metadata (SBOM SHA-256: `6bc6940c06cb7ae50979181c287cda28da6fd6eb09dd0b67a43db5e91f8c48ea`).
+- The subsequent commit adds deterministic license-inventory validation and enables the standalone Master Pack workflow on the restoration branch. These changes require their own exact-SHA CI proof.

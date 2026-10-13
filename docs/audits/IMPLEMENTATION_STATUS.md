@@ -92,3 +92,15 @@ Verified source revision: `341344b8f29be93f8f979056ed33b55c7bb9a1c6`.
 - The branch head is green for the configured engineering gates. This does not mean all release blockers are resolved or authorize a merge.
 - Open blockers remain exactly as recorded in `.tasks/NEXT.md`: evidenced legacy-save schema, authoritative incident/corrective-action contract, approved fictional economy/progression table, final licensed art/audio, and security/privacy/rights/release-operation evidence.
 - `main` remains unchanged at `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`.
+
+
+## Dependency-security baseline — exact verified revision
+
+Verified source revision: `41ff3d43f01da61fa54a645e685a3361c685cab6`.
+
+- [Full DopeFarm CI, run 38417104774](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38417104774): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38417104628](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38417104628): **SUCCESS** on the same SHA.
+- Dependency audit reported **0 vulnerabilities**. Locked development dependencies are pinned to Vite 6.4.4, Vitest 5.0.4 and Playwright 1.64.0.
+- The CI-generated CycloneDX SBOM contained 58 components, each with SPDX license metadata. The SBOM content SHA-256 is `6bc6940c06cb7ae50979181c287cda28da6fd6eb09dd0b67a43db5e91f8c48ea`.
+- This verifies automated dependency/security metadata and the configured engineering gates only. It does not substitute for secret scanning, legal compatibility/notice review, accessibility/privacy review, final asset rights, or release/rollback acceptance.
+- The subsequent commit adds deterministic license-inventory validation and branch-trigger coverage. Its own SHA must be verified by fresh CI; do not transfer this baseline's PASS to a later revision.

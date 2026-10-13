@@ -2,7 +2,7 @@ name: Dr. Green Dump / DopeFarm — Master Pack Validation
 
 on:
   push:
-    branches: [main]
+    branches: [main, "restore/original-masterpack-product-scope-20261012"]
   pull_request:
     branches: [main]
   workflow_dispatch:
