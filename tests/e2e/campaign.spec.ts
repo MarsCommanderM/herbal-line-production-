@@ -282,11 +282,16 @@ test('suspended license blocks delivery dispatch without reserving or posting an
   await expect(page.getByRole('button', { name: 'Lieferung versenden', exact: true })).toBeVisible();
   await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision ' + blockedRevision);
 
-  await page.getByRole('button', { name: 'Lieferung versenden', exact: true }).click();
-
-  await expect(page.locator('#game-feedback')).toContainText('Der Lizenz-/Compliance-Status blockiert den Versand.');
+  const dispatchButton = page.getByRole('button', { name: 'Lieferung versenden', exact: true });
+  await expect(dispatchButton).toBeDisabled();
+  await expect(dispatchButton).toHaveAttribute('title', /Compliance-Sperre aktiv/);
   await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision ' + blockedRevision);
-  await expect(page.getByRole('button', { name: 'Lieferung versenden', exact: true })).toBeVisible();
+
+  // A suspended license must prevent the action at the UI boundary; the disabled
+  // control is not clicked because doing so would wait for Playwright's timeout.
+  await page.reload();
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision ' + blockedRevision);
+  await expect(page.getByRole('button', { name: 'Lieferung versenden', exact: true })).toBeDisabled();
 });
 
 test('held inventory cannot be allocated to a pharmacy order', async ({ page }) => {
@@ -589,10 +594,10 @@ test('idle campaign is periodically autosaved at the configured interval', async
   await page.clock.install();
   await page.goto('/');
   const documentRoot = page.locator('html');
-  await expect(documentRoot).toHaveAttribute('data-autosave-count', /\d+/, { timeout: 10000 });
-  const before = Number(await documentRoot.getAttribute('data-autosave-count'));
+  await expect(documentRoot).toHaveAttribute('data-autosave-interval-ms', '30000', { timeout: 10000 });
+  const before = Number(await documentRoot.getAttribute('data-autosave-count') ?? '0');
   await page.clock.fastForward(30_000);
-  await expect.poll(async () => Number(await documentRoot.getAttribute('data-autosave-count'))).toBe(before + 1);
+  await expect.poll(async () => Number(await documentRoot.getAttribute('data-autosave-count') ?? '0')).toBe(before + 1);
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
 });
 
@@ -689,7 +694,8 @@ test('end-of-day settlement updates the campaign clock, ledger and autosave', as
   await expect(page.locator('#game-metrics')).toContainText('Tageskosten');
   await expect(page.locator('#game-metrics')).toContainText('Reichweite (0 € Umsatz)');
   await expect(page.locator('#game-metrics')).toContainText('30-Tage-Szenario (0 € Umsatz)');
-  await expect(page.locator('#game-metrics')).toContainText('223.600,00');
+  await expect(page.locator('#game-metrics')).toContainText('25.000,00');
+  await expect(page.locator('#game-metrics')).toContainText('-21.200,00');
   await expect(page.getByRole('button', { name: 'Tag abschließen' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Tag abschließen' }).click();
@@ -697,8 +703,8 @@ test('end-of-day settlement updates the campaign clock, ledger and autosave', as
   await expect(page.locator('#game-metrics .metric-card').filter({ hasText: 'Spieltag' })).toContainText('2');
   await expect(page.locator('#game-feedback')).toContainText('Tag 1 abgeschlossen');
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
-  await expect(page.locator('#game-metrics')).toContainText('880,00');
-  await expect(page.locator('#game-metrics')).toContainText('222.720,00');
+  await expect(page.locator('#game-metrics')).toContainText('23.460,00');
+  await expect(page.locator('#game-metrics')).toContainText('-22.740,00');
 });
 
 

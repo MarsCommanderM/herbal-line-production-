@@ -889,6 +889,7 @@ let dispose: (() => void) | undefined;
 let autosaveTimer: number | undefined;
 void boot().then((cleanup) => {
   dispose = cleanup;
+  document.documentElement.dataset.autosaveIntervalMs = String(GAME_BALANCE.autosaveIntervalMs);
   autosaveTimer = window.setInterval(() => {
     void autosaveCampaign();
   }, GAME_BALANCE.autosaveIntervalMs);
