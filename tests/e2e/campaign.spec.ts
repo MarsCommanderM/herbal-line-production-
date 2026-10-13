@@ -2,7 +2,7 @@ import type { CommandId, EntityId, Score0To100 } from '../../contracts/domain';
 import { createInitialGameState } from '../../src/domain/initial-state';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from '../../src/domain/vertical-slice';
 import { createSaveEnvelope, stableStringify } from '../../src/persistence/save-codec';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const entity = (value: string): EntityId => value as EntityId;
 const commandId = (value: string): CommandId => value as CommandId;
@@ -22,6 +22,40 @@ function applyOk(
   const result = applyVerticalSliceCommand(state, command);
   if (!result.ok) throw new Error(result.error.message);
   return result.state;
+}
+async function seedCampaignSave(page: Page, state: ReturnType<typeof createInitialGameState>): Promise<void> {
+  const envelope = await createSaveEnvelope(state, '2026-10-12T12:00:00.000Z');
+  const serialized = stableStringify(envelope);
+  const metadata = {
+    slotId: 'campaign-01',
+    revision: envelope.revision,
+    savedAtRealTime: envelope.savedAtRealTime,
+    gameVersion: envelope.gameVersion,
+    byteLength: new TextEncoder().encode(serialized).byteLength,
+  };
+
+  await page.goto('/');
+  await page.evaluate(async ({ saveEnvelope, saveMetadata }) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line', 1);
+      request.onupgradeneeded = () => {
+        if (!request.result.objectStoreNames.contains('saves')) {
+          request.result.createObjectStore('saves', { keyPath: 'slotId' });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction('saves', 'readwrite');
+      transaction.objectStore('saves').put({ slotId: 'campaign-01', envelope: saveEnvelope, metadata: saveMetadata });
+      transaction.oncomplete = () => { database.close(); resolve(); };
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error);
+    });
+  }, { saveEnvelope: envelope, saveMetadata: metadata });
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
 }
 
 test('third-person avatar moves with keyboard and camera target follows', async ({ page }) => {
@@ -168,6 +202,100 @@ test('all visible plant-care settings and actions persist through autosave and r
   await expect(canvas).toHaveAttribute('data-visual-nutrient-color', '1e7541');
 });
 
+
+test('suspended license blocks direct plant care without changing the saved campaign', async ({ page }) => {
+  const initial = createInitialGameState();
+  const suspended = {
+    ...initial,
+    compliance: { ...initial.compliance, licenseStatus: 'suspended' as const },
+  };
+  await seedCampaignSave(page, suspended);
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision 0');
+
+  const waterButton = page.getByRole('button', { name: 'Bewässerung: hoch', exact: true });
+  await expect(waterButton).toHaveAttribute('aria-pressed', 'false');
+  await waterButton.click();
+
+  await expect(page.locator('#game-feedback')).toContainText('Der Lizenz-/Compliance-Status blockiert diese Pflegeaktion.');
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision 0');
+  await expect(waterButton).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('suspended license blocks delivery dispatch without reserving or posting anything new', async ({ page }) => {
+  let state = createInitialGameState();
+  state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+  state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+  state = applyOk(state, 'BATCH/CREATE', {
+    batchId: entity('batch-compliance-e2e'),
+    plantIds: [entity('plant-001')],
+    profileId: 'fictional-medical-cannabis-batch',
+  });
+  state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-compliance-e2e'), roomId: entity('room-processing-01') });
+  state = applyOk(state, 'BATCH/START_PROCESSING', {
+    batchId: entity('batch-compliance-e2e'),
+    machineId: entity('machine-processing-001'),
+  });
+  state = applyOk(state, 'BATCH/SUBMIT_QC', {
+    batchId: entity('batch-compliance-e2e'),
+    assessmentId: entity('assessment-compliance-e2e'),
+  });
+  state = applyOk(state, 'BATCH/RELEASE', { batchId: entity('batch-compliance-e2e') });
+  state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-buyer-001') });
+  state = applyOk(state, 'ORDER/ALLOCATE', {
+    orderId: entity('order-buyer-001'),
+    lotIds: state.inventoryLots.filter((lot) => lot.status === 'released').map((lot) => lot.id),
+  });
+  state = applyOk(state, 'DELIVERY/CREATE', {
+    deliveryId: entity('delivery-compliance-e2e'),
+    orderId: entity('order-buyer-001'),
+    routeId: 'fictional-route-local-01',
+  });
+  state = {
+    ...state,
+    compliance: { ...state.compliance, licenseStatus: 'suspended' as const },
+  };
+  const blockedRevision = state.revision;
+
+  await seedCampaignSave(page, state);
+  await expect(page.getByRole('button', { name: 'Lieferung versenden', exact: true })).toBeVisible();
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision ' + blockedRevision);
+
+  await page.getByRole('button', { name: 'Lieferung versenden', exact: true }).click();
+
+  await expect(page.locator('#game-feedback')).toContainText('Der Lizenz-/Compliance-Status blockiert den Versand.');
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt · Revision ' + blockedRevision);
+  await expect(page.getByRole('button', { name: 'Lieferung versenden', exact: true })).toBeVisible();
+});
+
+test('held inventory cannot be allocated to a pharmacy order', async ({ page }) => {
+  let state = createInitialGameState();
+  state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+  state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+  state = applyOk(state, 'BATCH/CREATE', {
+    batchId: entity('batch-held-e2e'),
+    plantIds: [entity('plant-001')],
+    profileId: 'fictional-medical-cannabis-batch',
+  });
+  state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-held-e2e'), roomId: entity('room-processing-01') });
+  state = applyOk(state, 'BATCH/START_PROCESSING', {
+    batchId: entity('batch-held-e2e'),
+    machineId: entity('machine-processing-001'),
+  });
+  state = applyOk(state, 'BATCH/SUBMIT_QC', {
+    batchId: entity('batch-held-e2e'),
+    assessmentId: entity('assessment-held-e2e'),
+  });
+  state = applyOk(state, 'BATCH/RELEASE', { batchId: entity('batch-held-e2e') });
+  state = applyOk(state, 'ORDER/ACCEPT', { orderId: entity('order-buyer-001') });
+  state = {
+    ...state,
+    inventoryLots: state.inventoryLots.map((lot) => ({ ...lot, status: 'held' as const })),
+  };
+
+  await seedCampaignSave(page, state);
+  await expect(page.locator('#game-actions')).toContainText('Abnehmerauftrag annehmen');
+  await expect(page.getByRole('button', { name: 'Freigegebenen Bestand reservieren', exact: true })).toHaveCount(0);
+});
 
 test('rejects corrupt primary and backup saves without loading corrupted campaign state', async ({ page }) => {
   await page.goto('/');
