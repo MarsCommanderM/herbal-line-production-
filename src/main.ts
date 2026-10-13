@@ -536,15 +536,17 @@ async function boot(): Promise<() => void> {
         const plant = createCannabisPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
         plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
         if (row === 0 && column === 0 && pod === 0) {
-          const activePlant = gameState.plants.find((item) => item.id === gameState.ui.selectedEntityId) ?? gameState.plants[0];
-          if (activePlant) {
-            plant.userData.plantId = activePlant.id;
+          // The physical primary-bed plant must keep its domain identity across reloads.
+          // Selection is UI state; it must never rebind a different plant to this mesh.
+          const primaryPlant = gameState.plants.find((item) => item.propagatedFromPlantId === null) ?? gameState.plants[0];
+          if (primaryPlant) {
+            plant.userData.plantId = primaryPlant.id;
             plant.userData.baseScale = plant.scale.clone();
             const growLight = new THREE.PointLight(0xddeeff, 0.8, 4);
             growLight.position.set(0, 2.6, 0);
             plant.add(growLight);
             plant.userData.growLight = growLight;
-            plantVisuals.set(activePlant.id, [plant]);
+            plantVisuals.set(primaryPlant.id, [plant]);
           }
         }
         station.add(plant);
