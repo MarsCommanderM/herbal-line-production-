@@ -113,10 +113,22 @@ export interface ComplianceViolation {
   id: EntityId; code: string; severity: ViolationSeverity; occurredAt: SimulationMinute;
   relatedEntityIds: EntityId[]; resolvedAt: SimulationMinute | null; resolutionCode: string | null;
 }
+export type ComplianceCaseStatus = 'open' | 'corrective_action' | 'verification' | 'closed';
+export interface ComplianceCase {
+  id: EntityId; violationId: EntityId; code: string; severity: ViolationSeverity;
+  status: ComplianceCaseStatus; openedAt: SimulationMinute; relatedEntityIds: EntityId[];
+  correctiveActionCode: string | null; submittedAt: SimulationMinute | null;
+  verifiedAt: SimulationMinute | null; closedAt: SimulationMinute | null;
+}
+export interface AuditRun {
+  id: EntityId; startedAt: SimulationMinute; completedAt: SimulationMinute | null;
+  status: 'in_progress' | 'completed'; outcome: 'clear' | 'findings' | null;
+  findingCodes: string[]; violationIds: EntityId[];
+}
 export interface ComplianceState {
   risk: Risk0To100; licenseStatus: LicenseStatus; violations: ComplianceViolation[];
   auditDueAt: SimulationMinute; lastAuditAt: SimulationMinute | null;
-  blockedOperationCodes: string[];
+  blockedOperationCodes: string[]; cases?: ComplianceCase[]; audits?: AuditRun[];
 }
 export interface LedgerEntry {
   id: EntityId; simulationMinute: SimulationMinute; account: 'revenue' | 'expense' | 'penalty' | 'investment' | 'refund' | 'grant';

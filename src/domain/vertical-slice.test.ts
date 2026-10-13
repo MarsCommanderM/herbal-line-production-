@@ -467,4 +467,53 @@ describe('medical cannabis operations vertical slice', () => {
     expect(state).toEqual(before);
   });
 
+
+  it('executes incident, corrective-action, verification and audit transitions', () => {
+    const initial = createInitialGameState();
+    let state = applyOk(initial, 'COMPLIANCE/RECORD_INCIDENT', {
+      caseId: entity('case-unit-1'), violationId: entity('violation-unit-1'),
+      code: 'FICTIONAL_DEVIATION', severity: 'medium', relatedEntityIds: [initial.player.id],
+    });
+    expect(state.compliance.cases?.[0]?.status).toBe('open');
+    state = applyOk(state, 'COMPLIANCE/RECORD_CORRECTIVE_ACTION', { caseId: entity('case-unit-1'), actionCode: 'DOCUMENTED_GAME_CORRECTION' });
+    state = applyOk(state, 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION', { caseId: entity('case-unit-1') });
+    const rejected = applyOk(state, 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', { caseId: entity('case-unit-1'), passed: false, resolutionCode: 'VERIFICATION_FAILED' });
+    expect(rejected.compliance.cases?.[0]?.status).toBe('corrective_action');
+    expect(rejected.compliance.violations[0]?.resolvedAt).toBeNull();
+    state = applyOk(rejected, 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION', { caseId: entity('case-unit-1') });
+    state = applyOk(state, 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', { caseId: entity('case-unit-1'), passed: true, resolutionCode: 'VERIFICATION_PASSED' });
+    expect(state.compliance.cases?.[0]?.status).toBe('closed');
+    expect(state.compliance.violations[0]?.resolvedAt).toBe(state.time.totalMinutes);
+    state = applyOk(state, 'COMPLIANCE/START_AUDIT', { auditId: entity('audit-unit-1') });
+    state = applyOk(state, 'COMPLIANCE/COMPLETE_AUDIT', { auditId: entity('audit-unit-1') });
+    expect(state.compliance.audits?.[0]?.outcome).toBe('clear');
+    expect(state.logs.at(-1)?.code).toBe('COMPLIANCE_AUDIT_COMPLETED');
+  });
+
+  it('rejects duplicate and out-of-order compliance transitions atomically', () => {
+    const initial = createInitialGameState();
+    const noCase = dispatch(initial, 'COMPLIANCE/RECORD_CORRECTIVE_ACTION', { caseId: entity('missing-case'), actionCode: 'DOCUMENTED_GAME_CORRECTION' });
+    expect(noCase.ok).toBe(false);
+    expect(noCase.state).toEqual(initial);
+    const started = applyOk(initial, 'COMPLIANCE/START_AUDIT', { auditId: entity('audit-atomic-1') });
+    const duplicateStart = dispatch(started, 'COMPLIANCE/START_AUDIT', { auditId: entity('audit-atomic-2') });
+    expect(duplicateStart.ok).toBe(false);
+    expect(duplicateStart.state).toEqual(started);
+    const completed = applyOk(started, 'COMPLIANCE/COMPLETE_AUDIT', { auditId: entity('audit-atomic-1') });
+    const duplicateComplete = dispatch(completed, 'COMPLIANCE/COMPLETE_AUDIT', { auditId: entity('audit-atomic-1') });
+    expect(duplicateComplete.ok).toBe(false);
+    expect(duplicateComplete.state).toEqual(completed);
+  });
+
+  it('requires a clear audit before finalizing license recovery', () => {
+    const initial = createInitialGameState();
+    const suspended = { ...initial, compliance: { ...initial.compliance, licenseStatus: 'suspended' as const } };
+    let state = applyOk(suspended, 'COMPLIANCE/START_AUDIT', { auditId: entity('recovery-audit-1') });
+    state = applyOk(state, 'COMPLIANCE/COMPLETE_AUDIT', { auditId: entity('recovery-audit-1') });
+    expect(state.compliance.licenseStatus).toBe('recovery_review');
+    state = applyOk(state, 'COMPLIANCE/FINALIZE_RECOVERY');
+    expect(state.compliance.licenseStatus).toBe('valid');
+  });
+
+
 });

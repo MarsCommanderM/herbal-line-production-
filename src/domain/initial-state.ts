@@ -77,7 +77,7 @@ export function createInitialGameState(): GameState {
       { id: SENSOR_PACK_UPGRADE_ID, unlocked: false, purchasedAt: null },
       { id: DRYING_RACK_UPGRADE_ID, unlocked: false, purchasedAt: null },
     ],
-    compliance: { risk: risk(GAME_BALANCE.initialComplianceRisk), licenseStatus: 'valid', violations: [], auditDueAt: minute(4320), lastAuditAt: minute(0), blockedOperationCodes: [] },
+    compliance: { risk: risk(GAME_BALANCE.initialComplianceRisk), licenseStatus: 'valid', violations: [], auditDueAt: minute(4320), lastAuditAt: minute(0), blockedOperationCodes: [], cases: [], audits: [] },
     economy: { openingBalanceCents: cents(GAME_BALANCE.initialMoneyCents), ledger: [] },
     logs: [
       { id: entityId('log-seed-001'), at: minute(0), category: 'campaign', code: 'CAMPAIGN_READY', message: 'Kampagne gestartet. Alle Produktionswerte sind fiktive Spielwerte.', actorId: playerId, relatedEntityIds: [sourceLotId, plantId] },

@@ -1,4 +1,4 @@
-import type { CareLevel, CommandId, EntityId, GameState, PlantCareAction, Score0To100 } from './domain';
+import type { CareLevel, CommandId, EntityId, GameState, PlantCareAction, Score0To100, ViolationSeverity } from './domain';
 
 export interface CommandBase { commandId: CommandId; actorId: EntityId; expectedRevision: number; }
 export type DomainCommand =
@@ -33,6 +33,12 @@ export type DomainCommand =
   | (CommandBase & { type: 'UPGRADE/PURCHASE'; upgradeId: string })
   | (CommandBase & { type: 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT' })
   | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId })
+  | (CommandBase & { type: 'COMPLIANCE/COMPLETE_AUDIT'; auditId: EntityId })
+  | (CommandBase & { type: 'COMPLIANCE/RECORD_INCIDENT'; caseId: EntityId; violationId: EntityId; code: string; severity: ViolationSeverity; relatedEntityIds: EntityId[] })
+  | (CommandBase & { type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION'; caseId: EntityId; actionCode: string })
+  | (CommandBase & { type: 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION'; caseId: EntityId })
+  | (CommandBase & { type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION'; caseId: EntityId; passed: boolean; resolutionCode: string })
+  | (CommandBase & { type: 'COMPLIANCE/FINALIZE_RECOVERY' })
 ;
 
 export type UICommand =

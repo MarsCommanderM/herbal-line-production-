@@ -47,6 +47,13 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'TIME/END_DAY'
     | 'UPGRADE/PURCHASE'
     | 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT'
+    | 'COMPLIANCE/START_AUDIT'
+    | 'COMPLIANCE/COMPLETE_AUDIT'
+    | 'COMPLIANCE/RECORD_INCIDENT'
+    | 'COMPLIANCE/RECORD_CORRECTIVE_ACTION'
+    | 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION'
+    | 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION'
+    | 'COMPLIANCE/FINALIZE_RECOVERY'
 }>;
 
 const entityId = (value: string): EntityId => value as EntityId;
@@ -314,6 +321,169 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
           }],
         },
       }, [timeEvent, ...ledgerEvents], 'CAMPAIGN_DAY_ENDED', 'Tag ' + completedDay + ' abgeschlossen; Löhne und Betriebskosten wurden im Ledger gebucht.', [state.player.id, ...postings.map((entry) => entry.id)]);
+    }
+    case 'COMPLIANCE/START_AUDIT': {
+      const audits = state.compliance.audits ?? [];
+      if (!command.auditId.trim()) return failure(state, 'INVALID_PAYLOAD', 'Die Audit-ID darf nicht leer sein.');
+      if (audits.some((item) => item.id === command.auditId)) return failure(state, 'DUPLICATE_COMMAND', 'Diese Audit-ID wurde bereits verwendet.');
+      if (audits.some((item) => item.status === 'in_progress')) return failure(state, 'INVALID_TRANSITION', 'Ein Audit ist bereits aktiv.');
+      let licenseStatus = state.compliance.licenseStatus;
+      if (Number(state.compliance.risk) >= GAME_BALANCE.licenseSuspendedRisk) licenseStatus = 'suspended';
+      else if (licenseStatus !== 'suspended' && licenseStatus !== 'recovery_review'
+        && Number(state.compliance.risk) >= GAME_BALANCE.licenseWarningRisk) licenseStatus = 'warning';
+      const audit = {
+        id: command.auditId, startedAt: state.time.totalMinutes, completedAt: null,
+        status: 'in_progress' as const, outcome: null, findingCodes: [], violationIds: [],
+      };
+      const events: DomainEvent[] = [{
+        ...eventBase(state, command, command.auditId), type: 'compliance.audit_started',
+        code: 'COMPLIANCE_AUDIT_STARTED', status: 'in_progress',
+      }];
+      if (licenseStatus !== state.compliance.licenseStatus) events.push({
+        ...eventBase(state, command, command.auditId, 2), type: 'compliance.license_changed',
+        code: 'LICENSE_STATUS_UPDATED_FROM_RISK', status: licenseStatus,
+      });
+      return commit(state, command, {
+        compliance: { ...state.compliance, audits: [...audits, audit], licenseStatus },
+      }, events, 'COMPLIANCE_AUDIT_STARTED', 'Audit gestartet; offene Abweichungen und Lizenzstatus werden im Spiel geprüft.', [command.auditId]);
+    }
+    case 'COMPLIANCE/COMPLETE_AUDIT': {
+      const audits = state.compliance.audits ?? [];
+      const audit = audits.find((item) => item.id === command.auditId);
+      if (!audit) return failure(state, 'NOT_FOUND', 'Audit nicht gefunden.');
+      if (audit.status !== 'in_progress') return failure(state, 'INVALID_TRANSITION', 'Nur ein laufendes Audit kann abgeschlossen werden.');
+      const cases = state.compliance.cases ?? [];
+      const unresolvedViolations = state.compliance.violations.filter((item) => item.resolvedAt === null);
+      const openCases = cases.filter((item) => item.status !== 'closed');
+      const findingCodes = [...new Set([...unresolvedViolations.map((item) => item.code), ...openCases.map((item) => item.code)])].sort();
+      const outcome = findingCodes.length === 0 ? 'clear' as const : 'findings' as const;
+      const completedAudit = {
+        ...audit, completedAt: state.time.totalMinutes, status: 'completed' as const, outcome,
+        findingCodes, violationIds: unresolvedViolations.map((item) => item.id).sort(),
+      };
+      const priorStatus = state.compliance.licenseStatus;
+      let licenseStatus = priorStatus;
+      if (outcome === 'clear') {
+        if (priorStatus === 'suspended' && Number(state.compliance.risk) < GAME_BALANCE.licenseSuspendedRisk) licenseStatus = 'recovery_review';
+        else if (priorStatus === 'recovery_review') licenseStatus = 'recovery_review';
+        else if (priorStatus === 'warning' && Number(state.compliance.risk) < GAME_BALANCE.licenseWarningRisk) licenseStatus = 'valid';
+        else if (Number(state.compliance.risk) >= GAME_BALANCE.licenseSuspendedRisk) licenseStatus = 'suspended';
+        else if (Number(state.compliance.risk) >= GAME_BALANCE.licenseWarningRisk && priorStatus !== 'suspended') licenseStatus = 'warning';
+      } else {
+        if (Number(state.compliance.risk) >= GAME_BALANCE.licenseSuspendedRisk) licenseStatus = 'suspended';
+        else if (priorStatus !== 'suspended' && priorStatus !== 'recovery_review'
+          && Number(state.compliance.risk) >= GAME_BALANCE.licenseWarningRisk) licenseStatus = 'warning';
+      }
+      const events: DomainEvent[] = [{
+        ...eventBase(state, command, audit.id), type: 'compliance.audit_completed',
+        code: 'COMPLIANCE_AUDIT_COMPLETED', status: outcome,
+      }];
+      if (licenseStatus !== priorStatus) events.push({
+        ...eventBase(state, command, audit.id, 2), type: 'compliance.license_changed',
+        code: outcome === 'clear' ? 'COMPLIANCE_AUDIT_PASSED' : 'COMPLIANCE_AUDIT_FINDINGS', status: licenseStatus,
+      });
+      return commit(state, command, {
+        compliance: { ...state.compliance, audits: audits.map((item) => item.id === audit.id ? completedAudit : item), lastAuditAt: state.time.totalMinutes, licenseStatus },
+      }, events, 'COMPLIANCE_AUDIT_COMPLETED',
+      outcome === 'clear' ? 'Audit abgeschlossen: keine offenen Compliance-Abweichungen gefunden.' : 'Audit abgeschlossen: offene Abweichungen bleiben sichtbar und müssen bearbeitet werden.',
+      [audit.id, ...completedAudit.violationIds, ...openCases.map((item) => item.id)]);
+    }
+    case 'COMPLIANCE/RECORD_INCIDENT': {
+      const cases = state.compliance.cases ?? [];
+      if (!command.caseId.trim() || !command.violationId.trim() || !/^[A-Z][A-Z0-9_:-]{1,63}$/.test(command.code)) return failure(state, 'INVALID_PAYLOAD', 'Fall-ID, Befund-ID oder Befundcode ist ungültig.');
+      if (!['low', 'medium', 'high', 'critical'].includes(command.severity)) return failure(state, 'INVALID_PAYLOAD', 'Der Schweregrad des Befunds ist ungültig.');
+      if (cases.some((item) => item.id === command.caseId) || state.compliance.violations.some((item) => item.id === command.violationId)) return failure(state, 'DUPLICATE_COMMAND', 'Fall-ID oder Befund-ID existiert bereits.');
+      const knownIds = new Set<string>([
+        state.player.id, ...state.rooms.map((item) => item.id), ...state.sourceLots.map((item) => item.id),
+        ...state.plants.map((item) => item.id), ...state.batches.map((item) => item.id),
+        ...state.inventoryLots.map((item) => item.id), ...state.qualityAssessments.map((item) => item.id),
+        ...state.orders.map((item) => item.id), ...state.customers.map((item) => item.id),
+        ...state.deliveries.map((item) => item.id), ...state.staff.map((item) => item.id),
+        ...state.assignments.map((item) => item.id), ...state.machines.map((item) => item.id),
+      ]);
+      if (command.relatedEntityIds.length === 0 || command.relatedEntityIds.some((id) => !knownIds.has(id))) return failure(state, 'INVALID_PAYLOAD', 'Mindestens eine gültige Bezugseinheit muss verknüpft sein.');
+      const violation = {
+        id: command.violationId, code: command.code, severity: command.severity,
+        occurredAt: state.time.totalMinutes, relatedEntityIds: [...new Set(command.relatedEntityIds)],
+        resolvedAt: null, resolutionCode: null,
+      };
+      const complianceCase = {
+        id: command.caseId, violationId: violation.id, code: violation.code, severity: violation.severity,
+        status: 'open' as const, openedAt: state.time.totalMinutes, relatedEntityIds: violation.relatedEntityIds,
+        correctiveActionCode: null, submittedAt: null, verifiedAt: null, closedAt: null,
+      };
+      let licenseStatus = state.compliance.licenseStatus;
+      if (Number(state.compliance.risk) >= GAME_BALANCE.licenseSuspendedRisk) licenseStatus = 'suspended';
+      else if (licenseStatus !== 'suspended' && licenseStatus !== 'recovery_review'
+        && Number(state.compliance.risk) >= GAME_BALANCE.licenseWarningRisk) licenseStatus = 'warning';
+      const events: DomainEvent[] = [
+        { ...eventBase(state, command, violation.id), type: 'compliance.violation_recorded', code: violation.code, status: 'open' },
+        { ...eventBase(state, command, complianceCase.id, 2), type: 'compliance.case_opened', code: complianceCase.code, status: complianceCase.status },
+      ];
+      if (licenseStatus !== state.compliance.licenseStatus) events.push({
+        ...eventBase(state, command, complianceCase.id, 3), type: 'compliance.license_changed',
+        code: 'LICENSE_STATUS_UPDATED_FROM_RISK', status: licenseStatus,
+      });
+      return commit(state, command, {
+        compliance: { ...state.compliance, violations: [...state.compliance.violations, violation], cases: [...cases, complianceCase], licenseStatus },
+      }, events, 'COMPLIANCE_CASE_OPENED', 'Fiktive Betriebsabweichung dokumentiert; Korrektur und Verifikation sind erforderlich.', [complianceCase.id, violation.id, ...violation.relatedEntityIds]);
+    }
+    case 'COMPLIANCE/RECORD_CORRECTIVE_ACTION': {
+      const cases = state.compliance.cases ?? [];
+      const complianceCase = cases.find((item) => item.id === command.caseId);
+      if (!complianceCase) return failure(state, 'NOT_FOUND', 'Compliance-Fall nicht gefunden.');
+      if (complianceCase.status !== 'open') return failure(state, 'INVALID_TRANSITION', 'Eine Korrekturmaßnahme kann nur für einen offenen Fall erfasst werden.');
+      if (!/^[A-Z][A-Z0-9_:-]{1,63}$/.test(command.actionCode)) return failure(state, 'INVALID_PAYLOAD', 'Der Korrekturmaßnahmencode ist ungültig.');
+      const updatedCase = { ...complianceCase, status: 'corrective_action' as const, correctiveActionCode: command.actionCode, submittedAt: null, verifiedAt: null, closedAt: null };
+      const event: DomainEvent = { ...eventBase(state, command, complianceCase.id), type: 'compliance.corrective_action_recorded', code: command.actionCode, status: 'corrective_action' };
+      return commit(state, command, { compliance: { ...state.compliance, cases: cases.map((item) => item.id === complianceCase.id ? updatedCase : item) } }, [event], 'COMPLIANCE_CORRECTIVE_ACTION_RECORDED', 'Korrekturmaßnahme dokumentiert; sie muss zur Prüfung eingereicht werden.', [complianceCase.id, complianceCase.violationId]);
+    }
+    case 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION': {
+      const cases = state.compliance.cases ?? [];
+      const complianceCase = cases.find((item) => item.id === command.caseId);
+      if (!complianceCase) return failure(state, 'NOT_FOUND', 'Compliance-Fall nicht gefunden.');
+      if (complianceCase.status !== 'corrective_action' || !complianceCase.correctiveActionCode) return failure(state, 'INVALID_TRANSITION', 'Nur eine dokumentierte Korrekturmaßnahme kann eingereicht werden.');
+      const updatedCase = { ...complianceCase, status: 'verification' as const, submittedAt: state.time.totalMinutes };
+      const event: DomainEvent = { ...eventBase(state, command, complianceCase.id), type: 'compliance.corrective_action_submitted', code: complianceCase.correctiveActionCode, status: 'verification' };
+      return commit(state, command, { compliance: { ...state.compliance, cases: cases.map((item) => item.id === complianceCase.id ? updatedCase : item) } }, [event], 'COMPLIANCE_CORRECTIVE_ACTION_SUBMITTED', 'Korrekturmaßnahme zur Verifikation eingereicht.', [complianceCase.id, complianceCase.violationId]);
+    }
+    case 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION': {
+      const cases = state.compliance.cases ?? [];
+      const complianceCase = cases.find((item) => item.id === command.caseId);
+      if (!complianceCase) return failure(state, 'NOT_FOUND', 'Compliance-Fall nicht gefunden.');
+      if (complianceCase.status !== 'verification') return failure(state, 'INVALID_TRANSITION', 'Nur eine eingereichte Korrekturmaßnahme kann verifiziert werden.');
+      if (typeof command.passed !== 'boolean' || !/^[A-Z][A-Z0-9_:-]{1,63}$/.test(command.resolutionCode)) return failure(state, 'INVALID_PAYLOAD', 'Verifikationsergebnis oder Abschlusscode ist ungültig.');
+      const violation = state.compliance.violations.find((item) => item.id === complianceCase.violationId);
+      if (!violation) return failure(state, 'PRECONDITION_FAILED', 'Der Compliance-Fall verweist auf keinen vorhandenen Befund.');
+      const updatedCase = command.passed
+        ? { ...complianceCase, status: 'closed' as const, verifiedAt: state.time.totalMinutes, closedAt: state.time.totalMinutes }
+        : { ...complianceCase, status: 'corrective_action' as const, submittedAt: null, verifiedAt: null, closedAt: null };
+      const updatedViolation = command.passed ? { ...violation, resolvedAt: state.time.totalMinutes, resolutionCode: command.resolutionCode } : violation;
+      const event: DomainEvent = { ...eventBase(state, command, complianceCase.id), type: 'compliance.corrective_action_verified', code: command.resolutionCode, status: command.passed ? 'closed' : 'corrective_action' };
+      return commit(state, command, {
+        compliance: {
+          ...state.compliance,
+          cases: cases.map((item) => item.id === complianceCase.id ? updatedCase : item),
+          violations: state.compliance.violations.map((item) => item.id === violation.id ? updatedViolation : item),
+        },
+      }, [event], command.passed ? 'COMPLIANCE_CORRECTIVE_ACTION_VERIFIED' : 'COMPLIANCE_CORRECTIVE_ACTION_REWORK',
+      command.passed ? 'Korrekturmaßnahme verifiziert; Fall und Befund wurden geschlossen.' : 'Verifikation nicht bestanden; die Korrekturmaßnahme muss überarbeitet werden.',
+      [complianceCase.id, complianceCase.violationId]);
+    }
+    case 'COMPLIANCE/FINALIZE_RECOVERY': {
+      if (state.compliance.licenseStatus !== 'recovery_review') return failure(state, 'INVALID_TRANSITION', 'Die Lizenz befindet sich nicht in der Wiederherstellungsprüfung.');
+      const audits = state.compliance.audits ?? [];
+      const latestAudit = [...audits].reverse().find((item) => item.status === 'completed');
+      const hasOpenCases = (state.compliance.cases ?? []).some((item) => item.status !== 'closed');
+      const hasOpenViolations = state.compliance.violations.some((item) => item.resolvedAt === null);
+      if (!latestAudit || latestAudit.outcome !== 'clear' || hasOpenCases || hasOpenViolations) return failure(state, 'PRECONDITION_FAILED', 'Wiederherstellung benötigt ein bestandenes letztes Audit und keine offenen Fälle oder Befunde.');
+      if (Number(state.compliance.risk) >= GAME_BALANCE.licenseSuspendedRisk) return failure(state, 'COMPLIANCE_BLOCKED', 'Das Compliance-Risiko liegt weiterhin im Lizenzsperrbereich.');
+      const licenseStatus = Number(state.compliance.risk) >= GAME_BALANCE.licenseWarningRisk ? 'warning' as const : 'valid' as const;
+      const events: DomainEvent[] = [{ ...eventBase(state, command, state.player.id), type: 'compliance.recovery_finalized', code: 'LICENSE_RECOVERY_FINALIZED', status: licenseStatus }];
+      if (licenseStatus !== state.compliance.licenseStatus) events.push({
+        ...eventBase(state, command, state.player.id, 2), type: 'compliance.license_changed', code: 'LICENSE_RECOVERY_FINALIZED', status: licenseStatus,
+      });
+      return commit(state, command, { compliance: { ...state.compliance, licenseStatus } }, events, 'LICENSE_RECOVERY_FINALIZED', 'Lizenz-Wiederherstellung abgeschlossen; Status: ' + licenseStatus + '.', [state.player.id, latestAudit.id]);
     }
     case 'PLANT/CARE_ACTION': {
       const plant = state.plants.find((item) => item.id === command.plantId);

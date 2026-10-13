@@ -11,7 +11,7 @@ export type DomainEvent =
   | (EventBase & { type: 'order.accepted' | 'order.allocated' | 'order.blocked' | 'order.expired'; orderId: EntityId; reasonCode?: string })
   | (EventBase & { type: 'delivery.created'; deliveryId: EntityId; orderId: EntityId })
   | (EventBase & { type: 'delivery.dispatched' | 'delivery.delivered' | 'delivery.exception'; deliveryId: EntityId; orderId: EntityId; reasonCode?: string })
-  | (EventBase & { type: 'compliance.violation_recorded' | 'compliance.license_changed' | 'compliance.audit_completed'; code: string; status?: string })
+  | (EventBase & { type: 'compliance.violation_recorded' | 'compliance.license_changed' | 'compliance.audit_started' | 'compliance.audit_completed' | 'compliance.case_opened' | 'compliance.corrective_action_recorded' | 'compliance.corrective_action_submitted' | 'compliance.corrective_action_verified' | 'compliance.recovery_finalized'; code: string; status?: string })
   | (EventBase & { type: 'finance.ledger_posted'; ledgerEntryId: EntityId; amountCents: number; account: string })
   | (EventBase & { type: 'upgrade.purchased'; upgradeId: string; costCents: number })
   | (EventBase & { type: 'economy.distress_support_granted'; ledgerEntryId: EntityId; amountCents: number; daysOfRunway: number })
