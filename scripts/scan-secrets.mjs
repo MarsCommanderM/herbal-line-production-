@@ -3,6 +3,10 @@ import { execFileSync, spawnSync } from 'node:child_process';
 const MAX_TEXT_BLOB_BYTES = 2 * 1024 * 1024;
 const MAX_OUTPUT_BYTES = 128 * 1024 * 1024;
 
+// This historical scanner blob contains its own literal detector pattern and is an expected false positive.
+// Suppress only that exact blob for the private-key detector; all other patterns and future blobs remain scanned.
+const KNOWN_DETECTOR_PATTERN_BLOB = 'dcae33e544e746e7bb06eeb574b19a54691143eb';
+
 const patterns = [
   {
     name: 'private-key material',
@@ -66,6 +70,7 @@ while (offset < result.stdout.length) {
   scannedTextBlobs += 1;
   for (const pattern of patterns) {
     if (pattern.expression.test(source)) {
+      if (pattern.name === 'private-key material' && sha === KNOWN_DETECTOR_PATTERN_BLOB) continue;
       findings.push({ kind: pattern.name, path: pathByObject.get(sha) ?? '(path unavailable)', sha });
     }
   }
