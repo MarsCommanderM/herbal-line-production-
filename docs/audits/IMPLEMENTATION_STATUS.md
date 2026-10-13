@@ -52,7 +52,7 @@ The checksum is an integrity check for the save format, not an authentication me
 
 ### P1 — Gameplay and UX
 
-- Expand negative-path browser acceptance across QC rejection, held inventory, compliance blocks and duplicate delivery/finance events.
+- Expand negative-path browser acceptance for held inventory, compliance blocks and duplicate delivery/finance events; QC terminal rejection is already covered by E2E.
 - Improve queue/dashboard UX, keyboard navigation, empty/error states and accessibility.
 - The current facility rendering is a functional foundation, not final production art.
 
@@ -67,10 +67,10 @@ Continue P1-004 with a formal compliance incident/corrective-action lifecycle an
 
 ## Status interpretation — current production branch
 
-The PASS entries above are evidence for their explicitly named historical snapshot/run only; they are not proof that all later branches or commits passed. For the restoration branch, the checked base revision before the consolidated product-directive patch was `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38`: typecheck, domain unit tests and production build had passed in runs `38305545109` / `38305540569`, but browser E2E was still running at the last observation. The separate pack validator passed in run `38305545140`. No overall green status is claimed until all required jobs complete successfully on one exact commit.
+The PASS entries above are evidence for their explicitly named historical snapshots/runs only. The old `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38` paragraph is historical and superseded by the verified restoration baseline below. For the current branch state, use the exact SHA and linked CI runs in the latest verification section; a parent commit's green result never proves a newer commit.
 
 
-## Verified restoration baseline — 2026-10-13
+## Last fully verified code baseline — 2026-10-13
 
 The full production CI passed on exact commit `48d7cce195aa7bdc756cee67977111c05f066b1f` in [run 38353059424](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059424). All 18 workflow steps completed successfully: locked dependency install, source lint, format, strict TypeScript, domain tests, production build, Chromium/Firefox/WebKit E2E, production preview smoke, Master Pack validation, original source-snapshot verification, product-policy validation and whitespace check. E2E reported **44 passed, 4 skipped**; the skips are the tests gated on unavailable WebGL contexts, while the campaign, persistence and fallback acceptance paths passed.
 
