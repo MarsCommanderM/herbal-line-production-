@@ -137,9 +137,9 @@ const isTimeState: Guard = (value) => hasShape(value, {
   day: isPositiveSafeInteger,
   minuteOfDay: (item) => isSafeNonNegativeIntegerGuard(item) && (item as number) < 1440,
   totalMinutes: isSafeNonNegativeIntegerGuard,
-  speed: enumOf(['0', '1', '2', '4']),
+  speed: (item) => isSafeInteger(item) && [0, 1, 2, 4].includes(item as number),
   paused: isBoolean,
-}) && [0, 1, 2, 4].includes(Number((value as Record<string, unknown>).speed));
+});
 
 const isPlayerState: Guard = (value) => hasShape(value, {
   id: isNonEmptyString,
@@ -419,8 +419,10 @@ function validPayload(value: unknown): value is SavePayload {
   })) return false;
   return hasOnlyKeys(value, PAYLOAD_KEYS);
 }
+const ENVELOPE_KEYS = ['format', 'schemaVersion', 'gameVersion', 'revision', 'savedAtRealTime', 'rngState', 'checksum', 'payload'] as const;
+
 function validEnvelopeBody(value: unknown): value is SaveEnvelopeV1 {
-  if (!isRecord(value)) return false;
+  if (!isRecord(value) || !hasOnlyKeys(value, ENVELOPE_KEYS)) return false;
   if (value.format !== FORMAT || value.schemaVersion !== SCHEMA_VERSION) return false;
   if (typeof value.gameVersion !== 'string' || value.gameVersion.length === 0) return false;
   if (!isSafeNonNegativeInteger(value.revision) || !isSafeNonNegativeInteger(value.rngState)) return false;
@@ -473,6 +475,12 @@ export async function verifySaveEnvelope(input: string | unknown): Promise<Migra
   } catch {
     return { ok: false, errorCode: 'INVALID_ENVELOPE' };
   }
+
+  const validationState: GameState = {
+    ...value.payload,
+    ui: { selectedEntityId: null, activeScreen: 'facility', notifications: [] },
+  };
+  if (validateGameStateInvariants(validationState).length > 0) return { ok: false, errorCode: 'INVALID_ENVELOPE' };
   return { ok: true, envelope: value };
 }
 
