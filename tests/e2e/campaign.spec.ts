@@ -157,6 +157,11 @@ test('all visible plant-care settings and actions persist through autosave and r
   await expect(canvas).toHaveAttribute('data-state-plant-count', '2');
   await expect(canvas).toHaveAttribute('data-plant-visual-count', '2');
   await expect(canvas).toHaveAttribute('data-cutting-visual-count', '0');
+  // set_cutting mutates the source plant and selects the new propagated plant.
+  // Select the source again to verify its care history survived the save/reload.
+  await expect(page.getByLabel('Pflanze für Pflege auswählen')).toHaveValue(/plant-/);
+  await page.getByLabel('Pflanze für Pflege auswählen').selectOption('plant-001');
+  await expect(canvas).toHaveAttribute('data-visual-plant-id', 'plant-001');
   await expect(canvas).toHaveAttribute('data-visual-care-last-action', 'set_cutting');
   await expect(canvas).toHaveAttribute('data-visual-water-color', '294a5e');
   await expect(canvas).toHaveAttribute('data-visual-light-intensity', '0.20');
