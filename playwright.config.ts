@@ -3,6 +3,10 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
+  // WebGL canvas tests share CPU/GPU resources across browser engines in CI.
+  // Serial execution prevents cross-project contention from stalling input and IndexedDB.
+  workers: process.env.CI ? 1 : undefined,
+  timeout: process.env.CI ? 60_000 : 30_000,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: 'list',
