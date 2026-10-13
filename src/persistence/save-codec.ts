@@ -330,13 +330,26 @@ const isComplianceViolation: Guard = (value) => hasShape(value, {
   resolutionCode: isNullableString,
 });
 
+const isComplianceCase: Guard = (value) => hasShape(value, {
+  id: isNonEmptyString, violationId: isNonEmptyString, code: isNonEmptyString,
+  severity: enumOf(['low', 'medium', 'high', 'critical']),
+  status: enumOf(['open', 'corrective_action', 'verification', 'closed']),
+  openedAt: isSafeNonNegativeIntegerGuard, relatedEntityIds: isIdArray,
+  correctiveActionCode: nullable(isNullableString), submittedAt: isNullableMinute,
+  verifiedAt: isNullableMinute, closedAt: isNullableMinute,
+});
+const isAuditRun: Guard = (value) => hasShape(value, {
+  id: isNonEmptyString, startedAt: isSafeNonNegativeIntegerGuard, completedAt: isNullableMinute,
+  status: enumOf(['in_progress', 'completed']), outcome: nullable(enumOf(['clear', 'findings'])),
+  findingCodes: isStringArray, violationIds: isIdArray,
+});
 const isComplianceState: Guard = (value) => hasShape(value, {
-  risk: isScore,
-  licenseStatus: enumOf(['valid', 'warning', 'suspended', 'recovery_review']),
-  violations: arrayOf(isComplianceViolation),
-  auditDueAt: isSafeNonNegativeIntegerGuard,
-  lastAuditAt: isNullableMinute,
-  blockedOperationCodes: isStringArray,
+  risk: isScore, licenseStatus: enumOf(['valid', 'warning', 'suspended', 'recovery_review']),
+  violations: arrayOf(isComplianceViolation), auditDueAt: isSafeNonNegativeIntegerGuard,
+  lastAuditAt: isNullableMinute, blockedOperationCodes: isStringArray,
+}, {
+  cases: arrayOf(isComplianceCase),
+  audits: arrayOf(isAuditRun),
 });
 
 const isLedgerEntry: Guard = (value) => hasShape(value, {

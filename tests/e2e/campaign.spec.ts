@@ -802,3 +802,21 @@ test('campaign interface has no WCAG 2.1/2.2 A/AA axe violations', async ({ page
 
   expect(violations, JSON.stringify(violations, null, 2)).toEqual([]);
 });
+
+test('compliance incident, corrective action and audit lifecycle is visible and survives reload', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Abweichung dokumentieren', exact: true }).click();
+  await page.getByRole('button', { name: 'Korrekturmaßnahme erfassen', exact: true }).click();
+  await page.getByRole('button', { name: 'Korrekturmaßnahme einreichen', exact: true }).click();
+  await page.getByRole('button', { name: 'Korrekturmaßnahme bestanden', exact: true }).click();
+  await page.getByRole('button', { name: 'Audit starten', exact: true }).click();
+  await page.getByRole('button', { name: 'Audit abschließen', exact: true }).click();
+  await expect(page.locator('#game-log')).toContainText('COMPLIANCE AUDIT COMPLETED');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
+  await page.reload();
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt');
+  await expect(page.getByRole('button', { name: 'Audit starten', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Abweichung dokumentieren', exact: true })).toBeVisible();
+});
+
+

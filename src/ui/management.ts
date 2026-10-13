@@ -23,6 +23,40 @@ function availableActions(state: GameState): Action[] {
   const plant = state.plants.find((item) => item.id === state.ui.selectedEntityId) ?? state.plants.find((item) => item.stage === 'active') ?? state.plants[0];
   const batch = state.batches[state.batches.length - 1];
   const order = state.orders[0];
+  const complianceCases = state.compliance.cases ?? [];
+  const complianceAudits = state.compliance.audits ?? [];
+  const activeAudit = complianceAudits.find((item) => item.status === 'in_progress');
+  const openComplianceCase = complianceCases.some((item) => item.status !== 'closed');
+
+  if (activeAudit) {
+    actions.push({ label: 'Audit abschließen', detail: 'Prüft offene Befunde und dokumentiert das Ergebnis der fiktiven Audit-Runde.', type: 'COMPLIANCE/COMPLETE_AUDIT', payload: { auditId: activeAudit.id } });
+  } else {
+    actions.push({ label: 'Audit starten', detail: 'Startet eine nachvollziehbar gespeicherte Compliance-Prüfung.', type: 'COMPLIANCE/START_AUDIT', payload: { auditId: entityId('audit-' + (state.revision + 1)) } });
+  }
+  if (!openComplianceCase) {
+    actions.push({
+      label: 'Abweichung dokumentieren', detail: 'Eröffnet einen fiktiven, protokollierten Betriebsfall mit verknüpftem Befund.',
+      type: 'COMPLIANCE/RECORD_INCIDENT',
+      payload: {
+        caseId: entityId('case-' + (state.revision + 1)),
+        violationId: entityId('violation-' + (state.revision + 1)),
+        code: 'OPERATOR_REPORTED_DEVIATION', severity: 'medium', relatedEntityIds: [state.player.id],
+      },
+    });
+  }
+  for (const complianceCase of complianceCases) {
+    if (complianceCase.status === 'open') {
+      actions.push({ label: 'Korrekturmaßnahme erfassen', detail: 'Dokumentiert eine abstrakte Korrekturmaßnahme für den offenen Fall.', type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, actionCode: 'DOCUMENTED_GAME_CORRECTION' } });
+    } else if (complianceCase.status === 'corrective_action') {
+      actions.push({ label: 'Korrekturmaßnahme einreichen', detail: 'Übergibt die dokumentierte Maßnahme in den Verifikationszustand.', type: 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id } });
+    } else if (complianceCase.status === 'verification') {
+      actions.push({ label: 'Korrekturmaßnahme bestanden', detail: 'Schließt den fiktiven Fall nach erfolgreicher Verifikation.', type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, passed: true, resolutionCode: 'VERIFICATION_PASSED' } });
+      actions.push({ label: 'Korrekturmaßnahme nicht bestanden', detail: 'Lässt den Fall zur Überarbeitung offen, wenn die Verifikation fehlschlägt.', type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, passed: false, resolutionCode: 'VERIFICATION_FAILED' } });
+    }
+  }
+  if (state.compliance.licenseStatus === 'recovery_review') {
+    actions.push({ label: 'Lizenz-Wiederherstellung abschließen', detail: 'Schließt die Wiederherstellung nur nach klarem letztem Audit und ohne offene Fälle/Befunde ab.', type: 'COMPLIANCE/FINALIZE_RECOVERY', payload: {} });
+  }
 
   if (plant && plant.stage === 'active') {
     actions.push({ label: 'Simulationsschritt ausführen', detail: 'Fortschritt im fiktiven Kampagnenmodell aktualisieren.', type: 'PLANT/ADVANCE_FICTIONAL_STEP', payload: { plantId: plant.id } });

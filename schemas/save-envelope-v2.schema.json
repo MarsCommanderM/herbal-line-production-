@@ -211,6 +211,151 @@
               "items": {
                 "type": "string"
               }
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "violationId",
+                  "code",
+                  "severity",
+                  "status",
+                  "openedAt",
+                  "relatedEntityIds",
+                  "correctiveActionCode",
+                  "submittedAt",
+                  "verifiedAt",
+                  "closedAt"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "violationId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "code": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "severity": {
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high",
+                      "critical"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "open",
+                      "corrective_action",
+                      "verification",
+                      "closed"
+                    ]
+                  },
+                  "openedAt": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "relatedEntityIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "correctiveActionCode": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "submittedAt": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "verifiedAt": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "closedAt": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "audits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "startedAt",
+                  "completedAt",
+                  "status",
+                  "outcome",
+                  "findingCodes",
+                  "violationIds"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "startedAt": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "completedAt": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "status": {
+                    "enum": [
+                      "in_progress",
+                      "completed"
+                    ]
+                  },
+                  "outcome": {
+                    "enum": [
+                      "clear",
+                      "findings",
+                      null
+                    ]
+                  },
+                  "findingCodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "violationIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
             }
           },
           "required": [
