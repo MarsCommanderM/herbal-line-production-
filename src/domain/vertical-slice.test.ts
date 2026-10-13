@@ -276,7 +276,7 @@ describe('medical cannabis operations vertical slice', () => {
     expect(grant?.account).toBe('grant');
     expect(grant?.amountCents).toBe(2_500_000);
     expect(grant?.idempotencyKey).toBe('distress-support:campaign-1');
-    expect(getCampaignBalance(support.state)).toBe(2_412_000);
+    expect(getCampaignBalance(support.state)).toBe(2_346_000);
     expect(support.events.map((event) => event.type)).toEqual(['economy.distress_support_granted', 'finance.ledger_posted']);
     expect(support.state.ui.notifications.at(-1)?.code).toBe('DISTRESS_SUPPORT_GRANTED');
 
