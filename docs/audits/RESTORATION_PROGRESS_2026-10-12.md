@@ -40,32 +40,21 @@ Das ist **kein** bestätigtes Gesamt-CI-PASS. Frühere rote Typecheck-Läufe geh
 - Generische Profil-/Auftragsbezeichner in der sichtbaren Produktstrecke bereinigt.
 - Überholte CI-/Paritätsaussagen in Auditdokumenten werden als historisch gekennzeichnet, nicht als aktueller Status ausgegeben.
 
-## Verifizierter CI-Stand des aktuellen PR-Heads
-
-Commit `48d7cce195aa7bdc756cee67977111c05f066b1f`:
-- [DopeFarm CI 38353059424](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059424): **SUCCESS** auf exakt diesem SHA. Locked install, Source-Lint, Formatcheck, strikter TypeScript-Typecheck, Domain-Tests, Produktionsbuild, Chromium/Firefox/WebKit-E2E, Preview-Smoke, Master-Pack-Validierung, Source-Snapshot-Check, Produkt-Policy-Validierung und Whitespace-Check sind alle erfolgreich.
-- [Master Pack Validation 38353059561](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059561): **SUCCESS** auf demselben SHA.
-- Die E2E umfasst alle fünf fiktiven Pflegeeinstellungen, Beschneiden, Stecklinge schneiden und setzen, sichtbares Feedback sowie Autosave-/Reload-Persistenz. Die bestehenden Cross-Browser-Pfade bleiben Bestandteil des erfolgreichen Laufs.
-- Frühere fehlgeschlagene oder abgebrochene Läufe gehören zu älteren SHAs und werden nicht als Ergebnis des aktuellen SHA gezählt.
-
-## Noch offene Release-Gates
-
-1. **Erledigt auf aktuellem CI-SHA:** E2E-Erweiterung für Pflegeeinstellungen, Beschneiden, Stecklinge, sichtbares Feedback und Save/Reload; beide Pflicht-Workflows sind grün.
-2. **Offen — Wirtschafts-/Progressionsregeln:** Nicht belegte Upgradepreise/-effekte, XP-/Levelregeln und Unlock-Schedules bleiben gesperrt, bis eine autoritative Quelle oder dokumentierte Balanceentscheidung vorliegt. Keine Werte erfinden.
-3. **Offen — finale Produktion:** Finale Charakterkunst/-animation, Umgebungsassets, Audio, Asset-Pipeline, Lizenz-/Provenienzregister und Rechteprüfung fehlen; der prozedurale Third-Person-Avatar ist ein Platzhalter.
-4. **Offen — Resilienz:** Persistenz-Fault-Injection (Quota, abgebrochene Transaktionen), Migration und browserübergreifende Recovery weiter ausbauen; negative Pfade für Compliance, gehaltene Bestände und doppelte Finanz-/Lieferereignisse ergänzen.
-5. `main` bleibt unverändert, bis verbleibende Release-Blocker abgeschlossen oder ausdrücklich akzeptiert wurden. Die historischen Archivabweichungen sind klassifiziert; eine 1:1-Parität des aktiven Roots wird nicht behauptet.
-
-## Statusregel
-
-Ein Task gilt nur als DONE, wenn die Implementierung existiert, Tests ausgeführt wurden, das Ergebnis auf den exakten Commit verweist und keine offenen P0/P1-Fehler verbleiben. Laufende, abgebrochene oder übersprungene Jobs sind nicht bestanden.
-
 ## Latest exact-commit verification — 2026-10-13
 
-Verified code revision: `4c4c77ff4f4d969009e9354d32f6292256c745e1`.
+Verified code revision: `41ae376e527a79d28ff1692fd19d6db2a4052631`.
 
-- [Full DopeFarm CI](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38354410131): **SUCCESS**.
-- [Master Pack Validation](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38354410210): **SUCCESS** on the same SHA.
-- Browser E2E reported **53 passed, 4 skipped**. The skips are WebGL-dependent checks in Firefox when no WebGL canvas is available. The suite now includes third-person movement, direct plant selection, care settings/visuals, pruning, cutting/setting, save/reload, suspended-license blocks, held inventory, QC rejection, accessibility, mobile layout, maintenance, settlement and delivery idempotency.
-- The current follow-up adds an explicit WebGL initialization failure-injection test to prove the management UI and a care action remain usable without the 3D renderer. That follow-up commit requires its own exact-SHA CI run.
-- Open product/release blockers are not closed by CI: legacy-save migration without a defined prior schema, formal incident/corrective-action contract, economy/progression balance rules, final art/audio and asset rights, and release security/rights/rollback gates.
+- [Full DopeFarm CI 38355313631](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38355313631): **SUCCESS** on this exact SHA. Locked install, source lint, format, strict TypeScript, unit tests, production build, Chromium/Firefox/WebKit E2E, preview smoke, Master-Pack/source-snapshot validation, product-policy validation and whitespace all passed.
+- [Master Pack Validation 38355313567](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38355313567): **SUCCESS** on the same SHA.
+- The E2E suite contains explicit WebGL initialization failure injection; the management UI and a care action remain available when the 3D renderer cannot initialize. Renderer-dependent tests may be skipped where the browser exposes no WebGL canvas; these are not counted as passes.
+- `main` remains unchanged at `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`.
+
+## Remaining release blockers
+
+1. **Persistence migration:** no migration chain will be fabricated without a real, evidenced legacy schema.
+2. **Formal incident/corrective-action lifecycle:** requires an authoritative product contract; existing compliance gates remain implemented and tested.
+3. **Economy/progression:** upgrade prices/effects, XP/level thresholds and unlock schedules require an approved balance table; unconfigured upgrades stay unavailable.
+4. **Final art/audio/assets:** procedural third-person avatar and facility geometry remain placeholders until source assets, provenance and commercial-use rights are verified.
+5. **Release QA/operations:** dependency/secret review, accessibility, privacy/security, IP/license review, artifact identity and rollback/incident-response evidence remain open.
+
+A green CI establishes technical acceptance for this commit only. It does not close the product decisions, asset approvals or release operations listed above. Do not merge or claim release-ready status until those blockers are resolved or explicitly accepted through the project's decision process.
