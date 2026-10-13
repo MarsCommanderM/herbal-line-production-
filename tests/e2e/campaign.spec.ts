@@ -56,7 +56,7 @@ async function seedCampaignSave(page: Page, state: ReturnType<typeof createIniti
     });
   }, { saveEnvelope: envelope, saveMetadata: metadata });
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
+  await expect(page.getByLabel('Pflanze für Pflege auswählen')).toBeVisible();
 }
 
 test('third-person avatar moves with keyboard and camera target follows', async ({ page }) => {
