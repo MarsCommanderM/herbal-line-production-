@@ -1,20 +1,27 @@
 # Dr. Green Dump / DopeFarm — Prioritized Backlog
 
-| ID | Priority | Work package | Depends on | Acceptance evidence | Status |
-|---|---|---|---|---|---|
-| P0-001 | P0 | Repository truth audit | — | Baseline report, exact commands/results, risks | Complete — audit and current CI evidence recorded |
-| P0-002 | P0 | Canonical scope/contract reconciliation | P0-001 | Decision log; consistent domain and persistence contracts | Complete — policy and validator pass |
-| P0-003 | P0 | Reproducible TypeScript/CI baseline | P0-002 | Clean install, lint, typecheck, unit tests and build observed green | Complete — DopeFarm CI 38417104774 SUCCESS on exact head 41ff3d43f01da61fa54a645e685a3361c685cab6; companion Master Pack Validation 38417104628 SUCCESS on same SHA |
-| P1-001 | P1 | Intake-to-pharmacy vertical slice | P0-003 | End-to-end scenario and transition/traceability tests | Complete — domain and full browser loop tests pass |
-| P1-002 | P1 | Save/load, validation and recovery | P0-003 | Migration, corrupt-save, quota and retry tests | In progress — v1 recovery/fault tests pass; legacy migration awaits a defined source schema |
-| P1-003 | P1 | Operational dashboard and queue UX | P1-001 | Keyboard-accessible core flow with explicit errors/empty states | Complete — keyboard, mobile, status and error-path E2E pass |
-| P1-004 | P1 | Quality, audit and incident systems | P1-001 | Hold/release gates, audit trail and corrective action tests | In progress — browser E2E covers suspended-license care/dispatch, held inventory and QC rejection; formal incident/corrective-action lifecycle lacks an authoritative product contract |
-| P1-005 | P1 | Visible cannabis plant care and 3D feedback | P0-003 | Care commands, selected plant UI/3D feedback, saved state, invalid-action and reload tests | Complete — full CI 38417104774 SUCCESS on exact head 41ff3d43f01da61fa54a645e685a3361c685cab6; explicit WebGL failure-injection E2E included; renderer-dependent tests may skip only when browser WebGL is unavailable |
-| P2-001 | P2 | Facility, capacity, staffing and maintenance | P1-001 | Capacity/assignment invariants and scenario tests | Complete — invariants and browser scenario tests pass |
-| P2-002 | P2 | Economy and progression | P2-001 | Ledger invariants and multi-stage balancing simulation | Blocked — authoritative fictional prices, effects, XP/level and unlock rules are not defined; values must not be invented |
-| P2-003 | P2 | Content, tutorial and contextual research notices | P1-003 | Content review, source register, UX tests | Complete — state-derived contextual guidance/tutorial, empty-entity safe states, compliance/QC/delivery paths and UI E2E assertions pass on exact head 41ff3d43f01da61fa54a645e685a3361c685cab6 (CI 38417104774) |
-| P3-001 | P3 | Visual/audio polish and asset pipeline | P1-003 | Asset/license manifest, visual QA, performance evidence | Blocked — final art/audio sources and commercial-use licenses are not yet approved |
-| P3-002 | P3 | Release candidate QA/security/rights | P2-* | CI evidence, dependency/secret scan, accessibility and rights review | In progress — dependency audit and deterministic CycloneDX license inventory are green; high-confidence reachable-history credential scanning and Axe WCAG 2.1/2.2 A/AA checks are now required CI gates and must pass on the current exact SHA; legal compatibility/required license texts, privacy/security review, final asset rights and release artifact/rollback evidence remain open |
-| P4-001 | P4 | Release and post-launch operations | P3-* | Artifact identity, rollback plan, smoke tests, incident runbook | Pending |
+**Status source:** verified CI for implementation revision `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`; the current branch must pass CI again after this bookkeeping refresh.
 
-Priorities describe order, not permission to bypass dependencies. No task is complete merely because its files exist.
+| ID | Priority | Work package | Status | Evidence / remaining acceptance |
+|---|---|---|---|---|
+| P0-001 | P0 | Repository truth audit | Complete | Branch, base, manifest, provenance and known risks recorded; do not confuse source-snapshot identity with ZIP-container re-hashing. |
+| P0-002 | P0 | Canonical scope/contract reconciliation | Complete for current implementation | Owner-confirmed medical-cannabis game scope and Third Person are enforced by policy and product validator. Detailed product decisions listed below remain open. |
+| P0-003 | P0 | Reproducible engineering baseline | Green on verified baseline | [App CI]( https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858305 ) and [Master Pack Validation]( https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858306 ) both passed on exact revision `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`; this revision had 76/76 unit tests and 59 browser tests passed, with 4 WebGL-dependent browser cases skipped. |
+| P1-001 | P1 | Intake-to-pharmacy vertical slice | Implemented / CI green | Domain and browser scenarios cover intake, production, QC, inventory, order, delivery, ledger and traceability. |
+| P1-002 | P1 | Save/load, validation and recovery | In progress — schema blocker | Current v1 validation, checksum, backup recovery, quota/transaction fault tests and import/export are covered. Legacy migration remains blocked until an actual legacy save schema is identified. |
+| P1-003 | P1 | Operational dashboard and queue UX | Implemented / CI green | Keyboard, responsive layout, status/error paths, empty states and Axe WCAG 2.1/2.2 A/AA checks pass in CI. |
+| P1-004 | P1 | Quality, audit and incident systems | In progress — lifecycle gap | Existing gates cover suspended-license actions, held inventory, audit records and QC rejection. The formal incident/corrective-action lifecycle still needs its state transitions and persistence/events implemented against the documented contract; do not invent real-world procedures. |
+| P1-005 | P1 | Visible cannabis plant care and 3D feedback | Implemented / CI green with renderer limitation | Fictional plant-care commands, direct selection, feedback and persistence are covered. Four renderer-dependent browser cases were skipped when WebGL was unavailable; keep this limitation visible and improve deterministic WebGL coverage. |
+| P2-001 | P2 | Facility, capacity, staffing and maintenance | Implemented / CI green | Invariants and browser scenarios pass. |
+| P2-002 | P2 | Economy and progression | Blocked by missing authoritative balance | `sensor_pack_1` and `drying_rack_1` remain unavailable; no XP thresholds, prices, effects or unlock rules may be invented. |
+| P2-003 | P2 | Content, tutorial and contextual guidance | Implemented / CI green | State-derived guidance/tutorial and compliance/QC/delivery states have unit and browser coverage. Editorial/content approval remains a release gate. |
+| P3-001 | P3 | Final art/audio/asset pipeline | Blocked by approved final assets | Current procedural scene is a functional foundation, not final premium art. Final art/audio must have recorded provenance and compatible commercial-use rights; visual/performance evidence remains open. |
+| P3-002 | P3 | Release candidate QA/security/rights | Engineering checks green; release review open | On the verified baseline: secret-pattern scan passed across 802 reachable text blobs; `npm audit` found 0 vulnerabilities; CycloneDX/license metadata, axe, tests and source-snapshot checks passed. Legal compatibility/notice review, privacy/security review and final asset rights remain open. |
+| P4-001 | P4 | Release and post-launch operations | Pending | Define release artifact identity, rollback, production smoke and incident response; execute a rollback drill. |
+
+## Hard gates
+
+- Do not merge or modify `main` while P1 blockers and release rights gates remain open.
+- Running, failed, cancelled or skipped workflow **jobs** are not passes. The current browser suite itself reported 4 skipped WebGL-dependent cases; they are explicitly not represented as passed tests.
+- Do not invent prices, progression, legacy-save formats, incident workflows, licenses or owner approvals.
+- Every code change needs exact-SHA App CI and Master Pack Validation, reviewed diff, tests and updated evidence.

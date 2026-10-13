@@ -100,7 +100,7 @@ Ein grüner Pack-Validator ersetzt keine App-CI. Ein erfolgreicher Typecheck ers
 
 Ein Produktions-Task gilt erst als **DONE**, wenn die akzeptierten Anforderungen umgesetzt, relevante Tests bestanden, der Diff geprüft, Dokumentation/Taskstatus aktualisiert und Risiken benannt sind. Ein Meilenstein gilt nur dann als **GRÜN**, wenn alle Pflichtgates für denselben finalen Commit grün sind und keine offenen P0/P1-Blocker bestehen.
 
-Bis dahin bleibt PR #26 ein Draft. main darf nicht geändert werden. Ein Merge darf erst nach vollständigem grünen CI, Prüfung der Review-Diffs und bestätigter Produkt-/Scope-Parität erwogen werden. Niemand darf einen nicht bestandenen oder unvollständigen Status als abgenommen bezeichnen.
+PR #26 ist derzeit offen und nicht mehr als Draft markiert. main darf nicht geändert werden. Ein Merge darf erst nach vollständigem grünen CI auf dem finalen Head, Prüfung der Review-Diffs, Schließung der P1-Blocker und bestätigter Produkt-/Scope-Parität erwogen werden. Niemand darf einen nicht bestandenen oder unvollständigen Status als abgenommen bezeichnen.
 
 ## 10. Pflichtprüfungen jeder Änderung
 

@@ -1,41 +1,32 @@
 # Next Task — Authoritative Queue
 
-## Latest verified baseline
+## Current verified implementation baseline
 
-Exact source revision: `41ff3d43f01da61fa54a645e685a3361c685cab6`.
+Exact implementation revision: `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`.
 
-- [Full DopeFarm CI, run 38417104774](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38417104774): **SUCCESS** on this exact SHA.
-- [Master Pack Validation, run 38417104628](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38417104628): **SUCCESS** on the same SHA.
-- The full CI passed locked install, dependency audit (`npm audit`: 0 vulnerabilities), CycloneDX SBOM generation, source lint, format, strict TypeScript, unit tests, production build, Chromium/Firefox/WebKit browser E2E, production preview smoke, master-pack and preserved-source verification, product-policy validation, and whitespace. The SBOM contained 58 components with SPDX license metadata; legal compatibility/notice review remains a separate release gate.
-- Browser coverage includes third-person movement and direct plant selection, visible-care state and persistence, Save/Load/recovery, compliance blocks, held inventory, QC rejection, keyboard/mobile/reduced-motion paths, maintenance, settlement/delivery, state-derived guidance/tutorial, and explicit WebGL initialization failure injection.
-- Renderer-dependent world-interaction tests may skip when a browser exposes no WebGL canvas; that limitation is documented and does not replace the explicit graphics-failure fallback test.
-- `main` remains at `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; no merge is authorized by this CI result alone.
+- [Full DopeFarm CI, run 38423858305](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858305): **SUCCESS** on the exact revision.
+- [Master Pack Validation, run 38423858306](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858306): **SUCCESS** on the same revision.
+- CI gates passed: full-history credential-pattern scan, locked install, `npm audit` (0 vulnerabilities), CycloneDX SBOM and dependency-license metadata comparison, source lint, format, strict TypeScript, 76 unit tests, production build, browser E2E, production preview smoke, master-pack validation, preserved-source verification, product-policy validation and whitespace.
+- Browser E2E: **59 passed, 4 skipped**. The skipped cases are renderer-dependent; some hosted browser contexts expose no WebGL canvas. The explicit WebGL-initialization-failure fallback test passed in Chromium, Firefox and WebKit. Skipped cases are not claimed as passed.
+- Credential-pattern scan: **802 reachable text blobs scanned**, no high-confidence findings.
+- Master-pack source snapshot: all 42 preserved files are checked against recorded Git blob IDs. This does not re-hash the original ZIP container because the ZIP binary is not stored in the repository.
+- Active root parity remains intentionally **20/42 exact matches, 22/42 classified differences**, plus application-specific files. The root is not claimed to be byte-identical to the historical archive.
+- `main` remains at `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`. PR #26 is open and ready for review, but is not authorized to merge while blockers below remain.
+- A documentation/status refresh follows this implementation revision; the new head must receive its own green CI before the refreshed branch is called green.
 
-## Completed with evidence
+## Remaining work, in priority order
 
-- **P0-001 — Repository truth audit:** baseline, branch truth, source manifest, original-pack provenance and classified differences are recorded.
-- **P0-002 — Contract reconciliation:** original canonical contracts remain separate from tested runtime extensions.
-- **P0-003 — Reproducible engineering baseline:** both mandatory workflows pass on exact SHA `41ff3d43f01da61fa54a645e685a3361c685cab6`.
-- **P1-001 — Vertical slice:** intake, production, QC, inventory, order, delivery and transition tests are implemented.
-- **P1-003 — Core operational UX:** keyboard navigation, mobile layout, status semantics and error paths have E2E coverage.
-- **P1-005 — Visible cannabis care and third-person interaction:** keyboard movement, following camera, collision/range, direct plant selection, care controls, pruning, cutting/setting, visual feedback and persistence have automated coverage.
-- **P2-001 — Facility/capacity/staffing/maintenance core:** invariants and browser scenarios pass.
-- **P2-003 — Content/tutorial/source notices:** state-derived campaign guidance and tutorial, safe empty-entity behavior, compliance/QC/delivery states, non-mutation unit tests, UI rendering and transitions are covered by unit/E2E acceptance on the verified head.
-- **WebGL fallback acceptance:** explicit renderer-failure test passes in the full CI suite; management controls and a care action remain usable.
-
-## Remaining work, ordered by dependency
-
-1. **P1-002 — Persistence evolution/recovery:** current v1 validation, corruption handling, backup recovery, quota/transaction fault tests and import/export are covered. Keep legacy migration open until an actual legacy schema is identified and evidenced; do not invent one.
-2. **P1-004 — Quality/compliance incidents:** current tests cover suspended-license actions, held inventory and terminal QC rejection. A formal incident/corrective-action lifecycle requires an authoritative product contract before implementation.
-3. **P2-002 — Economy/progression:** source-listed upgrades remain unavailable until authoritative fictional prices, effects, XP/level thresholds and unlock rules are documented. Do not invent balance values.
-4. **P3-001 — Final art/audio/asset pipeline:** replace procedural placeholders only with assets whose provenance and commercial-use rights are verified; add animation, visual QA and performance evidence.
-5. **P3-002 — Release candidate QA/security/rights:** dependency advisory audit, CycloneDX/license-metadata inventory, high-confidence credential-pattern scanning across reachable Git history, and Axe WCAG 2.1/2.2 A/AA browser checks are automated. The new checks require a green exact-SHA run; legal license compatibility/required license texts, privacy/security review, final asset rights, release artifact identity and rollback evidence remain separate release gates.
-6. **P4-001 — Release/operations:** document artifact identity, rollback, production smoke and incident response; run a rollback drill.
+1. **P1-002 — Save migration:** identify a real legacy save format from an actual shipped/recovered artifact or documented schema. Until then, reject unsupported versions safely; do not fabricate a migration.
+2. **P1-004 — Incident/corrective-action lifecycle:** reconcile the documented `ComplianceCase`, `AuditRun`, `Violation` and license recovery state machine with runtime contracts. Implement only transitions supported by the project contract, with typed commands/events, persistence, audit log, UI, invalid-transition tests and browser coverage. Do not add real-world operating procedures.
+3. **P1-005 — WebGL acceptance:** eliminate or explicitly isolate the four renderer-dependent skipped E2E cases. Keep world interaction acceptance mandatory in at least the supported Chromium/SwiftShader path; retain fallback testing in all three engines. No skipped case is a pass.
+4. **P2-002 — Economy/progression:** keep upgrades locked until an approved fictional balance table defines prices, effects, prerequisites, XP thresholds and unlock rules. No invented numbers.
+5. **P3-001 — Visual quality:** replace the clearly temporary procedural avatar/facility assets with original or appropriately licensed final assets; record source, hashes, license/rights evidence, target-resolution screenshots and performance results.
+6. **P3-002 — Release security/rights:** engineering automation is green on the verified baseline. Still require legal compatibility/notice review, privacy/security review, final asset rights and release-artifact/rollback evidence.
+7. **P4-001 — Release operations:** define artifact identity, deployment smoke, rollback and incident-response runbook; run a rollback drill.
 
 ## Operating rules
 
-- Work only on `restore/original-masterpack-product-scope-20261012`; preserve `main` until all release blockers are resolved and review is complete.
-- All plant-care and production parameters are fictional game abstractions only.
-- Do not invent prices, progression, legacy-save formats, incident workflows, asset licenses or owner approvals.
-- Every task requires implementation evidence, tests, reviewed diff and updated documentation.
-- Running, cancelled, skipped or failed workflow jobs are not passes. Evidence belongs only to the exact SHA tested.
+- Work only on `restore/original-masterpack-product-scope-20261012`; keep `main` unchanged until the P1 blockers, product review and release gates are closed.
+- The game is specifically Dr. Green Dump / DopeFarm: recognizable medical-cannabis plants, visible direct care and a Third-Person player perspective. Never substitute generic herbs.
+- All cultivation/process values are fictional game abstractions; do not introduce real-world production parameters.
+- Every code change requires exact-SHA App CI and Master Pack Validation. Cancelled/skipped/failed jobs do not count as green.

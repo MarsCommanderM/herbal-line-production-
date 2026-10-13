@@ -116,3 +116,18 @@ The subsequent QA revision adds:
 - deterministic CycloneDX/SPDX dependency license inventory comparison and artifact upload.
 
 The earlier `41ff3d43f01da61fa54a645e685a3361c685cab6` and `e28dd9977a63a290728f24d370b43bd5851e41c1` results are historical baselines only. The current head's own full CI and Master Pack Validation runs are the acceptance evidence for these added gates. Legal compatibility/notice review, final asset rights, privacy/security review and release/rollback evidence remain distinct release gates.
+
+
+## Exact current branch-head verification — 2026-10-13
+
+Verified implementation revision: `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`.
+
+- [Full DopeFarm CI, run 38423858305](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858305): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38423858306](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858306): **SUCCESS** on the same SHA.
+- The App CI's 23 reported steps completed successfully, including the full-history credential scan, `npm audit`, SBOM/license-inventory comparison, lint, format, strict TypeScript, unit tests, production build, browser E2E, preview smoke, master-pack/source snapshot validation, product policy and whitespace.
+- Unit tests: **9 files, 76 tests passed**.
+- Browser E2E: **59 passed, 4 skipped**. The skips are renderer-dependent tests when a browser context has no WebGL canvas. These are explicitly not represented as passing tests; deterministic WebGL acceptance remains open.
+- Secret scan: 802 reachable text blobs scanned, no high-confidence credential pattern found. Dependency audit reported zero vulnerabilities. These automated checks do not replace legal compatibility review, asset rights review or privacy/security sign-off.
+- Master Pack: 42/42 preserved source files verified against recorded Git blob IDs. Active-root comparison remains 20/42 exact and 22/42 classified differences; ZIP container SHA is provenance only because the original archive binary is not stored here.
+- This is a green **engineering baseline**, not a release-ready declaration. Open P1 blockers: defined legacy-save schema and formal runtime incident/corrective-action lifecycle. Other blockers: authoritative economy/progression rules, final art/audio/license evidence, and release rights/security/rollback review.
+- Current `main`: `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; it remains untouched. The documentation refresh must be verified on its own exact head before the branch is called green.

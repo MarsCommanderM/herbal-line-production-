@@ -63,3 +63,15 @@ The exact file-level comparison is reproducible from the recorded manifest at br
 The 42 original file contents are preserved separately under masterpack/source/ by referencing the exact Git blob IDs from docs/audits/MASTERPACK_EXPECTED_BLOBS.json. The new source-snapshot verifier recomputes each Git blob SHA-1 from the file bytes, checks all 42 entries, and rejects missing or extra snapshot files. This proves per-file source-snapshot identity against the recorded manifest. The historical ZIP SHA-256 remains a recorded provenance value; the ZIP binary itself is not stored here, so this execution does not independently re-hash the archive container.
 
 Latest application CI before adding the source snapshot: PASS on 22e60941981bc168c020ae55213b7eab61a486aa, run https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38324074349. The separate master-pack validator also passed on that same commit, run https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38324074272. The snapshot-verification gates added in this refresh must pass on the new commit before it can be considered green.
+
+
+## Exact current verification — 2026-10-13
+
+Verified implementation revision: `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`.
+
+- [Full DopeFarm CI, run 38423858305](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858305): **SUCCESS** on the exact revision.
+- [Master Pack Validation, run 38423858306](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858306): **SUCCESS** on the same revision.
+- The App CI passed the preserved-source snapshot verifier; all 42 source files matched the expected Git blob IDs and no unmanifested snapshot file was reported.
+- Active-root reconciliation remains 20/42 exact matches and 22/42 intentional/classified differences, with 53 additional application/CI/test/audit paths as recorded in the comparison at revision 22e60941981bc168c020ae55213b7eab61a486aa. The archive ZIP itself is not stored in this repository; its recorded SHA-256 is provenance and was not re-hashed by the current run.
+- The current source snapshot is verified, but the active root is **not** byte-identical to the historical ZIP. This is a documented scope overlay, not a 1:1 parity claim.
+- The current browser suite reports 59 passed and 4 renderer-dependent skipped cases. This test limitation remains tracked in `.tasks/NEXT.md`.

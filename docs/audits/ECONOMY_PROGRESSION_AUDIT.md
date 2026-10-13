@@ -57,3 +57,8 @@
 ## Scope rule
 
 The title and core product remain Dr. Green Dump / DopeFarm, a medical-cannabis production management game with fictional game-only process values. Economics and progression must not introduce real production instructions. Values without explicit source or owner confirmation remain an open balance decision, not an implicit design authorization.
+
+
+## Current branch verification note — 2026-10-13
+
+The economy/progression restrictions above remain in force. The current branch-head engineering baseline `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d` passed [App CI run 38423858305](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858305) and [Master Pack Validation run 38423858306](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858306). These green gates do not supply missing balance authority: source-listed upgrades remain unavailable and XP/level/unlock rules remain unimplemented until a canonical balance table or owner-approved decision exists.
