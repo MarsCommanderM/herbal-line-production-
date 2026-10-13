@@ -104,12 +104,15 @@ test('all visible plant-care settings and actions persist through autosave and r
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
 
+  const canvas = page.locator('#world-root canvas');
+  await expect(canvas).toHaveAttribute('data-visual-plant-id', 'plant-001');
+  await expect(canvas).toHaveAttribute('data-visual-care-ring-visible', 'true');
   const settings = [
-    { label: 'Bewässerung: hoch', feedback: 'Bewässerung · Spielstufe hoch', revision: 1 },
-    { label: 'Licht: niedrig', feedback: 'Lichteinstellung · Spielstufe niedrig', revision: 2 },
-    { label: 'Temperatur: hoch', feedback: 'Temperatursimulation · Spielstufe hoch', revision: 3 },
-    { label: 'Luftfeuchtigkeit: niedrig', feedback: 'Luftfeuchtigkeitssimulation · Spielstufe niedrig', revision: 4 },
-    { label: 'Nährstoffniveau: hoch', feedback: 'Nährstoffsimulation · Spielstufe hoch', revision: 5 },
+    { label: 'Bewässerung: hoch', feedback: 'Bewässerung · Spielstufe hoch', revision: 1, visualAttribute: 'data-visual-water-color', visualValue: '294a5e' },
+    { label: 'Licht: niedrig', feedback: 'Lichteinstellung · Spielstufe niedrig', revision: 2, visualAttribute: 'data-visual-light-intensity', visualValue: '0.20' },
+    { label: 'Temperatur: hoch', feedback: 'Temperatursimulation · Spielstufe hoch', revision: 3, visualAttribute: 'data-visual-care-ring-color', visualValue: 'ff9b71' },
+    { label: 'Luftfeuchtigkeit: niedrig', feedback: 'Luftfeuchtigkeitssimulation · Spielstufe niedrig', revision: 4, visualAttribute: 'data-visual-care-ring-color', visualValue: '83d8e8' },
+    { label: 'Nährstoffniveau: hoch', feedback: 'Nährstoffsimulation · Spielstufe hoch', revision: 5, visualAttribute: 'data-visual-nutrient-color', visualValue: '1e7541' },
   ];
   for (const setting of settings) {
     const button = page.getByRole('button', { name: setting.label, exact: true });
@@ -117,23 +120,44 @@ test('all visible plant-care settings and actions persist through autosave and r
     await expect(button).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#game-feedback')).toContainText(setting.feedback);
     await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision ' + setting.revision);
+    await expect(canvas).toHaveAttribute(setting.visualAttribute, setting.visualValue);
   }
 
+  const unprunedScale = Number(await canvas.getAttribute('data-visual-pruning-scale-y'));
   await page.getByRole('button', { name: 'Beschneiden', exact: true }).click();
   await expect(page.locator('#game-feedback')).toContainText('Beschneiden ausgeführt');
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 6', { timeout: 15_000 });
+  await expect(canvas).toHaveAttribute('data-visual-pruning-count', '1');
+  await expect(canvas).toHaveAttribute('data-visual-care-last-action', 'prune');
+  await expect.poll(async () => Number(await canvas.getAttribute('data-visual-pruning-scale-y'))).toBeLessThan(unprunedScale);
 
   await page.getByRole('button', { name: 'Steckling schneiden', exact: true }).click();
   await expect(page.locator('#game-feedback')).toContainText('Steckling schneiden ausgeführt');
   await expect(page.getByRole('button', { name: 'Steckling setzen (1)', exact: true })).toBeVisible();
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 7', { timeout: 15_000 });
+  await expect(canvas).toHaveAttribute('data-visual-care-last-action', 'take_cutting');
+  await expect(canvas).toHaveAttribute('data-cutting-visual-count', '1');
+
+  await page.getByRole('button', { name: 'Steckling setzen (1)', exact: true }).click();
+  await expect(page.locator('#game-feedback')).toContainText('Steckling setzen ausgeführt');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 8', { timeout: 15_000 });
+  await expect(canvas).toHaveAttribute('data-state-plant-count', '2');
+  await expect(canvas).toHaveAttribute('data-plant-visual-count', '2');
+  await expect(canvas).toHaveAttribute('data-cutting-visual-count', '0');
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
   for (const setting of settings) {
     await expect(page.getByRole('button', { name: setting.label, exact: true })).toHaveAttribute('aria-pressed', 'true');
   }
-  await expect(page.getByRole('button', { name: 'Steckling setzen (1)', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Steckling setzen (1)', exact: true })).toHaveCount(0);
+  await expect(canvas).toHaveAttribute('data-state-plant-count', '2');
+  await expect(canvas).toHaveAttribute('data-plant-visual-count', '2');
+  await expect(canvas).toHaveAttribute('data-cutting-visual-count', '0');
+  await expect(canvas).toHaveAttribute('data-visual-care-last-action', 'set_cutting');
+  await expect(canvas).toHaveAttribute('data-visual-water-color', '294a5e');
+  await expect(canvas).toHaveAttribute('data-visual-light-intensity', '0.20');
+  await expect(canvas).toHaveAttribute('data-visual-nutrient-color', '1e7541');
 });
 
 
