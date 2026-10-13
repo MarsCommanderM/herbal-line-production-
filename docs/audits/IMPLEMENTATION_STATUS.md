@@ -40,14 +40,15 @@ The checksum is an integrity check for the save format, not an authentication me
 - Supplied archive SHA-256: `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`.
 - Archive file count: 42.
 - A previous pack-shaped recovery snapshot matched all 42 paths but had 36 blob-content mismatches.
-- **Current tree parity remains unverified.** Do not mark the repository as synchronized until all 42 paths have a reproducible expected-vs-actual blob comparison and intentional differences are documented.
+- The active root is intentionally not byte-identical to the historical archive: the recorded comparison is 20/42 exact matches, 22/42 classified intentional/content differences, plus 53 application-specific paths. The exact original 42 source files are preserved under `masterpack/source/` and their expected Git blob IDs are verified by CI. This resolves provenance/classification; it does **not** claim 1:1 active-root parity.
 
 ### P1 — Persistence hardening
 
 - Explicit migration chain for a future schema version.
-- Quota exhaustion and interrupted/aborted transaction tests.
-- Cross-browser E2E beyond Chromium.
-- Defined behavior for recovery when both primary and backup are invalid.
+- Quota exhaustion and interrupted/aborted transaction tests are implemented and passed in the verified suite.
+- Cross-browser save/load, corrupt-save handling, backup recovery and import/export are exercised in the three-browser E2E suite; the full run reported 44 passed and 4 graphics-dependent skips.
+- Recovery when both primary and backup are invalid is explicitly tested; invalid state is not loaded.
+- Remaining persistence item: a migration chain for a specifically defined legacy schema. Unsupported versions are rejected safely; no fictional legacy schema will be invented.
 
 ### P1 — Gameplay and UX
 
@@ -61,9 +62,16 @@ Final asset licensing inventory, visual regression/performance proof, security/p
 
 ## Next action
 
-Resolve the P0 per-path Master Pack comparison without overwriting valuable implementation work. Then continue P1 dashboard/accessibility and persistence fault-injection coverage.
+Continue P1-004 with a formal compliance incident/corrective-action lifecycle and browser negative-path tests for compliance blocks, held inventory and duplicate financial/delivery events. Keep P1-002's migration-chain item blocked until a concrete legacy schema exists. Economy/progression balance values and final art/audio/licensing remain explicit release blockers.
 
 
 ## Status interpretation — current production branch
 
 The PASS entries above are evidence for their explicitly named historical snapshot/run only; they are not proof that all later branches or commits passed. For the restoration branch, the checked base revision before the consolidated product-directive patch was `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38`: typecheck, domain unit tests and production build had passed in runs `38305545109` / `38305540569`, but browser E2E was still running at the last observation. The separate pack validator passed in run `38305545140`. No overall green status is claimed until all required jobs complete successfully on one exact commit.
+
+
+## Verified restoration baseline — 2026-10-13
+
+The full production CI passed on exact commit `48d7cce195aa7bdc756cee67977111c05f066b1f` in [run 38353059424](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059424). All 18 workflow steps completed successfully: locked dependency install, source lint, format, strict TypeScript, domain tests, production build, Chromium/Firefox/WebKit E2E, production preview smoke, Master Pack validation, original source-snapshot verification, product-policy validation and whitespace check. E2E reported **44 passed, 4 skipped**; the skips are the tests gated on unavailable WebGL contexts, while the campaign, persistence and fallback acceptance paths passed.
+
+The separate [Master Pack Validation run 38353059561](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059561) also passed on the same SHA, including all 42 exact preserved source blobs. This verifies the engineering gates for that code commit; it does not close the documented product, migration-contract, art/licensing or release-operations blockers.
