@@ -71,7 +71,7 @@ async function seedCampaignSave(page: Page, state: ReturnType<typeof createIniti
   await expect(page.getByLabel('Pflanze für Pflege auswählen')).toBeVisible();
 }
 
-test('third-person avatar moves with keyboard and camera target follows', async ({ page }) => {
+test('third-person avatar moves with keyboard and camera target follows', async ({ page }, testInfo) => {
   await page.goto('/');
   const worldCanvas = page.locator('#world-root canvas');
   await requireWebGLCanvas(page, testInfo, worldCanvas);
