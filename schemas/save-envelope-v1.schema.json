@@ -96,52 +96,167 @@
           "maximum": 1000
         },
         "rooms": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "sourceLots": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "plants": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "batches": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "inventoryLots": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "qualityAssessments": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "orders": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "customers": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "deliveries": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "staff": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "assignments": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "machines": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "upgrades": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "compliance": {
-          "type": "object"
+          "type": "object",
+          "properties": {
+            "risk": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "licenseStatus": {
+              "enum": [
+                "valid",
+                "warning",
+                "suspended",
+                "recovery_review"
+              ]
+            },
+            "violations": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "auditDueAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lastAuditAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "blockedOperationCodes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "risk",
+            "licenseStatus",
+            "violations",
+            "auditDueAt",
+            "lastAuditAt",
+            "blockedOperationCodes"
+          ]
         },
         "economy": {
-          "type": "object"
+          "type": "object",
+          "properties": {
+            "openingBalanceCents": {
+              "type": "integer"
+            },
+            "ledger": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "revenueTodayCents": {
+              "type": "integer"
+            },
+            "expensesTodayCents": {
+              "type": "integer"
+            },
+            "lifetimeRevenueCents": {
+              "type": "integer"
+            },
+            "lifetimeExpensesCents": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "openingBalanceCents",
+            "ledger"
+          ]
         },
         "logs": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         }
       },
       "additionalProperties": false
