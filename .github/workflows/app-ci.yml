@@ -41,7 +41,8 @@ jobs:
       - name: Production build
         run: npm run build
       - name: Install Chromium, Firefox, and WebKit for browser tests
-        run: npx playwright install --with-deps chromium firefox webkit
+        timeout-minutes: 8
+        run: npx playwright install chromium firefox webkit
       - name: Browser end-to-end acceptance
         run: npm run test:e2e
       - name: Serve production build and smoke-test assets
