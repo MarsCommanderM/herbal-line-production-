@@ -2,12 +2,13 @@
 
 Deterministic inventory generated from the locked-install CycloneDX SBOM. CI regenerates this table and compares it with the committed file.
 
-**Coverage:** 58 dependency components in the Linux CI SBOM; all 58 expose at least one SPDX license identifier.
+**Coverage:** 60 dependency components in the Linux CI SBOM; all 60 expose at least one SPDX license identifier.
 
 **Limitations:** This is a metadata inventory, not legal clearance. It does not confirm license compatibility, redistribution/modification rights, attribution obligations, or inclusion of required license texts. Those remain release gates.
 
 | Package | Version | SPDX license identifier(s) |
 |---|---|---|
+| `@axe-core/playwright` | `4.13.0` | MPL-2.0 |
 | `@dimforge/rapier3d-compat` | `0.12.0` | Apache-2.0 |
 | `@dimforge/rapier3d-compat` | `0.17.3` | Apache-2.0 |
 | `@esbuild/linux-x64` | `0.25.12` | MIT |
@@ -32,6 +33,7 @@ Deterministic inventory generated from the locked-install CycloneDX SBOM. CI reg
 | `@webgpu/types` | `0.1.74` | BSD-3-Clause |
 | `@xmldom/xmldom` | `0.8.15` | MIT |
 | `assertion-error` | `2.0.1` | MIT |
+| `axe-core` | `4.13.0` | MPL-2.0 |
 | `chai` | `6.3.0` | MIT |
 | `earcut` | `2.2.4` | ISC |
 | `es-module-lexer` | `2.3.2` | MIT |
