@@ -75,3 +75,13 @@ The PASS entries above are evidence for their explicitly named historical snapsh
 The full production CI passed on exact commit `48d7cce195aa7bdc756cee67977111c05f066b1f` in [run 38353059424](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059424). All 18 workflow steps completed successfully: locked dependency install, source lint, format, strict TypeScript, domain tests, production build, Chromium/Firefox/WebKit E2E, production preview smoke, Master Pack validation, original source-snapshot verification, product-policy validation and whitespace check. E2E reported **44 passed, 4 skipped**; the skips are the tests gated on unavailable WebGL contexts, while the campaign, persistence and fallback acceptance paths passed.
 
 The separate [Master Pack Validation run 38353059561](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059561) also passed on the same SHA, including all 42 exact preserved source blobs. This verifies the engineering gates for that code commit; it does not close the documented product, migration-contract, art/licensing or release-operations blockers.
+
+## Latest exact-commit verification — 2026-10-13
+
+Verified code revision: `4c4c77ff4f4d969009e9354d32f6292256c745e1`.
+
+- [Full DopeFarm CI](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38354410131): **SUCCESS**.
+- [Master Pack Validation](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38354410210): **SUCCESS** on the same SHA.
+- Browser E2E reported **53 passed, 4 skipped**. The skips are WebGL-dependent checks in Firefox when no WebGL canvas is available. The suite now includes third-person movement, direct plant selection, care settings/visuals, pruning, cutting/setting, save/reload, suspended-license blocks, held inventory, QC rejection, accessibility, mobile layout, maintenance, settlement and delivery idempotency.
+- The current follow-up adds an explicit WebGL initialization failure-injection test to prove the management UI and a care action remain usable without the 3D renderer. That follow-up commit requires its own exact-SHA CI run.
+- Open product/release blockers are not closed by CI: legacy-save migration without a defined prior schema, formal incident/corrective-action contract, economy/progression balance rules, final art/audio and asset rights, and release security/rights/rollback gates.

@@ -59,3 +59,13 @@ Commit `48d7cce195aa7bdc756cee67977111c05f066b1f`:
 ## Statusregel
 
 Ein Task gilt nur als DONE, wenn die Implementierung existiert, Tests ausgeführt wurden, das Ergebnis auf den exakten Commit verweist und keine offenen P0/P1-Fehler verbleiben. Laufende, abgebrochene oder übersprungene Jobs sind nicht bestanden.
+
+## Latest exact-commit verification — 2026-10-13
+
+Verified code revision: `4c4c77ff4f4d969009e9354d32f6292256c745e1`.
+
+- [Full DopeFarm CI](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38354410131): **SUCCESS**.
+- [Master Pack Validation](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38354410210): **SUCCESS** on the same SHA.
+- Browser E2E reported **53 passed, 4 skipped**. The skips are WebGL-dependent checks in Firefox when no WebGL canvas is available. The suite now includes third-person movement, direct plant selection, care settings/visuals, pruning, cutting/setting, save/reload, suspended-license blocks, held inventory, QC rejection, accessibility, mobile layout, maintenance, settlement and delivery idempotency.
+- The current follow-up adds an explicit WebGL initialization failure-injection test to prove the management UI and a care action remain usable without the 3D renderer. That follow-up commit requires its own exact-SHA CI run.
+- Open product/release blockers are not closed by CI: legacy-save migration without a defined prior schema, formal incident/corrective-action contract, economy/progression balance rules, final art/audio and asset rights, and release security/rights/rollback gates.

@@ -97,6 +97,26 @@ test('nearby cannabis plant can be selected directly from the third-person world
   await expect(page.locator('#game-feedback')).toContainText('Pflanze ausgewählt');
 });
 
+test('management remains usable when WebGL initialization fails', async ({ page }) => {
+  await page.addInitScript(`
+    const originalGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+      if (typeof type === 'string' && /^(webgl|webgl2|experimental-webgl)$/i.test(type)) return null;
+      return originalGetContext.call(this, type, ...args);
+    };
+  `);
+  await page.goto('/');
+  const fallback = page.locator('#fatal-error');
+  await expect(fallback).toBeVisible();
+  await expect(fallback).toContainText('Die 3D-Ansicht ist nicht verfügbar.');
+  await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
+  const waterButton = page.getByRole('button', { name: 'Bewässerung: hoch', exact: true });
+  await expect(waterButton).toBeVisible();
+  await waterButton.click();
+  await expect(page.locator('#game-feedback')).toContainText('Bewässerung · Spielstufe hoch');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1', { timeout: 15_000 });
+});
+
 test('campaign controls run a step and restore a saved state', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
