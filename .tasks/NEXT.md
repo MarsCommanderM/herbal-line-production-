@@ -40,11 +40,15 @@ Do not mark a task complete without implementation evidence, relevant tests, rev
 The historical Master-Pack tasks remain the task catalogue. The current user-approved identity, cannabis-specific visuals and directly visible care requirements are governed by the production policy. Release approval requires every gate to be green for one exact commit.
 
 ### Immediate execution queue
-1. Confirm the latest strict typecheck, unit tests and production build on the current revision.
-2. Finish browser E2E, preview smoke, Master-Pack validation, product-policy validation and whitespace checks on that same revision.
-3. Verify that plant-care E2E covers fictional level changes, visible feedback, save/autosave/reload and rejected invalid input; add missing cases before marking P1-005 done.
-4. Reconcile unsupported economy/progression values with canonical evidence. Do not invent upgrade prices, effects, XP, level thresholds or unlock schedules.
-5. Record exact-SHA evidence in the implementation audit. Keep main untouched until review and all required gates pass.
+
+**Verified baseline:** Commit `981baa43067e818757309ed79820438a77eba107` passed the full DopeFarm CI workflow [run 38325272366](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38325272366) and separate Master Pack Validation [run 38325272353](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38325272353). The next code or documentation commit must receive its own full green run before it can replace this baseline.
+
+1. **Completed for baseline SHA only:** locked install, source lint, format check, strict typecheck, unit tests, production build, Chromium/Firefox/WebKit E2E, preview smoke, Master-Pack validation, preserved-source snapshot verification, product-policy validation and whitespace check.
+2. **In progress:** address actionable review findings (workflow concurrency isolation, save schema/runtime alignment, validator false-pass prevention, stale 3D visuals after load/import, and audit/queue evidence accuracy); rerun every gate on the resulting exact commit.
+3. **Open:** inspect whether plant-care E2E proves fictional level changes, visible feedback, save/autosave/reload and rejected invalid input; add any missing regression cases before marking P1-005 done.
+4. **Open:** economy/progression remains intentionally incomplete until authoritative fictional prices/effects, XP/level thresholds and unlock rules are supplied; do not invent them.
+5. **Open:** review remaining asset/art fidelity, license/provenance, release security/accessibility and canonical source parity classifications. Exact historical source is preserved under `masterpack/source/` and `masterpack/canonical/contracts/`; active runtime extensions are intentionally not byte-identical.
+6. **Merge gate:** keep `main` untouched until all current-head CI checks are green, actionable review findings are resolved or explicitly dispositioned, and remaining release blockers are classified.
 
 ### Current status rule
 No workflow result from a parent commit counts as proof for a newer commit. Running, cancelled, skipped or failed jobs are not green. Do not mark any queue item complete from documentation alone.
