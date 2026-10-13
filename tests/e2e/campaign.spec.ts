@@ -133,6 +133,49 @@ test('all visible plant-care settings and actions persist through autosave and r
   await expect(page.getByRole('button', { name: 'Steckling setzen (1)', exact: true })).toBeVisible();
 });
 
+
+test('rejects corrupt primary and backup saves without loading corrupted campaign state', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
+  await page.getByRole('button', { name: 'Einheit in Batch überführen' }).click();
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
+
+  await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('herbal-line');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction('saves', 'readwrite');
+      const store = transaction.objectStore('saves');
+      for (const slotId of ['campaign-01', 'campaign-01-backup']) {
+        const request = store.get(slotId);
+        request.onsuccess = () => {
+          const record = request.result as { envelope: { payload: { reputation: number } } } | undefined;
+          if (!record) {
+            transaction.abort();
+            reject(new Error('Expected primary and backup save records to exist.'));
+            return;
+          }
+          record.envelope.payload.reputation = 999;
+          store.put(record);
+        };
+        request.onerror = () => reject(request.error);
+      }
+      transaction.oncomplete = () => { database.close(); resolve(); };
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error ?? new Error('Corruption setup transaction aborted.'));
+    });
+  });
+
+  await page.reload();
+  await expect(page.locator('#save-status')).toContainText('Spielstand konnte nicht automatisch geladen werden');
+  await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toHaveCount(0);
+});
+
 test('autosave survives reload and corrupt primary recovers the last valid backup', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
