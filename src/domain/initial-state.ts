@@ -39,7 +39,7 @@ export function createInitialGameState(): GameState {
     rngState: 17321,
     time: { day: 1, minuteOfDay: 480, totalMinutes: minute(0), speed: 1, paused: true },
     player: { id: playerId, callsign: 'Operations Director', level: 1, experience: 0 },
-    reputation(GAME_BALANCE.initialReputation),
+    reputation: reputation(GAME_BALANCE.initialReputation),
     rooms: [
       { id: productionRoomId, definitionId: 'room-production', displayName: 'Pflanzenraum', kind: 'production', capacity: 6, occupied: 1, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 12, unlocked: true, assignedStaffIds: [entityId('staff-operations-001')], assignedMachineIds: [] },
       { id: processingRoomId, definitionId: 'room-processing', displayName: 'Verarbeitung', kind: 'processing', capacity: 4, occupied: 0, condition: score(95), cleanliness: score(96), availability: score(97), powerUnitsPerHour: 8, unlocked: true, assignedStaffIds: [entityId('staff-maintenance-001')], assignedMachineIds: [entityId('machine-processing-001')] },
