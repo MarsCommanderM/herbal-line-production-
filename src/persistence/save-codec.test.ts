@@ -59,7 +59,7 @@ describe('versioned save codec', () => {
     const malformed = {
       ...malformedBody,
       checksum: await sha256Hex(stableStringify(malformedBody)),
-    } as SaveEnvelopeV1;
+    } as unknown as SaveEnvelopeV1;
 
     expect(await verifySaveEnvelope(malformed)).toEqual({ ok: false, errorCode: 'INVALID_ENVELOPE' });
   });
