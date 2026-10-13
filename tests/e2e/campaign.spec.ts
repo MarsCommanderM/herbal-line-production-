@@ -707,7 +707,7 @@ test('campaign interface has no WCAG 2.1/2.2 A/AA axe violations', async ({ page
   await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
 
   const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'])
     .analyze();
   const violations = results.violations.map((violation) => ({
     id: violation.id,
