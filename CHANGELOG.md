@@ -18,3 +18,9 @@
 - Nicht autorisierte Energieeffizienz-Upgrades aus dem aktiven Balance-Katalog entfernt; `sensor_pack_1` und `drying_rack_1` bleiben unkonfiguriert, bis Preise/Effekte autorisiert definiert sind.
 - Produktidentitäts-/Care-Contract-Validator in die verpflichtende PR-CI aufgenommen.
 - CI-Namen und Trigger werden so korrigiert, dass Feature-Branch-Pushes nicht zusätzlich einen zweiten vollständigen App-CI-Lauf starten.
+
+
+## CI and contract reconciliation — 2026-10-13
+
+- The restoration branch is validated by its open pull request only; branch pushes no longer start a duplicate second full run. Production `main` pushes continue to run both workflows. Concurrency groups are keyed by PR number/ref rather than event type so superseded runs for the same target cancel consistently.
+- The specification references `src/data/balance.json`, but that file is absent and runtime values are not yet centrally loaded from it. The missing source is now explicitly recorded as an implementation gap; no unsupported prices, progression thresholds or upgrade effects were added.

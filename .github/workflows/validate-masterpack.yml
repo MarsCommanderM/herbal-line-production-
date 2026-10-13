@@ -2,7 +2,7 @@ name: Dr. Green Dump / DopeFarm — Master Pack Validation
 
 on:
   push:
-    branches: [main, "restore/original-masterpack-product-scope-20261012"]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: dopefarm-master-pack-validation-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name }}
+  group: dopefarm-master-pack-validation-${{ github.event.pull_request.number || github.ref_name }}
   cancel-in-progress: true
 
 jobs:

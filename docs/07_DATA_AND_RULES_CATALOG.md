@@ -32,7 +32,7 @@ Inhalte sind datengetrieben. Definitionen (Content) sind unveränderliche Versio
 
 Das Profil nutzt `baseDurationGameMinutes`, `stability`, `careScore`, `stressIndex`, `contaminationIndex` und `qualitySensitivity`. Zeitfortschritt entsteht aus einem vereinfachten Fortschrittswert pro Game-Tick, der aus fiktiven Modifikatoren bestimmt wird. Alle Werte werden vor Anwendung geklemmt und deterministisch berechnet. Es gibt keine realen Sollwerte zu Licht, Temperatur, Luftfeuchte, Substrat, Nährstoffen, Bewässerung, Schnitt, Ernte, Trocknung oder Inhaltsstoffausbeute.
 
-Die Qualitätsbewertung ist ein transparentes Spielmodell: `rawScore = weighted(stability, careScore, cleanliness, timingScore) - fictionalPenalty(stressIndex, contaminationIndex)`; alle Gewichte sind in `balance.json` explizit, versioniert und per Tests abgesichert. QC-Schwelle ist eine Spielregel, keine klinische oder behördliche Empfehlung.
+Die Qualitätsbewertung ist ein transparentes Spielmodell: `rawScore = weighted(stability, careScore, cleanliness, timingScore) - fictionalPenalty(stressIndex, contaminationIndex)`. Die Spezifikation verlangt explizite, versionierte Gewichte in `src/data/balance.json`; **diese Datei fehlt derzeit**, und die Runtime lädt noch keine zentrale Balance-Datei. Die Gewichte sind daher eine offene Implementierungslücke und dürfen nicht als zentral konfiguriert/validiert behauptet werden. Die dokumentierte QC-Schwelle 70/100 ist ausschließlich eine Spielregel, keine klinische oder behördliche Empfehlung.
 
 ## 5. Wirtschaft
 

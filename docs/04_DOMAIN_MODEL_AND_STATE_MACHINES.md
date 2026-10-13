@@ -88,7 +88,7 @@ Fehlerpfade: `available → expired`, `accepted|allocated|ready_to_ship → canc
 
 `valid ↔ warning → suspended → recovery_review → valid|warning`
 
-Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte Spieldaten konfiguriert. Baseline für die erste Balance-Datei: Risiko 0–100; `warning` ab 40, `suspended` ab 80. Suspendierung blockiert alle fachlich als kritisch markierten Transaktionen. Es gibt keinen UI-Bypass.
+Die Spezifikation sieht eine versionierte `src/data/balance.json` für diese spielinternen Schwellenwerte vor. **Implementierungslücke:** Diese Datei existiert im aktuellen Repository nicht; die Laufzeit lädt daher noch keine zentrale Balance-Datei. Die dokumentierte Design-Baseline ist Risiko 0–100, `warning` ab 40 und `suspended` ab 80. Diese Werte dürfen erst dann als zentral konfiguriert gelten, wenn Datenquelle, Validator und Runtime-Verbrauch implementiert und getestet sind. Suspendierung muss alle fachlich als kritisch markierten Transaktionen blockieren; es gibt keinen UI-Bypass.
 
 ### 3.6 Save-Sitzung
 
