@@ -20,7 +20,7 @@
 **Previous implementation finding and current disposition**
 - The previous implementation had `energy-efficiency-1/2`, prices of 250,000/150,000 cents, 20%/10% cost reductions and a prerequisite not supported by the canonical pack.
 - Those active definitions have now been removed from the upgrade catalog. The catalog is intentionally empty; source-listed `sensor_pack_1` and `drying_rack_1` IDs remain locked and unbuyable until their fictional prices/effects/unlocks receive an authoritative balance definition.
-- Domain tests now require unconfigured/legacy upgrade purchase attempts to fail atomically without adding a ledger entry. The full current-commit CI run is still required to accept this change.
+- Domain tests require unconfigured/legacy upgrade purchase attempts to fail atomically without adding a ledger entry. This behavior and the full required CI gate set passed on commit `48d7cce195aa7bdc756cee67977111c05f066b1f` in [DopeFarm CI run 38353059424](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059424); the companion [Master Pack Validation run 38353059561](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059561) passed on the same SHA.
 
 **Disposition**
 - Do not invent replacement prices, percentages, prerequisites or unlock conditions.
@@ -51,7 +51,7 @@
 3. Add data/schema validation for upgrade definitions and references.
 4. Add tests proving insufficient funds, duplicate purchase prevention, one ledger posting per purchase, and effect application only after a valid purchase.
 5. Add a deterministic economy/progression harness once the missing numeric rules have an authoritative source.
-6. Re-run strict typecheck, unit/contract tests, production build and browser E2E on one identified commit. No result is claimed in this audit.
+6. **Verified 2026-10-13 on `48d7cce195aa7bdc756cee67977111c05f066b1f`:** strict typecheck, unit/contract tests, production build, Chromium/Firefox/WebKit browser E2E, preview smoke, Master-Pack validation, preserved-source verification, product-policy validation and whitespace all passed in [DopeFarm CI run 38353059424](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059424); [Master Pack Validation run 38353059561](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38353059561) also passed on the same SHA. This verifies the code gates, not the unresolved economy/progression design decisions listed above.
 
 
 ## Scope rule
