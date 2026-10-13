@@ -40,7 +40,7 @@ describe('versioned save codec', () => {
 
     const result = await verifySaveEnvelope(tampered);
     expect(result).toEqual({ ok: false, errorCode: 'CHECKSUM_MISMATCH' });
-    expect(envelope.payload.reputation).toBe(240);
+    expect(envelope.payload.reputation).toBe(100);
   });
 
   it('rejects invalid JSON, unsupported versions, and structurally incomplete envelopes', async () => {

@@ -55,8 +55,8 @@ describe('ledger-derived finance', () => {
     const state = createInitialGameState();
     expect(calculateDailyOperatingCosts(state)).toEqual({
       staffWagesCents: 64_000,
-      utilitiesCents: 24_000,
-      totalCents: 88_000,
+      utilitiesCents: 90_000,
+      totalCents: 154_000,
     });
   });
 
@@ -69,7 +69,7 @@ describe('ledger-derived finance', () => {
       'operating-costs:day:1:wages',
       'operating-costs:day:1:utilities',
     ]);
-    expect(postings.reduce((sum, item) => sum + Number(item.amountCents), 0)).toBe(88_000);
+    expect(postings.reduce((sum, item) => sum + Number(item.amountCents), 0)).toBe(154_000);
 
     const withPostings = { ...state, economy: { ...state.economy, ledger: postings } };
     expect(createDailyOperatingLedgerEntries(withPostings, 1, minute(1440))).toEqual([]);
@@ -79,7 +79,7 @@ describe('ledger-derived finance', () => {
   it('keeps upgrades inactive until approved fictional prices and effects are configured', () => {
     const state = createInitialGameState();
     const baseCosts = calculateDailyOperatingCosts(state);
-    expect(baseCosts).toEqual({ staffWagesCents: 64_000, utilitiesCents: 24_000, totalCents: 88_000 });
+    expect(baseCosts).toEqual({ staffWagesCents: 64_000, utilitiesCents: 90_000, totalCents: 154_000 });
     expect(ECONOMY_UPGRADES).toEqual([]);
     expect(getEconomyUpgradeDefinition(SENSOR_PACK_UPGRADE_ID)).toBeUndefined();
     expect(getEconomyUpgradeDefinition(DRYING_RACK_UPGRADE_ID)).toBeUndefined();

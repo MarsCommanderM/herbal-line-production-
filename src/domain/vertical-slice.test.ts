@@ -82,7 +82,7 @@ describe('medical cannabis operations vertical slice', () => {
     expect(state.inventoryLots[0]?.quantityReserved).toBe(0);
     expect(state.inventoryLots[0]?.status).toBe('depleted');
     expect(state.economy.ledger).toHaveLength(1);
-    expect(getCampaignBalance(state)).toBe(25_850_000);
+    expect(getCampaignBalance(state)).toBe(3_350_000);
   });
 
   it('does not post revenue twice when delivery confirmation is repeated', () => {
@@ -267,7 +267,7 @@ describe('medical cannabis operations vertical slice', () => {
       economy: { ...initial.economy, openingBalanceCents: 0 as typeof initial.economy.openingBalanceCents },
     };
     const exhausted = applyOk(noOpeningFunds, 'TIME/END_DAY');
-    expect(getCampaignBalance(exhausted)).toBe(-88_000);
+    expect(getCampaignBalance(exhausted)).toBe(-154_000);
 
     const support = dispatch(exhausted, 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT');
     expect(support.ok).toBe(true);
@@ -310,7 +310,7 @@ describe('medical cannabis operations vertical slice', () => {
     expect(result.state.time.totalMinutes).toBe(1440);
     expect(result.state.economy.ledger).toHaveLength(2);
     expect(result.state.economy.ledger.map((entry) => entry.reasonCode)).toEqual(['DAILY_STAFF_WAGES', 'DAILY_UTILITIES']);
-    expect(getCampaignBalance(result.state)).toBe(24_912_000);
+    expect(getCampaignBalance(result.state)).toBe(2_346_000);
     expect(result.events.map((event) => event.type)).toEqual(['time.day_ended', 'finance.ledger_posted', 'finance.ledger_posted']);
     expect(result.state.ui.notifications.at(-1)?.code).toBe('DAILY_SETTLEMENT');
   });
@@ -327,7 +327,7 @@ describe('medical cannabis operations vertical slice', () => {
       economy: { ...initial.economy, openingBalanceCents: 1 as typeof initial.economy.openingBalanceCents },
     };
     const overdrawn = applyOk(lowFunds, 'TIME/END_DAY');
-    expect(getCampaignBalance(overdrawn)).toBe(-87_999);
+    expect(getCampaignBalance(overdrawn)).toBe(-153_999);
     expect(overdrawn.ui.notifications.at(-1)?.level).toBe('danger');
   });
 
