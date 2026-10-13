@@ -149,5 +149,6 @@ export interface GameState {
 export interface GameBalanceConfig {
   version: string; qcPassThreshold: number; licenseWarningRisk: number; licenseSuspendedRisk: number;
   reputationMin: number; reputationMax: number; initialMoneyCents: number;
+  initialReputation: number; initialComplianceRisk: number; qcReviewThreshold: number;
   fixedStepHz: number; autosaveIntervalMs: number;
 }

@@ -585,6 +585,17 @@ test('explicit operation hold disables the affected action while leaving unrelat
   await expect(page.getByRole('button', { name: 'Tag abschließen' })).toBeEnabled();
 });
 
+test('idle campaign is periodically autosaved at the configured interval', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/');
+  const documentRoot = page.locator('html');
+  await expect(documentRoot).toHaveAttribute('data-autosave-count', /\d+/, { timeout: 10000 });
+  const before = Number(await documentRoot.getAttribute('data-autosave-count'));
+  await page.clock.fastForward(30_000);
+  await expect.poll(async () => Number(await documentRoot.getAttribute('data-autosave-count'))).toBe(before + 1);
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
+});
+
 test('keyboard navigation reaches primary controls in a predictable order', async ({ page }, testInfo) => {
   await page.goto('/');
   // Focus the first control explicitly; Firefox also tabs to its scrollable management landmark.

@@ -5,6 +5,8 @@ import { GAME_BALANCE, parseBalanceConfig } from './balance';
 describe('versioned fictional game balance', () => {
   it('loads only ordered, bounded game thresholds', () => {
     expect(GAME_BALANCE.version).toBe('fictional-game-balance-v1');
+    expect(GAME_BALANCE.reputationMin).toBe(0);
+    expect(GAME_BALANCE.reputationMax).toBe(1000);
     expect(GAME_BALANCE.qcPassThreshold).toBe(70);
     expect(GAME_BALANCE.qcReviewThreshold).toBe(60);
     expect(GAME_BALANCE.licenseWarningRisk).toBe(40);

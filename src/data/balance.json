@@ -1,5 +1,7 @@
 {
   "version": "fictional-game-balance-v1",
+  "reputationMin": 0,
+  "reputationMax": 1000,
   "initialMoneyCents": 2500000,
   "initialReputation": 100,
   "initialComplianceRisk": 0,

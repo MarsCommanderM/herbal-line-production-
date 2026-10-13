@@ -4,6 +4,7 @@ import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
 import type { CommandId, EntityId, GameState, PlantCareState } from '../contracts/domain';
 import { createInitialGameState } from './domain/initial-state';
+import { GAME_BALANCE } from './domain/balance';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from './domain/vertical-slice';
 import { renderManagementUI } from './ui/management';
 import { IndexedDbSaveRepository } from './persistence/indexeddb-save-repository';
@@ -141,7 +142,11 @@ async function autosaveCampaign(): Promise<void> {
   try {
     const envelope = await createSaveEnvelope(gameState);
     await writePrimarySave(envelope);
-    if (gameState.revision === revision) status = { level: 'success', message: 'Autosave gespeichert · Revision ' + revision + '.' };
+    if (gameState.revision === revision) {
+      status = { level: 'success', message: 'Autosave gespeichert · Revision ' + revision + '.' };
+      const previousCount = Number(document.documentElement.dataset.autosaveCount ?? '0');
+      document.documentElement.dataset.autosaveCount = String(Number.isSafeInteger(previousCount) ? previousCount + 1 : 1);
+    }
   } catch (error) {
     if (gameState.revision === revision) {
       status = { level: 'error', message: 'Autosave fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)) };
@@ -881,8 +886,17 @@ async function boot(): Promise<() => void> {
 }
 
 let dispose: (() => void) | undefined;
-void boot().then((cleanup) => { dispose = cleanup; }).catch(showFatalError);
+let autosaveTimer: number | undefined;
+void boot().then((cleanup) => {
+  dispose = cleanup;
+  autosaveTimer = window.setInterval(() => {
+    void autosaveCampaign();
+  }, GAME_BALANCE.autosaveIntervalMs);
+}).catch(showFatalError);
 
 if (import.meta.hot) {
-  import.meta.hot.dispose(() => dispose?.());
+  import.meta.hot.dispose(() => {
+    if (autosaveTimer !== undefined) window.clearInterval(autosaveTimer);
+    dispose?.();
+  });
 }

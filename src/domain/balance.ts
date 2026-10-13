@@ -1,17 +1,7 @@
 import rawBalance from '../data/balance.json' with { type: 'json' };
+import type { GameBalanceConfig } from '../../contracts/domain';
 
-export interface RuntimeBalanceConfig {
-  version: string;
-  initialMoneyCents: number;
-  initialReputation: number;
-  initialComplianceRisk: number;
-  licenseWarningRisk: number;
-  licenseSuspendedRisk: number;
-  qcPassThreshold: number;
-  qcReviewThreshold: number;
-  fixedStepHz: number;
-  autosaveIntervalMs: number;
-}
+export type RuntimeBalanceConfig = GameBalanceConfig;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -27,7 +17,7 @@ export function parseBalanceConfig(value: unknown): Readonly<RuntimeBalanceConfi
     throw new TypeError('Balance config must declare a non-empty version.');
   }
   const numericFields = [
-    'initialMoneyCents', 'initialReputation', 'initialComplianceRisk',
+    'initialMoneyCents', 'initialReputation', 'initialComplianceRisk', 'reputationMin', 'reputationMax',
     'licenseWarningRisk', 'licenseSuspendedRisk', 'qcPassThreshold',
     'qcReviewThreshold', 'fixedStepHz', 'autosaveIntervalMs',
   ] as const;
@@ -35,7 +25,9 @@ export function parseBalanceConfig(value: unknown): Readonly<RuntimeBalanceConfi
     if (!Number.isSafeInteger(value[field])) throw new TypeError('Balance config field must be a safe integer: ' + field);
   }
   if (!isIntegerInRange(value.initialMoneyCents, 0, Number.MAX_SAFE_INTEGER)) throw new RangeError('Initial money must be non-negative.');
-  if (!isIntegerInRange(value.initialReputation, 0, 1000)) throw new RangeError('Initial reputation must be in 0–1000.');
+  if (!isIntegerInRange(value.reputationMin, 0, 1000) || !isIntegerInRange(value.reputationMax, 0, 1000)
+    || value.reputationMin >= value.reputationMax) throw new RangeError('Reputation bounds must be ordered within 0–1000.');
+  if (!isIntegerInRange(value.initialReputation, value.reputationMin, value.reputationMax)) throw new RangeError('Initial reputation must be within the configured bounds.');
   if (!isIntegerInRange(value.initialComplianceRisk, 0, 100)) throw new RangeError('Initial compliance risk must be in 0–100.');
   if (!isIntegerInRange(value.licenseWarningRisk, 0, 100) || !isIntegerInRange(value.licenseSuspendedRisk, 0, 100)
     || value.licenseWarningRisk >= value.licenseSuspendedRisk) {
