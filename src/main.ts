@@ -51,11 +51,9 @@ async function waitForPersistenceIdle(): Promise<void> {
   while (persistenceBusy) await persistenceIdlePromise;
 }
 
-function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<string, unknown>): void {
-  if (persistenceBusy) {
-    if (gameFeedback) gameFeedback.textContent = 'Bitte warte, bis der Speichervorgang abgeschlossen ist.';
-    return;
-  }
+async function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<string, unknown>): Promise<void> {
+  // Commands wait for a consistent save snapshot instead of being rejected during autosave.
+  await waitForPersistenceIdle();
   commandSequence += 1;
   const command = {
     commandId: ('ui-command-' + commandSequence) as CommandId,
@@ -350,6 +348,14 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
   return plant;
 }
 
+function startAutosaveTimer(): void {
+  if (autosaveTimer !== undefined) return;
+  document.documentElement.dataset.autosaveIntervalMs = String(GAME_BALANCE.autosaveIntervalMs);
+  autosaveTimer = window.setInterval(() => {
+    void autosaveCampaign();
+  }, GAME_BALANCE.autosaveIntervalMs);
+}
+
 async function boot(): Promise<() => void> {
   if (!worldRoot || !uiRoot) throw new Error('Required application roots are missing.');
   // Bind persistence controls before the first asynchronous save lookup. Keep them disabled
@@ -378,6 +384,8 @@ async function boot(): Promise<() => void> {
   }
   setPersistenceControlsDisabled(false);
   renderManagementUI(gameState, runGameCommand, selectPlant);
+  // Persistence must continue even when the subsequent WebGL setup fails.
+  startAutosaveTimer();
 
   const scene = new THREE.Scene();
   const plantVisuals = new Map<string, THREE.Group[]>();
@@ -889,10 +897,6 @@ let dispose: (() => void) | undefined;
 let autosaveTimer: number | undefined;
 void boot().then((cleanup) => {
   dispose = cleanup;
-  document.documentElement.dataset.autosaveIntervalMs = String(GAME_BALANCE.autosaveIntervalMs);
-  autosaveTimer = window.setInterval(() => {
-    void autosaveCampaign();
-  }, GAME_BALANCE.autosaveIntervalMs);
 }).catch(showFatalError);
 
 if (import.meta.hot) {
