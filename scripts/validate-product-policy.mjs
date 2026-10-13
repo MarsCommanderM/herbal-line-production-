@@ -73,7 +73,7 @@ const requiredPhrases = new Map([
   ['src/domain/vertical-slice.ts', ['PLANT/CARE_ACTION', 'plant.care_applied', 'set_cutting']],
   ['src/ui/management.ts', ['Bewässerung', 'Steckling setzen']],
   ['src/main.ts', ['createCannabisPlant', 'applyPlantCareVisual', 'onWorldPointerDown']],
-  ['tests/e2e/campaign.spec.ts', ['Dr. Green Dump / DopeFarm', 'visible plant-care controls']],
+  ['tests/e2e/campaign.spec.ts', ['Dr. Green Dump / DopeFarm', 'all visible plant-care settings']],
 ]);
 
 for (const [file, phrases] of requiredPhrases) {
