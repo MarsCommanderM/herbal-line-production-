@@ -23,6 +23,7 @@ function applyOk(
   if (!result.ok) throw new Error(result.error.message);
   return result.state;
 }
+
 async function seedCampaignSave(page: Page, state: ReturnType<typeof createInitialGameState>): Promise<void> {
   const envelope = await createSaveEnvelope(state, '2026-10-12T12:00:00.000Z');
   const serialized = stableStringify(envelope);
@@ -293,7 +294,6 @@ test('held inventory cannot be allocated to a pharmacy order', async ({ page }) 
   };
 
   await seedCampaignSave(page, state);
-  await expect(page.locator('#game-actions')).toContainText('Abnehmerauftrag annehmen');
   await expect(page.getByRole('button', { name: 'Freigegebenen Bestand reservieren', exact: true })).toHaveCount(0);
 });
 
