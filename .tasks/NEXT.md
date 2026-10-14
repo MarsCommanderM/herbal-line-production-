@@ -1,32 +1,32 @@
 # Next Task — Authoritative Queue
 
-## Current verified implementation baseline
+## Exact verified implementation baseline
 
-Exact implementation revision: `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`.
+Current verified HEAD: `c099d29b748353b16870d5afd63e04274759e288`.
 
-- [Full DopeFarm CI, run 38423858305](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858305): **SUCCESS** on the exact revision.
-- [Master Pack Validation, run 38423858306](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858306): **SUCCESS** on the same revision.
-- CI gates passed: full-history credential-pattern scan, locked install, `npm audit` (0 vulnerabilities), CycloneDX SBOM and dependency-license metadata comparison, source lint, format, strict TypeScript, 76 unit tests, production build, browser E2E, production preview smoke, master-pack validation, preserved-source verification, product-policy validation and whitespace.
-- Browser E2E: **59 passed, 4 skipped**. The skipped cases are renderer-dependent; some hosted browser contexts expose no WebGL canvas. The explicit WebGL-initialization-failure fallback test passed in Chromium, Firefox and WebKit. Skipped cases are not claimed as passed.
-- Credential-pattern scan: **802 reachable text blobs scanned**, no high-confidence findings.
-- Master-pack source snapshot: all 42 preserved files are checked against recorded Git blob IDs. This does not re-hash the original ZIP container because the ZIP binary is not stored in the repository.
-- Active root parity remains intentionally **20/42 exact matches, 22/42 classified differences**, plus application-specific files. The root is not claimed to be byte-identical to the historical archive.
-- `main` remains at `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`. PR #26 is open and ready for review, but is not authorized to merge while blockers below remain.
-- A documentation/status refresh follows this implementation revision; the new head must receive its own green CI before the refreshed branch is called green.
+- [Full DopeFarm CI, run 38513719586](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38513719586): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38513719521](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38513719521): **SUCCESS** on the same SHA.
+- App CI passed the locked install, credential-pattern scan, `npm audit` (**0 vulnerabilities**), CycloneDX SBOM/license metadata comparison, lint, format, strict TypeScript, unit tests, production build, browser E2E, preview smoke, master-pack validation, preserved-source verification, product-policy validation and whitespace.
+- Unit tests: **11 test files passed**.
+- Browser E2E: **71 passed, 4 skipped**. Four renderer-dependent cases remain skipped when the selected non-reference browser context exposes no WebGL canvas; these are not counted as passes. Chromium/SwiftShader world interaction is required; the graphics-fallback scenario is also tested.
+- Original Master Pack snapshot: **42/42 files verified against recorded Git blob IDs**. The historical ZIP container is not stored in the repository, so its recorded archive digest is provenance, not a re-hash performed by this CI.
+- Original-source/root parity remains **20/42 exact active-root matches and 22/42 classified active-root differences**; original source bytes remain preserved under `masterpack/source/`.
+- Current `main`: `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`. PR #26 remains open and unmerged.
 
-## Remaining work, in priority order
+## Remaining work, priority order
 
-1. **P1-002 — Save migration:** documented historical Master Pack V1 and prior active-app V1 shapes now migrate into active V2. Saves with unreconstructable assessment references or ledger/balance mismatch are rejected with `MIGRATION_FAILED` without overwriting source data. Exact-SHA CI is pending.
-2. **P1-004 — Incident/corrective-action lifecycle:** reconcile the documented `ComplianceCase`, `AuditRun`, `Violation` and license recovery state machine with runtime contracts. Implement only transitions supported by the project contract, with typed commands/events, persistence, audit log, UI, invalid-transition tests and browser coverage. Do not add real-world operating procedures.
-3. **P1-005 — WebGL acceptance:** eliminate or explicitly isolate the four renderer-dependent skipped E2E cases. Keep world interaction acceptance mandatory in at least the supported Chromium/SwiftShader path; retain fallback testing in all three engines. No skipped case is a pass.
-4. **P2-002 — Economy/progression:** keep upgrades locked until an approved fictional balance table defines prices, effects, prerequisites, XP thresholds and unlock rules. No invented numbers.
-5. **P3-001 — Visual quality:** replace the clearly temporary procedural avatar/facility assets with original or appropriately licensed final assets; record source, hashes, license/rights evidence, target-resolution screenshots and performance results.
-6. **P3-002 — Release security/rights:** engineering automation is green on the verified baseline. Still require legal compatibility/notice review, privacy/security review, final asset rights and release-artifact/rollback evidence.
-7. **P4-001 — Release operations:** define artifact identity, deployment smoke, rollback and incident-response runbook; run a rollback drill.
+1. **P1-002 — Save migration:** historical Master Pack V1 and previous active-app V1 shapes are supported with strict checksum, payload, ledger and invariant checks. Conflicting ledger/balance snapshots or unreconstructable assessment references return `MIGRATION_FAILED` without overwriting the source save. Regression coverage exists; exact-HEAD CI above passed.
+2. **P1-004 — Compliance lifecycle:** implemented in HEAD `c099d29…`: typed `ComplianceCase`/`AuditRun` state, incident/violation recording, corrective-action recording/submission/verification, audit start/completion, recovery-finalization gate, save validation, cross-entity invariants, domain events, visible management actions, unit tests and browser persistence coverage. Exact-HEAD CI above passed. **Still open:** no canonical rule authorizes numerical reduction of compliance risk; do not invent one. Further work needs an authoritative fictional balance decision.
+3. **P1-005 — WebGL acceptance:** exact-HEAD E2E reports four renderer-dependent skips. Keep them visible; deterministic three-engine world-renderer parity remains unproven. Chromium/SwiftShader interaction acceptance is mandatory and passed in the current run.
+4. **P2-002 — Economy/progression:** upgrades `sensor_pack_1` and `drying_rack_1` remain unavailable until authoritative fictional prices, effects, prerequisites, XP thresholds and unlock rules are approved. No values may be invented.
+5. **P3-001 — Final art/audio and asset pipeline:** no standalone GLB/FBX/OBJ/Blender/texture/audio deliverables are present in the tracked tree; character, plant and facility visuals are procedural runtime placeholders. Replace them with original or properly licensed final assets, register source/hash/rights and retain target-resolution visual/performance evidence.
+6. **P3-002 — Security, privacy and rights:** automated security/dependency/secret-scan gates pass, but legal dependency compatibility/notice review, contributor-rights review, privacy/security sign-off, working-title/trademark review and final asset rights remain release blockers.
+7. **P4-001 — Release operations:** produce a hash-identified release artifact, deployment smoke evidence, rollback/incident runbook and a recorded rollback drill.
 
-## Operating rules
+## Operating constraints
 
-- Work only on `restore/original-masterpack-product-scope-20261012`; keep `main` unchanged until the P1 blockers, product review and release gates are closed.
-- The game is specifically Dr. Green Dump / DopeFarm: recognizable medical-cannabis plants, visible direct care and a Third-Person player perspective. Never substitute generic herbs.
-- All cultivation/process values are fictional game abstractions; do not introduce real-world production parameters.
-- Every code change requires exact-SHA App CI and Master Pack Validation. Cancelled/skipped/failed jobs do not count as green.
+- Work only on `restore/original-masterpack-product-scope-20261012`; keep `main` unchanged until every required acceptance and release gate is satisfied.
+- Product scope is Dr. Green Dump / DopeFarm: recognizable medical-cannabis plants, directly visible plant-care gameplay and Third Person. No generic herb substitution.
+- All cultivation/process values are fictional simulation abstractions, never real-world production parameters.
+- Every code or workflow change must pass both full App CI and Master Pack Validation on its exact new SHA. Running/failed/cancelled/skipped checks are not passes.
+- Do not generate or import assets with unknown or unapproved licenses. Paid Meshy submissions require a separately approved asset brief, declared spend and one-off authorization.
