@@ -450,7 +450,7 @@ async function boot(): Promise<() => void> {
 
   const automatedRenderProfile = window.navigator.webdriver === true;
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, automatedRenderProfile ? 1 : 1.75));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, automatedRenderProfile ? 1 : 2));
   renderer.shadowMap.enabled = !automatedRenderProfile;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -472,11 +472,12 @@ async function boot(): Promise<() => void> {
   const avatar = new THREE.Group();
   avatar.name = 'third-person-player';
   const startsWithExistingPlants = gameState.plants.length > 0;
-  avatar.position.set(startsWithExistingPlants ? -7 : -23, 0, startsWithExistingPlants ? -6.2 : -22);
+  avatar.position.set(startsWithExistingPlants ? -7 : -17.2, 0, startsWithExistingPlants ? -6.2 : -22);
+  avatar.rotation.y = startsWithExistingPlants ? 0 : -Math.PI / 2;
   avatar.userData.isPlayerAvatar = true;
-  const workShirt = new THREE.MeshStandardMaterial({ color: '#596c57', roughness: 0.82 });
-  const workVest = new THREE.MeshStandardMaterial({ color: '#34443b', roughness: 0.72 });
-  const trousers = new THREE.MeshStandardMaterial({ color: '#343c3e', roughness: 0.9 });
+  const workShirt = new THREE.MeshStandardMaterial({ color: '#92958f', roughness: 0.88 });
+  const workVest = new THREE.MeshStandardMaterial({ color: '#707671', roughness: 0.82 });
+  const trousers = new THREE.MeshStandardMaterial({ color: '#394a61', roughness: 0.92 });
   const bootMaterial = new THREE.MeshStandardMaterial({ color: '#302b27', roughness: 0.94 });
   const skinMaterial = new THREE.MeshStandardMaterial({ color: '#c99573', roughness: 0.78 });
   const hairMaterial = new THREE.MeshStandardMaterial({ color: '#302b27', roughness: 0.92 });
@@ -501,6 +502,16 @@ async function boot(): Promise<() => void> {
   head.position.set(0, 1.84, -0.015); head.castShadow = true; head.receiveShadow = true; avatar.add(head);
   const hair = new THREE.Mesh(new THREE.SphereGeometry(0.196, 28, 16, 0, Math.PI * 2, 0, Math.PI * 0.47), hairMaterial);
   hair.position.set(0, 1.91, 0.005); hair.castShadow = true; avatar.add(hair);
+  const capMaterial = new THREE.MeshStandardMaterial({ color: '#282d2b', roughness: 0.94 });
+  const capCrown = new THREE.Mesh(new THREE.SphereGeometry(0.205, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.53), capMaterial);
+  capCrown.position.set(0, 1.965, 0.01);
+  capCrown.castShadow = true;
+  avatar.add(capCrown);
+  const capPeak = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.026, 0.145), capMaterial);
+  capPeak.position.set(0, 1.93, -0.145);
+  capPeak.rotation.x = -0.06;
+  capPeak.castShadow = true;
+  avatar.add(capPeak);
   for (const earX of [-0.181, 0.181]) {
     const ear = new THREE.Mesh(new THREE.SphereGeometry(0.043, 12, 10), skinMaterial);
     ear.position.set(earX, 1.82, -0.005); avatar.add(ear);
@@ -549,6 +560,7 @@ async function boot(): Promise<() => void> {
   const movementObstacles: THREE.Mesh[] = [];
   const cameraTargetOffset = new THREE.Vector3(0, 1.2, 0);
   const previousAvatarPosition = avatar.position.clone();
+  let previousAvatarRotationY = avatar.rotation.y;
   const movementForward = new THREE.Vector3();
   const movementRight = new THREE.Vector3();
   const movementVector = new THREE.Vector3();
@@ -559,6 +571,7 @@ async function boot(): Promise<() => void> {
   renderer.domElement.dataset.thirdPerson = 'true';
   renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
   renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
+  renderer.domElement.dataset.cameraTargetX = avatar.position.x.toFixed(3);
   renderer.domElement.dataset.cameraTargetZ = avatar.position.z.toFixed(3);
   const spatialRoomZones = [
     { id: 'seed-intake', minX: -31, maxX: -15, minZ: -29, maxZ: -15 },
@@ -591,7 +604,8 @@ async function boot(): Promise<() => void> {
     corridor: 'VERBINDUNGSGANG',
   };
   renderer.domElement.dataset.roomId = identifySpatialRoom(avatar.position);
-  camera.position.copy(avatar.position).add(new THREE.Vector3(0, 4.4, 8));
+  const initialCameraOffset = new THREE.Vector3(0, 3.2, 6).applyAxisAngle(new THREE.Vector3(0, 1, 0), avatar.rotation.y);
+  camera.position.copy(avatar.position).add(initialCameraOffset);
   controls.target.copy(avatar.position).add(cameraTargetOffset);
   controls.update();
 
@@ -1041,7 +1055,7 @@ async function boot(): Promise<() => void> {
     const halfWidth = width / 2;
     const roomWallMaterial = room.greenhouseRoof ? greenhouseCurtainMaterial : wallMaterial;
     const halfDepth = depth / 2;
-    const doorWidth = 2.8;
+    const doorWidth = room.type === 'intake' || room.greenhouseRoof ? 4.2 : 2.8;
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), roomFloorMaterials[room.type] ?? floorMaterial);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(x, -0.025, z);
@@ -1480,7 +1494,7 @@ async function boot(): Promise<() => void> {
         if (room?.definitionId === 'room-production') return new THREE.Vector3(-7.5 + (roomIndex % 4) * 5, 0.52, -4.5 + Math.floor(roomIndex / 4) * 4.2);
         return new THREE.Vector3(0, 0.45, 0);
       };
-      const visualScale = statePlant.propagatedFromPlantId ? 0.3 : room?.definitionId === 'room-greenhouse' ? 0.56 : 0.46;
+      const visualScale = statePlant.propagatedFromPlantId ? 0.34 : room?.definitionId === 'room-greenhouse' ? 0.82 : 0.70;
       if (!visuals) {
         const visual = createCannabisPlant(0, 0, 200 + roomIndex);
         visual.position.copy(getPlantPosition()); visual.scale.setScalar(visualScale);
@@ -1588,7 +1602,8 @@ async function boot(): Promise<() => void> {
   });
   hud.addChild(panel, title, subtitle, stateLine);
   const resetCamera = (): void => {
-    camera.position.copy(avatar.position).add(new THREE.Vector3(0, 3.2, 6));
+    const offset = new THREE.Vector3(0, 3.2, 6).applyAxisAngle(new THREE.Vector3(0, 1, 0), avatar.rotation.y);
+    camera.position.copy(avatar.position).add(offset);
     controls.target.copy(avatar.position).add(cameraTargetOffset);
     controls.update();
   };
@@ -1696,9 +1711,19 @@ async function boot(): Promise<() => void> {
     camera.position.add(avatarDelta);
     previousAvatarPosition.copy(avatar.position);
     controls.target.copy(avatar.position).add(cameraTargetOffset);
+    const rotationDelta = Math.atan2(
+      Math.sin(avatar.rotation.y - previousAvatarRotationY),
+      Math.cos(avatar.rotation.y - previousAvatarRotationY),
+    );
+    if (Math.abs(rotationDelta) > 0.0001) {
+      const cameraOffset = camera.position.clone().sub(controls.target).applyAxisAngle(worldUp, rotationDelta);
+      camera.position.copy(controls.target).add(cameraOffset);
+    }
+    previousAvatarRotationY = avatar.rotation.y;
     controls.update();
     renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
     renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
+    renderer.domElement.dataset.cameraTargetX = controls.target.x.toFixed(3);
     renderer.domElement.dataset.cameraTargetZ = controls.target.z.toFixed(3);
     const currentRoomId = identifySpatialRoom(avatar.position);
     renderer.domElement.dataset.roomId = currentRoomId;

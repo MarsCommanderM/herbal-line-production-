@@ -102,13 +102,17 @@ test('third-person avatar moves with keyboard and camera target follows', async 
   const worldCanvas = page.locator('#world-root canvas');
   await requireWebGLCanvas(page, testInfo, worldCanvas);
   await expect(worldCanvas).toHaveAttribute('data-third-person', 'true');
-  const initialZ = Number(await worldCanvas.getAttribute('data-player-z'));
+  const initialX = Number(await worldCanvas.getAttribute('data-player-x'));
   await page.keyboard.down('w');
-  await expect.poll(async () => Number(await worldCanvas.getAttribute('data-player-z'))).not.toBe(initialZ);
+  await expect.poll(async () => Number(await worldCanvas.getAttribute('data-player-x'))).not.toBe(initialX);
   await page.keyboard.up('w');
+  await expect(worldCanvas).toHaveAttribute('data-camera-target-x', /.+/);
   await expect(worldCanvas).toHaveAttribute('data-camera-target-z', /.+/);
+  const playerX = await worldCanvas.getAttribute('data-player-x');
   const playerZ = await worldCanvas.getAttribute('data-player-z');
+  const cameraTargetX = await worldCanvas.getAttribute('data-camera-target-x');
   const cameraTargetZ = await worldCanvas.getAttribute('data-camera-target-z');
+  expect(cameraTargetX).toBe(playerX);
   expect(cameraTargetZ).toBe(playerZ);
 });
 
