@@ -665,11 +665,6 @@ async function boot(): Promise<() => void> {
     roughness: 0.87,
     metalness: 0.04,
   });
-  const partitionMaterial = new THREE.MeshStandardMaterial({
-    color: '#b2b7b1',
-    roughness: 0.76,
-    metalness: 0.12,
-  });
   const metalMaterial = new THREE.MeshStandardMaterial({
     color: '#6e7b7d',
     roughness: 0.3,
