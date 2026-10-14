@@ -516,6 +516,24 @@ async function boot(): Promise<() => void> {
   renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
   renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
   renderer.domElement.dataset.cameraTargetZ = avatar.position.z.toFixed(3);
+  const spatialRoomZones = [
+    { id: 'seed-intake', minX: -31, maxX: -15, minZ: -29, maxZ: -15 },
+    { id: 'greenhouse', minX: -10, maxX: 10, minZ: -29, maxZ: -15 },
+    { id: 'utilities', minX: 15, maxX: 31, minZ: -29, maxZ: -15 },
+    { id: 'seed-storage', minX: -31, maxX: -15, minZ: -8, maxZ: 8 },
+    { id: 'production', minX: -12, maxX: 12, minZ: -9, maxZ: 9 },
+    { id: 'processing', minX: 15, maxX: 31, minZ: -8, maxZ: 8 },
+    { id: 'office', minX: -31, maxX: -15, minZ: 14, maxZ: 28 },
+    { id: 'quality', minX: -8, maxX: 8, minZ: 14, maxZ: 28 },
+    { id: 'released-storage', minX: 15, maxX: 23, minZ: 14, maxZ: 28 },
+    { id: 'dispatch', minX: 23, maxX: 31, minZ: 14, maxZ: 28 },
+  ] as const;
+  const identifySpatialRoom = (position: THREE.Vector3): string =>
+    spatialRoomZones.find((zone) =>
+      position.x >= zone.minX && position.x <= zone.maxX &&
+      position.z >= zone.minZ && position.z <= zone.maxZ,
+    )?.id ?? 'corridor';
+  renderer.domElement.dataset.roomId = identifySpatialRoom(avatar.position);
   camera.position.copy(avatar.position).add(new THREE.Vector3(0, 4.4, 8));
   controls.target.copy(avatar.position).add(cameraTargetOffset);
   controls.update();
@@ -1327,6 +1345,7 @@ async function boot(): Promise<() => void> {
     renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
     renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
     renderer.domElement.dataset.cameraTargetZ = controls.target.z.toFixed(3);
+    renderer.domElement.dataset.roomId = identifySpatialRoom(avatar.position);
     const primaryPlantId = gameState.plants[0]?.id;
     const primaryPlantVisual = primaryPlantId ? plantVisuals.get(primaryPlantId)?.[0] : undefined;
     if (primaryPlantVisual) {
