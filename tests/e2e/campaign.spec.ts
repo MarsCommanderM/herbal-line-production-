@@ -465,10 +465,14 @@ test('importing an older save removes stale propagated plant and cutting visuals
   await page.getByRole('button', { name: 'Steckling schneiden', exact: true }).click();
   await expect.poll(async () => Number(await canvas.getAttribute('data-cutting-visual-count'))).toBeGreaterThan(0);
 
-  const chooserPromise = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: 'Spielstand importieren' }).click();
-  const chooser = await chooserPromise;
-  await chooser.setFiles({ name: 'older-campaign-save.json', mimeType: 'application/json', buffer: originalSave });
+  // The import control intentionally uses a hidden file input. Set its files
+  // directly in this state-restoration test; the separate campaign import test
+  // already verifies that the visible button opens the file chooser.
+  await page.locator('#import-save-file').setInputFiles({
+    name: 'older-campaign-save.json',
+    mimeType: 'application/json',
+    buffer: originalSave,
+  });
   await expect(page.locator('#game-feedback')).toContainText('Spielstand importiert');
   await expect.poll(async () => Number(await canvas.getAttribute('data-state-plant-count'))).toBe(initialPlantCount);
   await expect.poll(async () => Number(await canvas.getAttribute('data-plant-visual-count'))).toBe(initialVisualCount);
