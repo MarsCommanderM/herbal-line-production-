@@ -1719,8 +1719,8 @@ async function boot(): Promise<() => void> {
     if (!gamepadHint) return;
     gamepadHint.dataset.connected = String(connected);
     gamepadHint.textContent = connected
-      ? 'CONTROLLER VERBUNDEN · Linker Stick: bewegen · Rechter Stick: Kamera · A: auswählen/aktivieren · B: Kamera zurücksetzen · X/Y: Pflanze wechseln · Steuerkreuz: Oberfläche'
-      : 'GAMEPAD BEREIT · Linker Stick: bewegen · Rechter Stick: Kamera · A: Pflanze wählen/Aktion aktivieren · B: Kamera zurücksetzen · X/Y: Pflanze wechseln · Steuerkreuz: Oberfläche';
+      ? 'CONTROLLER VERBUNDEN · Linker Stick: bewegen · rechter Stick: Kamera · A: auswählen/aktivieren · B: Kamera zurücksetzen · X/Y und Schultern: Pflanze wechseln · Steuerkreuz hoch/runter: UI, links/rechts: Pflanze'
+      : 'GAMEPAD BEREIT · Linker Stick: bewegen · rechter Stick: Kamera · A: Pflanze wählen/Aktion aktivieren · B: Kamera zurücksetzen · X/Y und Schultern: Pflanze wechseln · Steuerkreuz hoch/runter: UI, links/rechts: Pflanze';
   };
   window.addEventListener('gamepadconnected', () => updateGamepadHint(true));
   window.addEventListener('gamepaddisconnected', () => updateGamepadHint(false));

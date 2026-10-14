@@ -116,6 +116,68 @@ test('third-person avatar moves with keyboard and camera target follows', async 
   expect(cameraTargetZ).toBe(playerZ);
 });
 
+test('standard gamepad moves the character and selects a nearby plant', async ({ page }, testInfo) => {
+  test.setTimeout(120_000);
+  if (testInfo.project.name !== 'chromium') test.skip(true, 'Synthetic Gamepad API acceptance runs once in Chromium/SwiftShader.');
+  await page.addInitScript(() => {
+    let axes = [0, 0, 0, 0];
+    let pressed = new Set<number>();
+    let timestamp = 0;
+    const fakeGamepad = {} as Gamepad;
+    Object.defineProperties(fakeGamepad, {
+      connected: { get: () => true },
+      index: { get: () => 0 },
+      id: { get: () => 'Synthetic Standard Gamepad' },
+      mapping: { get: () => 'standard' },
+      axes: { get: () => axes },
+      buttons: {
+        get: () => Array.from({ length: 16 }, (_, index) => ({
+          pressed: pressed.has(index),
+          touched: pressed.has(index),
+          value: pressed.has(index) ? 1 : 0,
+        })),
+      },
+      timestamp: { get: () => timestamp },
+    });
+    Object.defineProperty(navigator, 'getGamepads', {
+      configurable: true,
+      value: () => [fakeGamepad],
+    });
+    Object.assign(window, {
+      __setMockGamepadState: (nextAxes: number[], nextPressed: number[]) => {
+        axes = [...nextAxes];
+        pressed = new Set(nextPressed);
+        timestamp += 1;
+      },
+    });
+  });
+
+  await seedCampaignSave(page, createInitialGameState());
+  const canvas = page.locator('#world-root canvas');
+  await requireWebGLCanvas(page, testInfo, canvas);
+  await expect(canvas).toHaveAttribute('data-gamepad-supported', 'true');
+  await expect(canvas).toHaveAttribute('data-gamepad-connected', 'true');
+  await expect(page.locator('#gamepad-hint')).toHaveAttribute('data-connected', 'true');
+
+  const initialZ = Number(await canvas.getAttribute('data-player-z'));
+  await page.evaluate(() => {
+    const state = window as Window & { __setMockGamepadState?: (axes: number[], buttons: number[]) => void };
+    state.__setMockGamepadState?.([0, -1, 0, 0], []);
+  });
+  await expect.poll(async () => Number(await canvas.getAttribute('data-player-z')), { timeout: 10_000 })
+    .not.toBe(initialZ);
+
+  await page.evaluate(() => {
+    const state = window as Window & { __setMockGamepadState?: (axes: number[], buttons: number[]) => void };
+    state.__setMockGamepadState?.([0, 0, 0, 0], [0]);
+  });
+  await expect(page.locator('#game-feedback')).toContainText('Pflanze ausgewählt', { timeout: 10_000 });
+  await page.evaluate(() => {
+    const state = window as Window & { __setMockGamepadState?: (axes: number[], buttons: number[]) => void };
+    state.__setMockGamepadState?.([0, 0, 0, 0], []);
+  });
+});
+
 test('third-person player can leave the production room and enter the greenhouse', async ({ page }, testInfo) => {
   await seedCampaignSave(page, createInitialGameState());
   const worldCanvas = page.locator('#world-root canvas');
