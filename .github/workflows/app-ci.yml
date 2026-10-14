@@ -34,6 +34,8 @@ jobs:
         run: npm run scan:secrets
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
+      - name: Generate complete third-party license notices for the distributable build
+        run: node scripts/generate-third-party-notices.mjs
       - name: Audit all locked dependency advisories
         run: npm audit
       - name: Generate CycloneDX SBOM and verify dependency license metadata
@@ -60,6 +62,8 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
+      - name: Verify distributable third-party notices are present
+        run: test -s dist/THIRD_PARTY_NOTICES.txt
       - name: Install Chromium, Firefox, and WebKit system dependencies and browsers
         timeout-minutes: 12
         run: npx playwright install --with-deps chromium firefox webkit
