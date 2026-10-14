@@ -564,7 +564,6 @@ async function boot(): Promise<() => void> {
   const movementObstacles: THREE.Mesh[] = [];
   const cameraTargetOffset = new THREE.Vector3(0, 1.2, 0);
   const previousAvatarPosition = avatar.position.clone();
-  let previousAvatarRotationY = avatar.rotation.y;
   const movementForward = new THREE.Vector3();
   const movementRight = new THREE.Vector3();
   const movementVector = new THREE.Vector3();
@@ -572,6 +571,7 @@ async function boot(): Promise<() => void> {
   const walkClock = new THREE.Clock();
   let walkPhase = 0;
   let lastAutomatedRenderMs = 0;
+  const pendingGamepadButtonPresses = new Set<number>();
   renderer.domElement.dataset.thirdPerson = 'true';
   renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
   renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
@@ -1742,21 +1742,31 @@ async function boot(): Promise<() => void> {
       previousGamepadButtons,
     );
     previousGamepadButtons = new Set(gamepadFrame.pressedButtons);
+    for (const buttonIndex of gamepadFrame.justPressedButtons) pendingGamepadButtonPresses.add(buttonIndex);
     if (gamepadFrame.connected !== previousGamepadConnected) {
       previousGamepadConnected = gamepadFrame.connected;
       updateGamepadHint(gamepadFrame.connected);
       renderer.domElement.dataset.gamepadConnected = String(gamepadFrame.connected);
     }
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.dpadUp)) focusNextGameControl(-1);
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.dpadDown)) focusNextGameControl(1);
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.dpadLeft)) selectNearbyPlant(-1);
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.dpadRight)) selectNearbyPlant(1);
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.south)) activateGamepadPrimary();
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.east)) resetCamera();
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.west)) selectNearbyPlant(-1);
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.north)) selectNearbyPlant(1);
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.leftShoulder)) selectNearbyPlant(-1);
-    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.rightShoulder)) selectNearbyPlant(1);
+    // Test mode still samples controller buttons each frame but limits expensive world updates to 30 Hz.
+    // Real gameplay runs at the browser's normal animation cadence.
+    if (automatedRenderProfile) {
+      const now = performance.now();
+      if (now - lastAutomatedRenderMs < 33) return;
+      lastAutomatedRenderMs = now;
+    }
+    const pressedThisUpdate = new Set(pendingGamepadButtonPresses);
+    pendingGamepadButtonPresses.clear();
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.dpadUp)) focusNextGameControl(-1);
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.dpadDown)) focusNextGameControl(1);
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.dpadLeft)) selectNearbyPlant(-1);
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.dpadRight)) selectNearbyPlant(1);
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.south)) activateGamepadPrimary();
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.east)) resetCamera();
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.west)) selectNearbyPlant(-1);
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.north)) selectNearbyPlant(1);
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.leftShoulder)) selectNearbyPlant(-1);
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.rightShoulder)) selectNearbyPlant(1);
 
     if (Math.abs(gamepadFrame.moveX) > 0 || Math.abs(gamepadFrame.moveY) > 0) renderer.domElement.focus({ preventScroll: true });
     if (Math.abs(gamepadFrame.lookX) + Math.abs(gamepadFrame.lookY) > 0.01) {
@@ -1816,15 +1826,6 @@ async function boot(): Promise<() => void> {
     camera.position.add(avatarDelta);
     previousAvatarPosition.copy(avatar.position);
     controls.target.copy(avatar.position).add(cameraTargetOffset);
-    const rotationDelta = Math.atan2(
-      Math.sin(avatar.rotation.y - previousAvatarRotationY),
-      Math.cos(avatar.rotation.y - previousAvatarRotationY),
-    );
-    if (Math.abs(rotationDelta) > 0.0001) {
-      const cameraOffset = camera.position.clone().sub(controls.target).applyAxisAngle(worldUp, rotationDelta);
-      camera.position.copy(controls.target).add(cameraOffset);
-    }
-    previousAvatarRotationY = avatar.rotation.y;
     controls.update();
     renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
     renderer.domElement.dataset.gamepadSupported = String(typeof navigator.getGamepads === 'function');
@@ -1864,11 +1865,6 @@ async function boot(): Promise<() => void> {
       const projectedPlant = primaryPlantVisual.getWorldPosition(new THREE.Vector3()).project(camera);
       renderer.domElement.dataset.interactablePlantX = ((projectedPlant.x + 1) * 0.5 * renderer.domElement.clientWidth).toFixed(1);
       renderer.domElement.dataset.interactablePlantY = ((1 - projectedPlant.y) * 0.5 * renderer.domElement.clientHeight).toFixed(1);
-    }
-    if (automatedRenderProfile) {
-      const now = performance.now();
-      if (now - lastAutomatedRenderMs < 33) return;
-      lastAutomatedRenderMs = now;
     }
     renderer.render(scene, camera);
   });
