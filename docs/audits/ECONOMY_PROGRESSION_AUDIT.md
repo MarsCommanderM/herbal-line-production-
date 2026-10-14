@@ -62,3 +62,8 @@ The title and core product remain Dr. Green Dump / DopeFarm, a medical-cannabis 
 ## Current branch verification note — 2026-10-13
 
 The economy/progression restrictions above remain in force. The current branch-head engineering baseline `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d` passed [App CI run 38423858305](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858305) and [Master Pack Validation run 38423858306](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858306). These green gates do not supply missing balance authority: source-listed upgrades remain unavailable and XP/level/unlock rules remain unimplemented until a canonical balance table or owner-approved decision exists.
+
+
+## Current status confirmation — exact HEAD `c099d29b748353b16870d5afd63e04274759e288` (2026-10-14)
+
+The two source-listed upgrade identifiers `sensor_pack_1` and `drying_rack_1` remain locked/unavailable. No purchase prices, effects, prerequisites, XP thresholds or progression numbers were invented. The exact HEAD passed App CI and Master Pack Validation, which proves the implementation respects this restriction; it does not resolve the missing game-design authority. The authoritative fictional balance table remains a design blocker and needs an explicit approved decision before these upgrades are enabled.
