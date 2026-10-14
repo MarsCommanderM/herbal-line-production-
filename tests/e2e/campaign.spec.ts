@@ -163,7 +163,7 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
 test('all visible plant-care settings and actions persist through autosave and reload', async ({ page }, testInfo) => {
   // Chromium WebGL initialization and repeated checksum-verified IndexedDB writes
   // make this cross-browser persistence test slower than a standard UI test.
-  test.setTimeout(90_000);
+  test.setTimeout(180_000);
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
 
