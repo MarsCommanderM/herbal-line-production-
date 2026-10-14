@@ -1,4 +1,4 @@
-# Master Pack per-file reconciliation — 2026-10-13
+# Master Pack per-file reconciliation — baseline 2026-10-13 (preserved snapshot checked again on 2026-10-14)
 
 ## Comparison method and result
 
