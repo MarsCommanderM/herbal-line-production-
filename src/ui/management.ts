@@ -25,6 +25,37 @@ function availableActions(state: GameState): Action[] {
   const order = state.orders[0];
   const complianceCases = state.compliance.cases ?? [];
   const complianceAudits = state.compliance.audits ?? [];
+  const addSeedActions = (): void => {
+    const pending = state.sourceLots.find((lot) => lot.status === 'received');
+    const seedStock = state.sourceLots.find((lot) => lot.status === 'accepted' && lot.quantity > 0);
+    const activeLot = state.sourceLots.some((lot) => lot.status === 'received' || (lot.status === 'accepted' && lot.quantity > 0));
+    if (pending) {
+      actions.push({
+        label: 'Saatgutprüfung freigeben',
+        detail: 'Dokumentiert eine fiktive Eingangsprüfung. Erst nach erfolgreicher Prüfung kann Saatgut ausgesät werden.',
+        type: 'SOURCE/INSPECT',
+        payload: { sourceLotId: pending.id, accepted: true, qualityScore: 92, findingCodes: [] },
+      });
+    } else if (seedStock) {
+      const greenhouse = state.rooms.find((room) => room.definitionId === 'room-greenhouse' && room.unlocked);
+      if (greenhouse) actions.push({
+        label: 'Samen im Gewächshaus aussäen',
+        detail: 'Verbraucht eine fiktive Saatgut-Spiel-Einheit und legt eine individuelle, rückverfolgbare Cannabis-Pflanze im Gewächshaus an.',
+        type: 'PLANT/CREATE',
+        payload: { plantId: entityId('plant-seed-' + (state.revision + 1)), profileId: 'medical-cannabis-campaign-profile', sourceLotId: seedStock.id, roomId: greenhouse.id },
+        disabled: greenhouse.occupied >= greenhouse.capacity,
+      });
+    } else if (!activeLot) {
+      const sequence = state.revision + 1;
+      actions.push({
+        label: 'Saatgutlieferung annehmen',
+        detail: 'Erfasst ein fiktives Saatgutlos im Wareneingang mit eindeutiger Herkunftsreferenz. Die Aussaat bleibt bis zur Prüfung gesperrt.',
+        type: 'SOURCE/RECEIVE',
+        payload: { sourceLotId: entityId('seed-source-lot-' + sequence), sourceRef: 'MED-SEED-LOT-' + String(sequence).padStart(3, '0'), quantity: 12 },
+      });
+    }
+  };
+  if (state.plants.length === 0) addSeedActions();
   // Compliance workflow is grouped after the core campaign actions so keyboard users
   // encounter plant care and production first; compliance actions remain state-derived.
   const activeAudit = complianceAudits.find((item) => item.status === 'in_progress');
@@ -63,7 +94,19 @@ function availableActions(state: GameState): Action[] {
   if (plant && plant.stage === 'active') {
     actions.push({ label: 'Simulationsschritt ausführen', detail: 'Fortschritt im fiktiven Kampagnenmodell aktualisieren.', type: 'PLANT/ADVANCE_FICTIONAL_STEP', payload: { plantId: plant.id } });
   } else if (plant && plant.stage === 'ready_for_harvest' && plant.batchId === null) {
-    actions.push({ label: 'Einheit in Batch überführen', detail: 'Den freigegebenen Spielzustand für den nächsten Prozessschritt protokollieren.', type: 'PLANT/HARVEST', payload: { plantId: plant.id } });
+    const currentRoom = state.rooms.find((room) => room.id === plant.roomId);
+    if (currentRoom?.definitionId === 'room-greenhouse') {
+      const indoorRoom = state.rooms.find((room) => room.definitionId === 'room-production' && room.unlocked);
+      actions.push({
+        label: 'Pflanze in Indoor-Produktion überführen',
+        detail: 'Verschiebt die bereitstehende Pflanze aus dem Gewächshaus in den Indoor-Pflanzenraum. Die ID und Herkunft bleiben erhalten.',
+        type: 'PLANT/MOVE',
+        payload: { plantId: plant.id, roomId: indoorRoom?.id ?? entityId('room-production-01') },
+        disabled: !indoorRoom || indoorRoom.occupied >= indoorRoom.capacity,
+      });
+    } else {
+      actions.push({ label: 'Einheit in Batch überführen', detail: 'Den freigegebenen Spielzustand für den nächsten Prozessschritt protokollieren.', type: 'PLANT/HARVEST', payload: { plantId: plant.id } });
+    }
   } else if (plant && plant.stage === 'harvested' && plant.batchId === null) {
     actions.push({ label: 'Batch erstellen', detail: 'Herkunft und Einheiten unter einer eindeutigen Batch-ID verbinden.', type: 'BATCH/CREATE', payload: { batchId: entityId('batch-001'), plantIds: [plant.id], profileId: 'fictional-medical-cannabis-batch' } });
   }
@@ -194,6 +237,8 @@ function availableActions(state: GameState): Action[] {
       disabled: getCampaignBalance(state) < Number(upgrade.costCents),
     });
   }
+
+  if (state.plants.length > 0) addSeedActions();
 
   actions.push({
     label: 'Tag abschließen',

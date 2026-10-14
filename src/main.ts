@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
 import type { CommandId, EntityId, GameState, PlantCareState } from '../contracts/domain';
-import { createInitialGameState } from './domain/initial-state';
+import { createInitialGameState, createNewCampaignGameState } from './domain/initial-state';
 import { GAME_BALANCE } from './domain/balance';
 import { applyVerticalSliceCommand, type VerticalSliceCommand } from './domain/vertical-slice';
 import { renderManagementUI } from './ui/management';
@@ -421,7 +421,8 @@ async function boot(): Promise<() => void> {
         ? 'Autosave beschädigt; letztes gültiges Backup wiederhergestellt.'
         : 'Autosave wiederhergestellt · Revision ' + gameState.revision + '.');
     } else {
-      setSaveStatus('info', 'Neue Kampagne · Autosave nach jeder erfolgreichen Aktion.');
+      gameState = createNewCampaignGameState();
+      setSaveStatus('info', 'Neue Kampagne · Beginne mit Saatgutannahme und Herkunftsprüfung. Autosave nach jeder erfolgreichen Aktion.');
     }
   } catch (error) {
     setSaveStatus('error', 'Spielstand konnte nicht automatisch geladen werden: ' + (error instanceof Error ? error.message : String(error)));
@@ -434,8 +435,8 @@ async function boot(): Promise<() => void> {
   const scene = new THREE.Scene();
   const plantVisuals = new Map<string, THREE.Group[]>();
   const cuttingVisuals = new Map<string, THREE.Group[]>();
-  scene.background = new THREE.Color('#0b1220');
-  scene.fog = new THREE.Fog('#66716e', 52, 118);
+  scene.background = new THREE.Color('#c4d0cd');
+  scene.fog = new THREE.Fog('#c4d0cd', 82, 142);
 
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 150);
   camera.position.set(15, 13, 18);
@@ -465,41 +466,75 @@ async function boot(): Promise<() => void> {
   avatar.name = 'third-person-player';
   avatar.position.set(-7, 0, -6.2);
   avatar.userData.isPlayerAvatar = true;
-  const avatarClothing = new THREE.MeshStandardMaterial({ color: '#2e8b78', roughness: 0.78 });
-  const avatarTrim = new THREE.MeshStandardMaterial({ color: '#c4d6df', roughness: 0.62 });
-  const avatarSkin = new THREE.MeshStandardMaterial({ color: '#c99573', roughness: 0.86 });
-  const avatarHair = new THREE.MeshStandardMaterial({ color: '#302b2a', roughness: 0.92 });
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.58, 4, 8), avatarClothing);
-  torso.position.y = 1.13;
-  torso.castShadow = true;
-  avatar.add(torso);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), avatarSkin);
-  head.position.y = 1.82;
-  head.castShadow = true;
-  avatar.add(head);
-  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.195, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), avatarHair);
-  hair.position.y = 1.91;
-  hair.castShadow = true;
-  avatar.add(hair);
+  const workShirt = new THREE.MeshStandardMaterial({ color: '#596c57', roughness: 0.82 });
+  const workVest = new THREE.MeshStandardMaterial({ color: '#34443b', roughness: 0.72 });
+  const trousers = new THREE.MeshStandardMaterial({ color: '#343c3e', roughness: 0.9 });
+  const bootMaterial = new THREE.MeshStandardMaterial({ color: '#302b27', roughness: 0.94 });
+  const skinMaterial = new THREE.MeshStandardMaterial({ color: '#c99573', roughness: 0.78 });
+  const hairMaterial = new THREE.MeshStandardMaterial({ color: '#302b27', roughness: 0.92 });
+  const seamMaterial = new THREE.MeshStandardMaterial({ color: '#b4b5a4', roughness: 0.82 });
+  const eyeWhiteMaterial = new THREE.MeshStandardMaterial({ color: '#e9e5dc', roughness: 0.44 });
+  const pupilMaterial = new THREE.MeshStandardMaterial({ color: '#211e1b', roughness: 0.38 });
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.55, 8, 16), workShirt);
+  torso.position.y = 1.23; torso.castShadow = true; torso.receiveShadow = true; avatar.add(torso);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.09, 0.16, 14), skinMaterial);
+  neck.position.y = 1.63; neck.castShadow = true; avatar.add(neck);
+  const vest = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.44, 0.085), workVest);
+  vest.position.set(0, 1.29, -0.19); vest.castShadow = true; avatar.add(vest);
+  const zipper = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.36, 0.012), seamMaterial);
+  zipper.position.set(0, 1.3, -0.239); avatar.add(zipper);
+  for (const pocketX of [-0.12, 0.12]) {
+    const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.12, 0.018), workVest);
+    pocket.position.set(pocketX, 1.16, -0.244); pocket.castShadow = true; avatar.add(pocket);
+  }
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.055, 18), bootMaterial);
+  belt.position.y = 0.91; avatar.add(belt);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 28, 20), skinMaterial);
+  head.position.set(0, 1.84, -0.015); head.castShadow = true; head.receiveShadow = true; avatar.add(head);
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.196, 28, 16, 0, Math.PI * 2, 0, Math.PI * 0.47), hairMaterial);
+  hair.position.set(0, 1.91, 0.005); hair.castShadow = true; avatar.add(hair);
+  for (const earX of [-0.181, 0.181]) {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.043, 12, 10), skinMaterial);
+    ear.position.set(earX, 1.82, -0.005); avatar.add(ear);
+  }
+  for (const eyeX of [-0.064, 0.064]) {
+    const eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.031, 12, 10), eyeWhiteMaterial);
+    eyeWhite.position.set(eyeX, 1.855, -0.166); avatar.add(eyeWhite);
+    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.014, 10, 8), pupilMaterial);
+    pupil.position.set(eyeX, 1.854, -0.192); avatar.add(pupil);
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.066, 0.012, 0.02), hairMaterial);
+    brow.position.set(eyeX, 1.9, -0.163); brow.rotation.z = eyeX < 0 ? 0.08 : -0.08; avatar.add(brow);
+  }
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.034, 12, 10), skinMaterial);
+  nose.position.set(0, 1.81, -0.204); avatar.add(nose);
   const leftLeg = new THREE.Group();
   const rightLeg = new THREE.Group();
   for (const [leg, x] of [[leftLeg, -0.13], [rightLeg, 0.13]] as const) {
-    const limb = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.48, 3, 6), avatarTrim);
-    limb.position.set(x, 0.48, 0);
-    limb.castShadow = true;
-    leg.add(limb);
+    leg.position.set(x, 0.83, 0);
+    const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.105, 0.29, 6, 12), trousers);
+    thigh.position.y = -0.19; thigh.castShadow = true; thigh.receiveShadow = true; leg.add(thigh);
+    const knee = new THREE.Mesh(new THREE.SphereGeometry(0.097, 12, 10), trousers);
+    knee.position.set(0, -0.4, -0.008); leg.add(knee);
+    const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.082, 0.27, 6, 12), trousers);
+    shin.position.y = -0.48; shin.castShadow = true; leg.add(shin);
+    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.12, 0.28), bootMaterial);
+    boot.position.set(0, -0.7, -0.045); boot.castShadow = true; leg.add(boot);
+    const sole = new THREE.Mesh(new THREE.BoxGeometry(0.175, 0.025, 0.285), seamMaterial);
+    sole.position.set(0, -0.765, -0.045); leg.add(sole);
     avatar.add(leg);
   }
-  const leftArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.075, 0.48, 3, 6), avatarClothing);
-  leftArm.position.set(-0.34, 1.2, 0);
-  leftArm.rotation.z = -0.12;
-  leftArm.castShadow = true;
-  avatar.add(leftArm);
-  const rightArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.075, 0.48, 3, 6), avatarClothing);
-  rightArm.position.set(0.34, 1.2, 0);
-  rightArm.rotation.z = 0.12;
-  rightArm.castShadow = true;
-  avatar.add(rightArm);
+  const leftArm = new THREE.Group();
+  const rightArm = new THREE.Group();
+  for (const [arm, x] of [[leftArm, -0.29], [rightArm, 0.29]] as const) {
+    arm.position.set(x, 1.43, 0); arm.rotation.z = x < 0 ? -0.08 : 0.08;
+    const sleeve = new THREE.Mesh(new THREE.CapsuleGeometry(0.082, 0.28, 6, 12), workShirt);
+    sleeve.position.set(0, -0.18, 0); sleeve.castShadow = true; arm.add(sleeve);
+    const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.064, 0.26, 6, 12), workShirt);
+    forearm.position.set(0, -0.405, -0.005); forearm.castShadow = true; arm.add(forearm);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 10), skinMaterial);
+    hand.position.set(0, -0.61, -0.008); hand.castShadow = true; arm.add(hand);
+    avatar.add(arm);
+  }
   scene.add(avatar);
 
   const movementKeys = new Set<string>();
@@ -557,13 +592,16 @@ async function boot(): Promise<() => void> {
 
   scene.add(new THREE.HemisphereLight(0xc8ddff, 0x172235, 2.0));
   const keyLight = new THREE.DirectionalLight(0xf4f7ff, 3.0);
-  keyLight.position.set(8, 16, 7);
+  keyLight.position.set(-18, 24, 12);
   keyLight.castShadow = true;
   keyLight.shadow.mapSize.set(2048, 2048);
   keyLight.shadow.camera.near = 1;
   keyLight.shadow.camera.far = 95;
   keyLight.shadow.bias = -0.00012;
   scene.add(keyLight);
+  const daylightFill = new THREE.DirectionalLight(0xf6e8ce, 0.72);
+  daylightFill.position.set(16, 10, -15);
+  scene.add(daylightFill);
 
   const tileTexture = (() => {
     const canvas = document.createElement('canvas');
@@ -957,7 +995,7 @@ async function boot(): Promise<() => void> {
   addRoomShell({ name: 'Klima & Gebäudetechnik', detail: 'VERSORGUNG · WARTUNG · ENERGIE', x: 23, z: -22, width: 16, depth: 14, type: 'utility', west: true, south: true });
   addRoomShell({ name: 'Samenlager & Quarantäne', detail: 'GESPERRTE / FREIGEGEBENE BESTÄNDE', x: -23, z: 0, width: 16, depth: 16, type: 'storage', north: true, east: true, south: true });
   addRoomShell({
-    name: gameState.rooms.find((room) => room.kind === 'production')?.displayName ?? 'Pflanzenproduktion',
+    name: gameState.rooms.find((room) => room.definitionId === 'room-production')?.displayName ?? 'Indoor-Pflanzenproduktion',
     detail: 'SICHTBARE CANNABIS-PFLANZEN · DIREKTE PFLEGE',
     x: 0, z: 0, width: 24, depth: 18, type: 'production', north: true, east: true, south: true, west: true,
   });
@@ -973,9 +1011,9 @@ async function boot(): Promise<() => void> {
     x: 0, z: 21, width: 16, depth: 14, type: 'quality', north: true, east: true, west: true,
   });
   addRoomShell({
-    name: gameState.rooms.find((room) => room.kind === 'storage')?.displayName ?? 'Freigegebenes Lager',
+    name: gameState.rooms.find((room) => room.definitionId === 'room-storage')?.displayName ?? 'Freigegebenes Lager',
     detail: 'FREIGEGEBENE CHARGEN · BESTAND',
-    x: 19, z: 21, width: 8, depth: 14, type: 'storage', north: true, west: true,
+    x: 19, z: 21, width: 8, depth: 14, type: 'storage', north: true, west: true, east: true
   });
   addRoomShell({
     name: gameState.rooms.find((room) => room.kind === 'logistics')?.displayName ?? 'Versand',
@@ -991,7 +1029,23 @@ async function boot(): Promise<() => void> {
   addStorageRack(18.9, -25.1, 4.0, 1.1, '#788887');
   addStorageRack(27.1, 16.8, 4.1, 1.0, '#8f9a8e');
   addStorageRack(18.9, 25.2, 4.0, 1.0, '#7e897f');
-  addWorkBench(0, -25.1, 6.0, 1.2, woodMaterial);
+  const greenhouseSoilMaterial = new THREE.MeshStandardMaterial({ color: '#45392b', roughness: 0.98 });
+  const greenhouseIrrigationMaterial = new THREE.MeshStandardMaterial({ color: '#3b5550', roughness: 0.52, metalness: 0.28 });
+  for (const bedX of [-4.8, 4.8]) {
+    addBox([3.7, 0.38, 9.3], [bedX, 0.19, -22.2], woodMaterial, { collision: true });
+    addBox([3.42, 0.08, 9.04], [bedX, 0.42, -22.2], greenhouseSoilMaterial, { collision: false, castShadow: false });
+    const irrigation = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 8.7, 12), greenhouseIrrigationMaterial);
+    irrigation.rotation.x = Math.PI / 2;
+    irrigation.position.set(bedX, 0.485, -22.2);
+    scene.add(irrigation);
+    for (let emitter = 0; emitter < 7; emitter += 1) {
+      const nozzle = new THREE.Mesh(new THREE.SphereGeometry(0.052, 8, 6), greenhouseIrrigationMaterial);
+      nozzle.position.set(bedX, 0.455, -25.4 + emitter * 1.05);
+      scene.add(nozzle);
+    }
+    for (const edgeX of [bedX - 1.76, bedX + 1.76]) addBox([0.08, 0.12, 9.25], [edgeX, 0.44, -22.2], woodMaterial, { collision: false });
+  }
+  addWorkBench(0, -27.5, 4.8, 1.2, woodMaterial);
   addWorkBench(-23, 22.9, 4.8, 1.2, woodMaterial);
   addWorkBench(0, 24.5, 4.8, 1.25, metalMaterial);
   addWorkBench(23, 2.7, 4.6, 1.4, metalMaterial);
@@ -1035,27 +1089,6 @@ async function boot(): Promise<() => void> {
       station.receiveShadow = true;
       scene.add(station);
       movementObstacles.push(station);
-
-      // Distinct cannabis silhouettes are fictional game assets; all cultivation and process values are abstract game balance only.
-      for (let pod = 0; pod < 3; pod += 1) {
-        const plant = createCannabisPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
-        plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
-        if (row === 0 && column === 0 && pod === 0) {
-          // The physical primary-bed plant must keep its domain identity across reloads.
-          // Selection is UI state; it must never rebind a different plant to this mesh.
-          const primaryPlant = gameState.plants.find((item) => item.propagatedFromPlantId === null) ?? gameState.plants[0];
-          if (primaryPlant) {
-            plant.userData.plantId = primaryPlant.id;
-            plant.userData.baseScale = plant.scale.clone();
-            const growLight = new THREE.PointLight(0xddeeff, 0.8, 4);
-            growLight.position.set(0, 2.6, 0);
-            plant.add(growLight);
-            plant.userData.growLight = growLight;
-            plantVisuals.set(primaryPlant.id, [plant]);
-          }
-        }
-        station.add(plant);
-      }
     }
   }
 
@@ -1065,7 +1098,7 @@ async function boot(): Promise<() => void> {
     nutrients: '#8ed081', prune: '#c6b4ff', take_cutting: '#e6c6a8', set_cutting: '#51d6ad',
   };
 
-  function createCuttingVisual(slot: number): THREE.Group {
+  function createCuttingVisual(slot: number, roomId?: EntityId): THREE.Group {
     const cutting = new THREE.Group();
     const stemMaterial = new THREE.MeshStandardMaterial({ color: '#527c55', roughness: 0.9 });
     const leafMaterial = new THREE.MeshStandardMaterial({ color: '#3d824b', roughness: 0.8, side: THREE.DoubleSide });
@@ -1078,7 +1111,9 @@ async function boot(): Promise<() => void> {
       leaf.rotation.z = (index - 1) * 0.45;
       cutting.add(leaf);
     }
-    cutting.position.set(6.7 + (slot % 4) * 0.46, 0.27, 5.0 + Math.floor(slot / 4) * 0.42);
+    const parentRoom = roomId ? gameState.rooms.find((room) => room.id === roomId) : undefined;
+    if (parentRoom?.definitionId === 'room-greenhouse') cutting.position.set(-1.3 + (slot % 4) * 0.78, 0.49, -27.45 + Math.floor(slot / 4) * 0.28);
+    else cutting.position.set(6.4 + (slot % 4) * 0.42, 0.52, 4.9 + Math.floor(slot / 4) * 0.38);
     scene.add(cutting);
     return cutting;
   }
@@ -1138,20 +1173,32 @@ async function boot(): Promise<() => void> {
 
     for (const statePlant of state.plants) {
       let visuals = plantVisuals.get(statePlant.id);
-      if (!visuals && statePlant.propagatedFromPlantId) {
-        const propagatedIndex = state.plants.filter((item) => item.propagatedFromPlantId).findIndex((item) => item.id === statePlant.id);
-        const visual = createCannabisPlant(7.1 + (propagatedIndex % 3) * 0.8, 0, 100 + propagatedIndex);
-        visual.position.y = 0.34;
-        visual.scale.setScalar(0.24);
-        visual.userData.plantId = statePlant.id;
-        visual.userData.baseScale = visual.scale.clone();
-        const growLight = new THREE.PointLight(0xddeeff, 0.4, 2);
-        growLight.position.set(0, 1.2, 0);
-        visual.add(growLight);
-        visual.userData.growLight = growLight;
-        scene.add(visual);
-        visuals = [visual];
-        plantVisuals.set(statePlant.id, visuals);
+      const room = state.rooms.find((item) => item.id === statePlant.roomId);
+      const plantsInRoom = state.plants.filter((item) => item.roomId === statePlant.roomId);
+      const roomIndex = Math.max(0, plantsInRoom.findIndex((item) => item.id === statePlant.id));
+      const getPlantPosition = (): THREE.Vector3 => {
+        if (room?.definitionId === 'room-greenhouse') {
+          const bed = Math.floor(roomIndex % 4 / 2);
+          const side = roomIndex % 2 === 0 ? -0.72 : 0.72;
+          return new THREE.Vector3((bed === 0 ? -4.8 : 4.8) + side, 0.47, -25.3 + Math.floor(roomIndex / 4) * 2.1);
+        }
+        if (room?.definitionId === 'room-production') return new THREE.Vector3(-7.5 + (roomIndex % 4) * 5, 0.52, -4.5 + Math.floor(roomIndex / 4) * 4.2);
+        return new THREE.Vector3(0, 0.45, 0);
+      };
+      const visualScale = statePlant.propagatedFromPlantId ? 0.3 : room?.definitionId === 'room-greenhouse' ? 0.56 : 0.46;
+      if (!visuals) {
+        const visual = createCannabisPlant(0, 0, 200 + roomIndex);
+        visual.position.copy(getPlantPosition()); visual.scale.setScalar(visualScale);
+        visual.userData.plantId = statePlant.id; visual.userData.baseScale = visual.scale.clone(); visual.userData.roomId = statePlant.roomId;
+        const growLight = new THREE.PointLight(0xddeeff, 0.58, 3.0);
+        growLight.position.set(0, 1.65, 0); visual.add(growLight); visual.userData.growLight = growLight;
+        scene.add(visual); visuals = [visual]; plantVisuals.set(statePlant.id, visuals);
+      } else {
+        const visual = visuals[0];
+        if (visual && visual.parent === scene && visual.userData.roomId !== statePlant.roomId) {
+          visual.position.copy(getPlantPosition()); visual.scale.setScalar(visualScale);
+          visual.userData.baseScale = visual.scale.clone(); visual.userData.roomId = statePlant.roomId;
+        }
       }
       if (visuals) for (const visual of visuals) applyPlantCareVisual(visual, statePlant);
 
@@ -1160,7 +1207,7 @@ async function boot(): Promise<() => void> {
       const existing = cuttingVisuals.get(statePlant.id) ?? [];
       while (existing.length < targetCuttings) {
         const currentCount = [...cuttingVisuals.values()].reduce((sum, list) => sum + list.length, 0);
-        existing.push(createCuttingVisual(currentCount));
+        existing.push(createCuttingVisual(currentCount, statePlant.roomId));
       }
       while (existing.length > targetCuttings) {
         const removed = existing.pop();

@@ -14,6 +14,8 @@ export function getCampaignGuidance(state: GameState): CampaignGuidance {
   const plant = state.plants.find((item) => item.id === state.ui.selectedEntityId) ?? state.plants.find((item) => item.stage === 'active') ?? state.plants[0];
   const batch = state.batches[state.batches.length - 1];
   const order = state.orders[0];
+  const pendingSeedLot = state.sourceLots.find((item) => item.status === 'received');
+  const availableSeedLot = state.sourceLots.find((item) => item.status === 'accepted' && item.quantity > 0);
 
   if (state.compliance.licenseStatus === 'suspended' || state.compliance.licenseStatus === 'recovery_review') {
     return {
@@ -137,6 +139,10 @@ export function getCampaignGuidance(state: GameState): CampaignGuidance {
         : { title: 'Bestand reicht nicht aus', detail: 'Die verfügbare, freigegebene Menge deckt den Auftrag nicht. Erzeuge weiteren gültigen Spielbestand oder wähle einen kleineren Auftrag.', tone: 'warning', nextStep: 'Bestandslage prüfen' };
     }
   }
+
+  if (!plant && pendingSeedLot) return { title: 'Saatgutprüfung ausstehend', detail: 'Ein Saatgutlos ist eingegangen und wartet auf die dokumentierte fiktive Herkunfts- und Qualitätsprüfung.', tone: 'warning', nextStep: 'Saatgutprüfung freigeben' };
+  if (!plant && availableSeedLot) return { title: 'Saatgut freigegeben', detail: 'Das geprüfte Saatgut ist im Lager verfügbar. Lege eine neue, rückverfolgbare Pflanze im Gewächshaus an.', tone: 'success', nextStep: 'Samen im Gewächshaus aussäen' };
+  if (!plant) return { title: 'Neue Kampagne: Saatgutannahme', detail: 'Starte am Wareneingang. Nimm ein fiktives Saatgutlos an, prüfe dessen Herkunft und lege anschließend Pflanzen im Gewächshaus an.', tone: 'info', nextStep: 'Saatgutlieferung annehmen' };
 
   return {
     title: 'Kampagne bereit',

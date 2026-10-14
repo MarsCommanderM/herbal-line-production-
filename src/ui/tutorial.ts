@@ -45,6 +45,20 @@ export function getTutorialProgress(state: GameState): TutorialProgress {
   }
 
   const batch = state.batches[state.batches.length - 1];
+  const plant = state.plants.find((item) => item.id === state.ui.selectedEntityId) ?? state.plants.find((item) => item.stage === 'active') ?? state.plants[0];
+  const pendingSource = state.sourceLots.find((item) => item.status === 'received');
+  const availableSource = state.sourceLots.find((item) => item.status === 'accepted' && item.quantity > 0);
+  if (!plant) {
+    return {
+      step: 1, total: 6, status: 'active',
+      title: pendingSource ? 'Saatgutprüfung' : availableSource ? 'Aussaat im Gewächshaus' : 'Saatgutannahme',
+      detail: pendingSource
+        ? 'Prüfe das eingegangene fiktive Saatgutlos und dokumentiere die Entscheidung.'
+        : availableSource
+          ? 'Lege eine neue, rückverfolgbare Cannabis-Pflanze im Gewächshaus an. Alle Zahlen sind fiktive Spielwerte.'
+          : 'Nimm am Wareneingang ein Saatgutlos an. Danach folgen Herkunfts-/Qualitätsprüfung, Gewächshaus, Indoor-Produktion, Qualität und Lieferung.',
+    };
+  }
   if (batch?.status === 'rejected' || batch?.status === 'quarantined') {
     return {
       step,

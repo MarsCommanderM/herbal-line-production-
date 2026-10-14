@@ -85,3 +85,44 @@ export function createInitialGameState(): GameState {
     ui: { selectedEntityId: plantId, activeScreen: 'facility', notifications: [] },
   };
 }
+
+
+/** Clean campaign entry point: real play starts before seed receipt; unit fixtures stay seeded above. */
+export function createNewCampaignGameState(): GameState {
+  const base = createInitialGameState();
+  const makeRoom = (
+    id: string, definitionId: string, displayName: string,
+    kind: GameState['rooms'][number]['kind'], capacity: number, powerUnitsPerHour: number,
+  ): GameState['rooms'][number] => ({
+    id: entityId(id), definitionId, displayName, kind, capacity, occupied: 0,
+    condition: score(98), cleanliness: score(98), availability: score(99), powerUnitsPerHour,
+    unlocked: true, assignedStaffIds: [], assignedMachineIds: [],
+  });
+  const originalRoom = (id: string): GameState['rooms'][number] => {
+    const found = base.rooms.find((item) => item.id === entityId(id));
+    if (!found) throw new Error('Required room fixture is missing: ' + id);
+    return found;
+  };
+  const rooms: GameState['rooms'] = [
+    makeRoom('room-intake-01', 'room-intake', 'Wareneingang & Samenarchiv', 'storage', 12, 1),
+    makeRoom('room-greenhouse-01', 'room-greenhouse', 'Gewächshaus & Anzucht', 'production', 16, 8),
+    makeRoom('room-utility-01', 'room-utility', 'Klima & Gebäudetechnik', 'utility', 4, 4),
+    makeRoom('room-seed-storage-01', 'room-seed-storage', 'Samenlager & Quarantäne', 'storage', 12, 1),
+    { ...originalRoom('room-production-01'), occupied: 0 },
+    originalRoom('room-processing-01'),
+    makeRoom('room-office-01', 'room-office', 'Büro & Schichtleitung', 'office', 6, 1),
+    originalRoom('room-quality-01'),
+    { ...originalRoom('room-storage-01'), occupied: 0 },
+    originalRoom('room-logistics-01'),
+  ];
+  return {
+    ...base, rooms, sourceLots: [], plants: [], batches: [], inventoryLots: [], qualityAssessments: [],
+    logs: [{
+      id: entityId('log-new-campaign-001'), at: minute(0), category: 'campaign', code: 'CAMPAIGN_READY',
+      message: 'Neue Kampagne gestartet. Saatgutannahme, Herkunftsprüfung, Gewächshaus, Indoor-Produktion und die dokumentierte Auslieferung bilden einen durchgängigen Spielablauf.',
+      actorId: base.player.id, relatedEntityIds: [base.player.id],
+    }],
+    ui: { ...base.ui, selectedEntityId: null },
+  };
+}
+
