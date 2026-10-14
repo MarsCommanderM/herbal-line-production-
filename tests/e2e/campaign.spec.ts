@@ -71,6 +71,31 @@ async function seedCampaignSave(page: Page, state: ReturnType<typeof createIniti
   await expect(page.getByLabel('Pflanze für Pflege auswählen')).toBeVisible();
 }
 
+test('new campaign starts with seed intake and creates a visible greenhouse plant after inspection', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Saatgutlieferung annehmen', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Pflanze für Pflege auswählen')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Saatgutlieferung annehmen', exact: true }).click();
+  await expect(page.locator('#game-feedback')).toContainText('Saatgutlos angenommen');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
+
+  await page.getByRole('button', { name: 'Saatgutprüfung freigeben', exact: true }).click();
+  await expect(page.locator('#game-feedback')).toContainText('Saatgutprüfung bestanden');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 2');
+
+  await page.getByRole('button', { name: 'Samen im Gewächshaus aussäen', exact: true }).click();
+  await expect(page.getByLabel('Pflanze für Pflege auswählen')).toBeVisible();
+  await expect(page.getByLabel('Pflanze für Pflege auswählen')).toHaveValue('plant-seed-3');
+  await expect(page.locator('#game-feedback')).toContainText('rückverfolgbare Cannabis-Pflanze');
+  await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 3');
+
+  const canvas = page.locator('#world-root canvas');
+  await expect.poll(async () => (await canvas.getAttribute('data-state-plant-count')) ?? '').toBe('1');
+  await expect(canvas).toHaveAttribute('data-visual-plant-id', 'plant-seed-3');
+  await expect(canvas).toHaveAttribute('data-room-id', 'production');
+});
+
 test('third-person avatar moves with keyboard and camera target follows', async ({ page }, testInfo) => {
   await page.goto('/');
   const worldCanvas = page.locator('#world-root canvas');
@@ -104,7 +129,7 @@ test('third-person player can leave the production room and enter the greenhouse
 });
 
 test('nearby cannabis plant can be selected directly from the third-person world', async ({ page }, testInfo) => {
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   const canvas = page.locator('#world-root canvas');
   await requireWebGLCanvas(page, testInfo, canvas);
   await expect(canvas).toHaveAttribute('data-third-person', 'true');
@@ -130,7 +155,7 @@ test('management remains usable when WebGL initialization fails', async ({ page 
       return originalGetContext.call(this, type, ...args);
     };
   `);
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   const fallback = page.locator('#fatal-error');
   await expect(fallback).toBeVisible();
   await expect(fallback).toContainText('Die 3D-Ansicht ist nicht verfügbar.');
@@ -143,7 +168,7 @@ test('management remains usable when WebGL initialization fails', async ({ page 
 });
 
 test('campaign controls run a step and restore a saved state', async ({ page }) => {
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
   const graphicsCanvas = page.locator('#world-root canvas');
@@ -181,7 +206,7 @@ test('all visible plant-care settings and actions persist through autosave and r
   // Chromium WebGL initialization and repeated checksum-verified IndexedDB writes
   // make this cross-browser persistence test slower than a standard UI test.
   test.setTimeout(180_000);
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
 
   const canvas = page.locator('#world-root canvas');
@@ -641,14 +666,14 @@ test('keyboard navigation reaches primary controls in a predictable order', asyn
   }
 
   await page.keyboard.press('Tab');
-  await expect(page.locator(':focus')).toHaveText('Simulationsschritt ausführen');
+  await expect(page.locator(':focus')).toHaveText('Saatgutlieferung annehmen');
   const focusStyle = await page.locator(':focus').evaluate((element) => getComputedStyle(element).outlineStyle);
   expect(focusStyle).not.toBe('none');
 });
 
 test('mobile viewport keeps the management panel inside the screen without horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
   await expect(page.locator('#campaign-guidance')).toContainText('Produktionseinheit aktiv');
 
@@ -746,7 +771,7 @@ test('unconfigured upgrade IDs remain unavailable until balance rules are approv
 
 test('full browser campaign loop delivers once and restores the ledger after reload', async ({ page }) => {
   test.setTimeout(90_000);
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 1 von 6');
 
   const actions = [

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CommandId, EntityId, Score0To100 } from '../../contracts/domain';
 import type { VerticalSliceCommand } from './vertical-slice';
-import { createInitialGameState } from './initial-state';
+import { createInitialGameState, createNewCampaignGameState } from './initial-state';
 import { applyVerticalSliceCommand, getCampaignBalance, isOperationBlocked } from './vertical-slice';
 
 const entity = (value: string): EntityId => value as EntityId;
@@ -516,4 +516,49 @@ describe('medical cannabis operations vertical slice', () => {
   });
 
 
+});
+
+describe('seed receipt to greenhouse and indoor production', () => {
+  it('starts a clean campaign at intake and traces an inspected seed into the greenhouse and indoor room', () => {
+    let state = createNewCampaignGameState();
+    expect(state.sourceLots).toHaveLength(0);
+    expect(state.plants).toHaveLength(0);
+    expect(state.rooms.find((room) => room.definitionId === 'room-greenhouse')?.occupied).toBe(0);
+
+    state = applyOk(state, 'SOURCE/RECEIVE', { sourceLotId: entity('seed-lot-flow-001'), sourceRef: 'MED-SEED-FLOW-001', quantity: 2 });
+    expect(state.sourceLots[0]?.status).toBe('received');
+    expect(state.logs.at(-1)?.code).toBe('SOURCE_LOT_RECEIVED');
+
+    state = applyOk(state, 'SOURCE/INSPECT', { sourceLotId: entity('seed-lot-flow-001'), accepted: true, qualityScore: 91 as Score0To100, findingCodes: [] });
+    expect(state.sourceLots[0]?.status).toBe('accepted');
+    expect(state.sourceLots[0]?.roomId).toBe(entity('room-seed-storage-01'));
+
+    state = applyOk(state, 'PLANT/CREATE', {
+      plantId: entity('plant-seed-flow-001'), profileId: 'medical-cannabis-campaign-profile',
+      sourceLotId: entity('seed-lot-flow-001'), roomId: entity('room-greenhouse-01'),
+    });
+    expect(state.plants[0]?.roomId).toBe(entity('room-greenhouse-01'));
+    expect(state.sourceLots[0]?.quantity).toBe(1);
+    expect(state.plants[0]?.sourceLotId).toBe(entity('seed-lot-flow-001'));
+    expect(state.plants[0]?.stage).toBe('active');
+
+    for (let step = 0; step < 6 && state.plants[0]?.stage === 'active'; step += 1) {
+      state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-seed-flow-001') });
+    }
+    expect(state.plants[0]?.stage).toBe('ready_for_harvest');
+    const prematureHarvest = dispatch(state, 'PLANT/HARVEST', { plantId: entity('plant-seed-flow-001') });
+    expect(prematureHarvest.ok).toBe(false);
+    expect(prematureHarvest.state).toEqual(state);
+
+    state = applyOk(state, 'PLANT/MOVE', { plantId: entity('plant-seed-flow-001'), roomId: entity('room-production-01') });
+    expect(state.plants[0]?.roomId).toBe(entity('room-production-01'));
+    expect(state.rooms.find((room) => room.definitionId === 'room-greenhouse')?.occupied).toBe(0);
+    expect(state.rooms.find((room) => room.definitionId === 'room-production')?.occupied).toBe(1);
+    expect(state.logs.at(-1)?.code).toBe('PLANT_MOVED_TO_INDOOR_PRODUCTION');
+
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-seed-flow-001') });
+    expect(state.plants[0]?.stage).toBe('harvested');
+    expect(state.rooms.find((room) => room.definitionId === 'room-production')?.occupied).toBe(0);
+    expect(state.plants[0]?.sourceLotId).toBe(entity('seed-lot-flow-001'));
+  });
 });

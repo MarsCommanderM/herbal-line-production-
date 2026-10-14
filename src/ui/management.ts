@@ -150,7 +150,7 @@ function availableActions(state: GameState): Action[] {
     }
   }
 
-  if (order && order.status === 'available') {
+  if (order && order.status === 'available' && state.inventoryLots.some((item) => item.status === 'released' && item.quantityAvailable > item.quantityReserved)) {
     const blocked = isOperationBlocked(state, 'ORDER/ACCEPT');
     actions.push({
       label: 'Abnehmerauftrag annehmen',
