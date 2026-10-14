@@ -38,6 +38,15 @@ jobs:
         run: npm run build -- --base=./
       - name: Create Windows desktop ZIP
         run: python scripts/package_desktop_zip.py
+      - name: Upload complete Windows desktop ZIP independently of Pages deployment
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: DopeFarm-Desktop-${{ github.sha }}
+          path: |
+            dist/DopeFarm-Desktop.zip
+            dist/DopeFarm-Desktop.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
