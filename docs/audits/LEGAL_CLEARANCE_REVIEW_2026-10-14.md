@@ -38,7 +38,11 @@ Official guidance from the German Patent and Trade Mark Office says its public d
 - EUIPO search portal (eSearch plus / TMview / TMclass): https://www.euipo.europa.eu/de/search
 - WIPO Global Brand Database: https://branddb.wipo.int/
 
-The public search also surfaced third-party uses/registrations containing the word “DOPE” in unrelated product classes. That is not, by itself, proof of conflict with this game; it is a reason not to label the combined name “cleared” without class- and territory-specific similarity analysis. No trademark application was filed and no paid search service or attorney was engaged.
+The public search also surfaced:
+- A currently indexed commercial business using **DopeFarm** as a brand name in a cannabis-related retail context.
+- A historical games-industry reference to a Facebook game titled **DopeFarm** (reported in 2012).
+
+These are concrete **name-collision signals**, not proof that the owner has a registered mark enforceable in the target game classes or territories. They make an unqualified “DopeFarm is available” conclusion especially inappropriate. Before commercial release, a qualified search must cover identical and similar word/device marks, relevant Nice classes (including downloadable software/video games and online entertainment), German, EU and intended international territories, and potentially relevant company names, domains, unregistered prior use and passing-off/unfair-competition claims. No live authoritative register result establishing availability was obtained in this review; no trademark application was filed and no paid search service or attorney was engaged.
 
 ## Gate status
 
@@ -50,7 +54,7 @@ The public search also surfaced third-party uses/registrations containing the wo
 | Project code/contributor rights chain | Open — evidence needed | Copyright metadata does not prove assignments or contributor permissions |
 | Privacy/data-flow source review | Static review positive, limited scope | No obvious analytics/telemetry in inspected paths; hosting is unreviewed |
 | Production security/privacy configuration | Open — deployment evidence needed | No production host/configuration was supplied |
-| Trademark clearance | Open — qualified search/review needed | Exact-name availability and similarity were not authoritatively established |
+| Trademark clearance | **High-priority open gate** | Exact-name searches surfaced existing DopeFarm uses, including a commercial use and a historical game title; no authoritative clearance opinion exists |
 | Paid licenses/assets | None purchased | No paid asset was included or selected; no budget/provider/contract was specified |
 
 ## Exact-commit verification addendum — 2026-10-14
@@ -59,7 +63,7 @@ The public search also surfaced third-party uses/registrations containing the wo
 - Master Pack Validation run `38571682988`: **SUCCESS** on the same SHA.
 - Build artifact: `dopefarm-verified-build-238575624123a5422e53bd1363739929f6cb766c`; artifact digest `sha256:b246e179b0ddd5c34254ef51725f3d0b19c4cef0ada1887ca2a2eae16c2295e0`.
 - SBOM artifact: `dopefarm-sbom-238575624123a5422e53bd1363739929f6cb766c`; artifact digest `sha256:988efc247bb084bba7e4ad5d7577d3bfdea89e69e06e90f872e45e6c49894a39`.
-- Public indexed searches for the exact working titles did not produce a reliable, authoritative clearance result. The official DPMA guidance says DPMAregister does not provide a full similarity search and points to EUIPO/WIPO sources; no mark is declared cleared by this review. See [DPMA guidance](https://www.dpma.de/marken/markenrecherche/) and [EUIPO search portal](https://www.euipo.europa.eu/de/search).
+- Public indexed searches for the exact working titles did not produce a reliable, authoritative clearance result; searches also surfaced existing uses of “DopeFarm”, so this name carries an unresolved collision risk. The official DPMA guidance says DPMAregister does not provide a full similarity search and points to EUIPO/WIPO sources; no mark is declared cleared by this review. See [DPMA guidance](https://www.dpma.de/marken/markenrecherche/) and [EUIPO search portal](https://www.euipo.europa.eu/de/search).
 - No paid licenses were purchased because no paid third-party asset has been selected or included. This review cannot execute contributor agreements, establish missing rights assignments, file a trademark application, or inspect a production host.
 
 ## Release decision
