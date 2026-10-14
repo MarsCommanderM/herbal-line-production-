@@ -26,8 +26,8 @@ function setGamePanelOpen(open: boolean): void {
   gamePanel.hidden = !open;
   gamePanel.dataset.open = String(open);
   toggleGamePanelButton.setAttribute('aria-expanded', String(open));
-  toggleGamePanelButton.setAttribute('aria-label', open ? 'Management schließen' : 'Management öffnen');
-  toggleGamePanelButton.title = open ? 'Management schließen' : 'Management öffnen';
+  toggleGamePanelButton.setAttribute('aria-label', open ? 'Management-Menü geöffnet' : 'Management öffnen');
+  toggleGamePanelButton.title = open ? 'Management-Menü geöffnet' : 'Management öffnen';
 }
 
 setGamePanelOpen(!window.matchMedia('(max-width: 760px)').matches);
