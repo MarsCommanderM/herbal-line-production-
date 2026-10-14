@@ -25,16 +25,18 @@ function availableActions(state: GameState): Action[] {
   const order = state.orders[0];
   const complianceCases = state.compliance.cases ?? [];
   const complianceAudits = state.compliance.audits ?? [];
+  // Compliance workflow is grouped after the core campaign actions so keyboard users
+  // encounter plant care and production first; compliance actions remain state-derived.
   const activeAudit = complianceAudits.find((item) => item.status === 'in_progress');
   const openComplianceCase = complianceCases.some((item) => item.status !== 'closed');
-
+  const complianceActions: Action[] = [];
   if (activeAudit) {
-    actions.push({ label: 'Audit abschließen', detail: 'Prüft offene Befunde und dokumentiert das Ergebnis der fiktiven Audit-Runde.', type: 'COMPLIANCE/COMPLETE_AUDIT', payload: { auditId: activeAudit.id } });
+    complianceActions.push({ label: 'Audit abschließen', detail: 'Prüft offene Befunde und dokumentiert das Ergebnis der fiktiven Audit-Runde.', type: 'COMPLIANCE/COMPLETE_AUDIT', payload: { auditId: activeAudit.id } });
   } else {
-    actions.push({ label: 'Audit starten', detail: 'Startet eine nachvollziehbar gespeicherte Compliance-Prüfung.', type: 'COMPLIANCE/START_AUDIT', payload: { auditId: entityId('audit-' + (state.revision + 1)) } });
+    complianceActions.push({ label: 'Audit starten', detail: 'Startet eine nachvollziehbar gespeicherte Compliance-Prüfung.', type: 'COMPLIANCE/START_AUDIT', payload: { auditId: entityId('audit-' + (state.revision + 1)) } });
   }
   if (!openComplianceCase) {
-    actions.push({
+    complianceActions.push({
       label: 'Abweichung dokumentieren', detail: 'Eröffnet einen fiktiven, protokollierten Betriebsfall mit verknüpftem Befund.',
       type: 'COMPLIANCE/RECORD_INCIDENT',
       payload: {
@@ -46,16 +48,16 @@ function availableActions(state: GameState): Action[] {
   }
   for (const complianceCase of complianceCases) {
     if (complianceCase.status === 'open') {
-      actions.push({ label: 'Korrekturmaßnahme erfassen', detail: 'Dokumentiert eine abstrakte Korrekturmaßnahme für den offenen Fall.', type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, actionCode: 'DOCUMENTED_GAME_CORRECTION' } });
+      complianceActions.push({ label: 'Korrekturmaßnahme erfassen', detail: 'Dokumentiert eine abstrakte Korrekturmaßnahme für den offenen Fall.', type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, actionCode: 'DOCUMENTED_GAME_CORRECTION' } });
     } else if (complianceCase.status === 'corrective_action') {
-      actions.push({ label: 'Korrekturmaßnahme einreichen', detail: 'Übergibt die dokumentierte Maßnahme in den Verifikationszustand.', type: 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id } });
+      complianceActions.push({ label: 'Korrekturmaßnahme einreichen', detail: 'Übergibt die dokumentierte Maßnahme in den Verifikationszustand.', type: 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id } });
     } else if (complianceCase.status === 'verification') {
-      actions.push({ label: 'Korrekturmaßnahme bestanden', detail: 'Schließt den fiktiven Fall nach erfolgreicher Verifikation.', type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, passed: true, resolutionCode: 'VERIFICATION_PASSED' } });
-      actions.push({ label: 'Korrekturmaßnahme nicht bestanden', detail: 'Lässt den Fall zur Überarbeitung offen, wenn die Verifikation fehlschlägt.', type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, passed: false, resolutionCode: 'VERIFICATION_FAILED' } });
+      complianceActions.push({ label: 'Korrekturmaßnahme bestanden', detail: 'Schließt den fiktiven Fall nach erfolgreicher Verifikation.', type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, passed: true, resolutionCode: 'VERIFICATION_PASSED' } });
+      complianceActions.push({ label: 'Korrekturmaßnahme nicht bestanden', detail: 'Lässt den Fall zur Überarbeitung offen, wenn die Verifikation fehlschlägt.', type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, passed: false, resolutionCode: 'VERIFICATION_FAILED' } });
     }
   }
   if (state.compliance.licenseStatus === 'recovery_review') {
-    actions.push({ label: 'Lizenz-Wiederherstellung abschließen', detail: 'Schließt die Wiederherstellung nur nach klarem letztem Audit und ohne offene Fälle/Befunde ab.', type: 'COMPLIANCE/FINALIZE_RECOVERY', payload: {} });
+    complianceActions.push({ label: 'Lizenz-Wiederherstellung abschließen', detail: 'Schließt die Wiederherstellung nur nach klarem letztem Audit und ohne offene Fälle/Befunde ab.', type: 'COMPLIANCE/FINALIZE_RECOVERY', payload: {} });
   }
 
   if (plant && plant.stage === 'active') {
@@ -199,7 +201,7 @@ function availableActions(state: GameState): Action[] {
     type: 'TIME/END_DAY',
     payload: {},
   });
-  return actions;
+  return [...actions, ...complianceActions];
 }
 
 function metric(labelText: string, valueText: string): HTMLElement {
