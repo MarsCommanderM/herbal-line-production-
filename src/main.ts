@@ -16,7 +16,26 @@ const worldRoot = document.querySelector<HTMLDivElement>('#world-root');
 const uiRoot = document.querySelector<HTMLDivElement>('#ui-root');
 const fatalError = document.querySelector<HTMLDivElement>('#fatal-error');
 const resetCameraButton = document.querySelector<HTMLButtonElement>('#reset-camera');
-const gamepadHint = document.querySelector<HTMLDivElement>('#gamepad-hint');
+const toggleGamePanelButton = document.querySelector<HTMLButtonElement>('#toggle-game-panel');
+const closeGamePanelButton = document.querySelector<HTMLButtonElement>('#close-game-panel');
+const gamePanel = document.querySelector<HTMLElement>('#game-panel');
+const gamepadHint = document.querySelector<HTMLButtonElement>('#gamepad-hint');
+
+function setGamePanelOpen(open: boolean): void {
+  if (!gamePanel || !toggleGamePanelButton) return;
+  gamePanel.hidden = !open;
+  gamePanel.dataset.open = String(open);
+  toggleGamePanelButton.setAttribute('aria-expanded', String(open));
+  toggleGamePanelButton.setAttribute('aria-label', open ? 'Management schließen' : 'Management öffnen');
+  toggleGamePanelButton.title = open ? 'Management schließen' : 'Management öffnen';
+}
+
+setGamePanelOpen(!window.matchMedia('(max-width: 760px)').matches);
+toggleGamePanelButton?.addEventListener('click', () => setGamePanelOpen(Boolean(gamePanel?.hidden)));
+closeGamePanelButton?.addEventListener('click', () => {
+  setGamePanelOpen(false);
+  toggleGamePanelButton?.focus({ preventScroll: true });
+});
 const saveGameButton = document.querySelector<HTMLButtonElement>('#save-game');
 const loadGameButton = document.querySelector<HTMLButtonElement>('#load-game');
 const exportGameButton = document.querySelector<HTMLButtonElement>('#export-game');
@@ -1592,8 +1611,8 @@ async function boot(): Promise<() => void> {
 
   const panel = new Graphics();
   const title = new Text({
-    text: 'DR. GREEN DUMP / DOPEFARM',
-    style: { fontFamily: 'Arial, sans-serif', fontSize: 20, fontWeight: 'bold', fill: '#f0f5ff', letterSpacing: 2 },
+    text: 'DOPEFARM',
+    style: { fontFamily: 'Arial, sans-serif', fontSize: 12, fontWeight: 'bold', fill: '#f0f5ff', letterSpacing: 1.4 },
   });
   const subtitle = new Text({
     text: 'ANLAGE  /  ' + (spatialRoomLabels[identifySpatialRoom(avatar.position)] ?? 'VERBINDUNGSGANG'),
@@ -1601,8 +1620,8 @@ async function boot(): Promise<() => void> {
   });
   let previousHudRoomId = identifySpatialRoom(avatar.position);
   const stateLine = new Text({
-    text: 'TAG ' + gameState.time.day + '  /  REV ' + gameState.revision + '  /  ' + gameState.compliance.licenseStatus.toUpperCase(),
-    style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#d8c89b', wordWrap: true, wordWrapWidth: 380 },
+    text: 'TAG ' + gameState.time.day + '  ·  ' + gameState.compliance.licenseStatus.toUpperCase(),
+    style: { fontFamily: 'Arial, sans-serif', fontSize: 9, fill: '#d8c89b', wordWrap: true, wordWrapWidth: 260 },
   });
   hud.addChild(panel, title, subtitle, stateLine);
   const resetCamera = (): void => {
@@ -1615,14 +1634,13 @@ async function boot(): Promise<() => void> {
 
   const layout = (): void => {
     const width = ui.screen.width;
-    panel.clear().roundRect(18, 18, Math.min(450, width - 36), 144, 12)
-      .fill({ color: 0x0b1423, alpha: 0.9 })
-      .stroke({ color: 0x32465f, width: 1 });
-    title.position.set(36, 32);
-    subtitle.position.set(37, 60);
-    stateLine.style.wordWrapWidth = Math.min(390, width - 76);
-    stateLine.position.set(37, 84);
-    if (resetCameraButton) resetCameraButton.style.left = '37px';
+    panel.clear().roundRect(14, 14, Math.min(300, width - 28), 76, 10)
+      .fill({ color: 0x0b1423, alpha: 0.76 })
+      .stroke({ color: 0x465b69, alpha: 0.74, width: 1 });
+    title.position.set(26, 22);
+    subtitle.position.set(27, 42);
+    stateLine.style.wordWrapWidth = Math.min(250, width - 52);
+    stateLine.position.set(27, 61);
   };
   layout();
   onGameStateChanged = () => {
@@ -1718,10 +1736,20 @@ async function boot(): Promise<() => void> {
   const updateGamepadHint = (connected: boolean): void => {
     if (!gamepadHint) return;
     gamepadHint.dataset.connected = String(connected);
-    gamepadHint.textContent = connected
-      ? 'CONTROLLER VERBUNDEN · Linker Stick: bewegen · rechter Stick: Kamera · A: auswählen/aktivieren · B: Kamera zurücksetzen · X/Y und Schultern: Pflanze wechseln · Steuerkreuz hoch/runter: UI, links/rechts: Pflanze'
-      : 'GAMEPAD BEREIT · Linker Stick: bewegen · rechter Stick: Kamera · A: Pflanze wählen/Aktion aktivieren · B: Kamera zurücksetzen · X/Y und Schultern: Pflanze wechseln · Steuerkreuz hoch/runter: UI, links/rechts: Pflanze';
+    const expanded = gamepadHint.dataset.expanded === 'true';
+    gamepadHint.setAttribute('aria-label', expanded ? 'Gamepad-Hinweise ausblenden' : 'Gamepad-Hinweise anzeigen');
+    gamepadHint.title = expanded ? 'Gamepad-Hinweise ausblenden' : 'Gamepad-Hinweise anzeigen';
+    gamepadHint.textContent = expanded
+      ? (connected
+        ? 'CONTROLLER VERBUNDEN · Linker Stick: bewegen · rechter Stick: Kamera · A: auswählen/aktivieren · B: Kamera zurücksetzen · X/Y oder L/R: Pflanze wechseln · Steuerkreuz: Oberfläche'
+        : 'GAMEPAD BEREIT · Linker Stick: bewegen · rechter Stick: Kamera · A: Pflanze wählen/Aktion aktivieren · B: Kamera zurücksetzen · X/Y oder L/R: Pflanze wechseln · Steuerkreuz: Oberfläche')
+      : (connected ? '🎮 Controller verbunden' : '🎮 Gamepad bereit');
   };
+  gamepadHint?.addEventListener('click', () => {
+    if (!gamepadHint) return;
+    gamepadHint.dataset.expanded = String(gamepadHint.dataset.expanded !== 'true');
+    updateGamepadHint(gamepadHint.dataset.connected === 'true');
+  });
   window.addEventListener('gamepadconnected', () => updateGamepadHint(true));
   window.addEventListener('gamepaddisconnected', () => updateGamepadHint(false));
   updateGamepadHint(false);
@@ -1763,6 +1791,7 @@ async function boot(): Promise<() => void> {
     if (pressedThisUpdate.has(GAMEPAD_BUTTON.dpadRight)) selectNearbyPlant(1);
     if (pressedThisUpdate.has(GAMEPAD_BUTTON.south)) activateGamepadPrimary();
     if (pressedThisUpdate.has(GAMEPAD_BUTTON.east)) resetCamera();
+    if (pressedThisUpdate.has(GAMEPAD_BUTTON.start)) setGamePanelOpen(Boolean(gamePanel?.hidden));
     if (pressedThisUpdate.has(GAMEPAD_BUTTON.west)) selectNearbyPlant(-1);
     if (pressedThisUpdate.has(GAMEPAD_BUTTON.north)) selectNearbyPlant(1);
     if (pressedThisUpdate.has(GAMEPAD_BUTTON.leftShoulder)) selectNearbyPlant(-1);

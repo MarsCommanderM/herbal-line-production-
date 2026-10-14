@@ -739,9 +739,14 @@ test('keyboard navigation reaches primary controls in a predictable order', asyn
   expect(focusStyle).not.toBe('none');
 });
 
-test('mobile viewport keeps the management panel inside the screen without horizontal overflow', async ({ page }) => {
+test('mobile starts immersive; management opens and closes as a drawer without overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedCampaignSave(page, createInitialGameState());
+  await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeHidden();
+  await expect(page.locator('#world-root canvas')).toBeVisible();
+  const menu = page.getByRole('button', { name: 'Management öffnen' });
+  await expect(menu).toHaveAttribute('aria-expanded', 'false');
+  await menu.click();
   await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
   await expect(page.locator('#campaign-guidance')).toContainText('Produktionseinheit aktiv');
 
@@ -769,6 +774,9 @@ test('mobile viewport keeps the management panel inside the screen without horiz
   expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewportWidth);
   expect(geometry.panelScrollHeight).toBeGreaterThanOrEqual(geometry.panelClientHeight);
 
+  await page.getByRole('button', { name: 'Management schließen' }).click();
+  await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeHidden();
+  await menu.click();
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.locator('#campaign-guidance')).toContainText('Nächster Prozessschritt bereit');
 });
