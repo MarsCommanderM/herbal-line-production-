@@ -540,7 +540,7 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
         }) : state.rooms,
       }, [event], command.accepted ? 'SOURCE_LOT_ACCEPTED' : 'SOURCE_LOT_REJECTED',
       command.accepted ? 'Saatgutprüfung bestanden; das Los wurde mit seiner Herkunft im Saatgutlager freigegeben.' : 'Saatgutlos nach der fiktiven Eingangsprüfung abgelehnt und für die Aussaat gesperrt.',
-      [sourceLot.id, ...(sourceLot.roomId ? [sourceLot.roomId] : []), destination.id]);
+      [sourceLot.id, ...(sourceLot.roomId !== null ? [sourceLot.roomId] : []), destination.id]);
     }
     case 'PLANT/CREATE': {
       if (state.plants.some((item) => item.id === command.plantId)) return failure(state, 'DUPLICATE_COMMAND', 'Diese Pflanzen-ID existiert bereits.');
