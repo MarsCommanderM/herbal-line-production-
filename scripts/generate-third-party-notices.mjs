@@ -6,6 +6,26 @@ const root = process.cwd();
 const lockPath = path.join(root, 'node_modules', '.package-lock.json');
 const outputPath = path.join(root, 'public', 'THIRD_PARTY_NOTICES.txt');
 
+// Some npm platform-wrapper packages omit the license file from their tarball.
+// Reuse the corresponding upstream project's bundled license text. For the two
+// source packages whose tarballs omit the file entirely, replace the generic
+// license file's copyright line with the package's verified upstream notice.
+const licenseFallbacks = {
+  '@dimforge/rapier3d-compat': {
+    source: 'node_modules/@types/three/LICENSE',
+    copyright: 'Copyright 2020 Dimforge EURL',
+    replaceLastCopyright: true,
+  },
+  '@pixi/colord': {
+    source: 'node_modules/three/LICENSE',
+    copyright: 'Copyright (c) 2020 Vlad Shilov',
+    replaceLastCopyright: false,
+  },
+  '@esbuild/linux-x64': { source: 'node_modules/esbuild/LICENSE.md' },
+  '@rollup/rollup-linux-x64-gnu': { source: 'node_modules/rollup/LICENSE.md' },
+  '@rollup/rollup-linux-x64-musl': { source: 'node_modules/rollup/LICENSE.md' },
+};
+
 function fail(message) {
   console.error('THIRD-PARTY NOTICE GENERATION: FAIL — ' + message);
   process.exitCode = 1;
@@ -67,7 +87,7 @@ for (const [packagePath, lockEntry] of Object.entries(lock.packages ?? {})) {
     const record = licenseTexts.get(digest);
     record.packages.add(pkg.name + '@' + pkg.version);
     record.filenames.add(path.basename(licenseFile));
-    texts.push({ filename: path.basename(licenseFile), digest });
+    texts.push({ filename: entry.fallback ? 'upstream fallback: ' + fallback.source : path.basename(licenseFile), digest });
   }
 
   packages.push({
