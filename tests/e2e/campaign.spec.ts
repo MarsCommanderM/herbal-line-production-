@@ -128,9 +128,9 @@ test('third-person player can leave the production room and enter the greenhouse
   await page.keyboard.up('d');
   await expect.poll(async () => Math.abs(Number(await worldCanvas.getAttribute('data-player-x')))).toBeLessThan(1.1);
 
-  await page.keyboard.down('w');
+  await page.keyboard.down('a');
   await expect.poll(async () => await worldCanvas.getAttribute('data-room-id'), { timeout: 15000 }).toBe('greenhouse');
-  await page.keyboard.up('w');
+  await page.keyboard.up('a');
 });
 
 test('nearby cannabis plant can be selected directly from the third-person world', async ({ page }, testInfo) => {
