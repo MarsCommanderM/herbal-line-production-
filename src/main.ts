@@ -283,10 +283,51 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
   stem.castShadow = true;
   plant.add(stem);
 
-  // Distinct palmate, serrated-looking leaflets make the plant read as cannabis,
-  // rather than a generic round-leaf botanical placeholder.
-  const leafletGeometry = new THREE.ConeGeometry(0.105, 0.58, 7, 1);
-  leafletGeometry.translate(0, 0.29, 0);
+  // Shared, beveled leaflet silhouette with visible serrations and a raised midrib.
+  // This is an original runtime mesh, not an unlicensed imported asset.
+  const leafletShape = new THREE.Shape();
+  leafletShape.moveTo(0, 0);
+  leafletShape.lineTo(-0.035, 0.08);
+  leafletShape.lineTo(-0.072, 0.115);
+  leafletShape.lineTo(-0.043, 0.145);
+  leafletShape.lineTo(-0.092, 0.205);
+  leafletShape.lineTo(-0.055, 0.225);
+  leafletShape.lineTo(-0.1, 0.3);
+  leafletShape.lineTo(-0.059, 0.322);
+  leafletShape.lineTo(-0.077, 0.39);
+  leafletShape.lineTo(-0.035, 0.41);
+  leafletShape.lineTo(0, 0.58);
+  leafletShape.lineTo(0.035, 0.41);
+  leafletShape.lineTo(0.077, 0.39);
+  leafletShape.lineTo(0.059, 0.322);
+  leafletShape.lineTo(0.1, 0.3);
+  leafletShape.lineTo(0.055, 0.225);
+  leafletShape.lineTo(0.092, 0.205);
+  leafletShape.lineTo(0.043, 0.145);
+  leafletShape.lineTo(0.072, 0.115);
+  leafletShape.lineTo(0.035, 0.08);
+  leafletShape.closePath();
+  const leafletGeometry = new THREE.ExtrudeGeometry(leafletShape, {
+    depth: 0.012,
+    bevelEnabled: true,
+    bevelSegments: 1,
+    steps: 1,
+    bevelSize: 0.004,
+    bevelThickness: 0.003,
+  });
+  leafletGeometry.translate(0, 0, -0.006);
+  const veinMaterial = new THREE.LineBasicMaterial({
+    color: '#8fbd7c',
+    transparent: true,
+    opacity: 0.62,
+  });
+  const veinGeometry = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0.009),
+    new THREE.Vector3(0, 0.53, 0.009),
+  ]);
+  const attachLeafVein = (leaflet: THREE.Mesh): void => {
+    leaflet.add(new THREE.Line(veinGeometry, veinMaterial));
+  };
   for (let level = 0; level < 5; level += 1) {
     const y = 0.34 + level * 0.235;
     for (const side of [-1, 1]) {
@@ -308,6 +349,7 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
         leaflet.userData.isCannabisLeaflet = true;
         leaflet.userData.baseScale = leaflet.scale.clone();
         leaflet.castShadow = true;
+        attachLeafVein(leaflet);
         fan.add(leaflet);
       }
       plant.add(fan);
@@ -322,6 +364,8 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
     leaflet.scale.set(0.72, 0.66, 0.65);
     leaflet.userData.isCannabisLeaflet = true;
     leaflet.userData.baseScale = leaflet.scale.clone();
+    leaflet.castShadow = true;
+    attachLeafVein(leaflet);
     crown.add(leaflet);
   }
   plant.add(crown);
