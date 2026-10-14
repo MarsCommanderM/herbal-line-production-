@@ -11,16 +11,8 @@ const outputPath = path.join(root, 'public', 'THIRD_PARTY_NOTICES.txt');
 // source packages whose tarballs omit the file entirely, replace the generic
 // license file's copyright line with the package's verified upstream notice.
 const licenseFallbacks = {
-  '@dimforge/rapier3d-compat': {
-    source: 'node_modules/@types/three/LICENSE',
-    copyright: 'Copyright 2020 Dimforge EURL',
-    replaceLastCopyright: true,
-  },
-  '@pixi/colord': {
-    source: 'node_modules/three/LICENSE',
-    copyright: 'Copyright (c) 2020 Vlad Shilov',
-    replaceLastCopyright: false,
-  },
+  '@dimforge/rapier3d-compat': { source: 'licenses/third-party/rapier/LICENSE' },
+  '@pixi/colord': { source: 'licenses/third-party/colord/LICENSE.md' },
   '@esbuild/linux-x64': { source: 'node_modules/esbuild/LICENSE.md' },
   '@rollup/rollup-linux-x64-gnu': { source: 'node_modules/rollup/LICENSE.md' },
   '@rollup/rollup-linux-x64-musl': { source: 'node_modules/rollup/LICENSE.md' },
