@@ -1,12 +1,12 @@
 # Dr. Green Dump / DopeFarm — Prioritized Backlog
 
-**Status source:** exact-HEAD CI and Master Pack Validation both passed on `6d674e5d860993c6653c0703a5a9712e75b4fa5f`; [App CI 38522655908](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655908), [Master Pack Validation 38522655944](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655944).
+**Status source:** exact-HEAD CI and Master Pack Validation both passed on `d0e88c1433967617b7d92b91ac6bc12891dc7a8d`; [App CI 38564908633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633), [Master Pack Validation 38564908664](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908664).
 
 | ID | Priority | Work package | Status | Evidence / remaining acceptance |
 |---|---|---|---|---|
 | P0-001 | P0 | Repository truth audit | Complete | Branch, base, manifest, provenance and known risks recorded; do not confuse source-snapshot identity with ZIP-container re-hashing. |
 | P0-002 | P0 | Canonical scope/contract reconciliation | Complete for current implementation | Owner-confirmed medical-cannabis game scope and Third Person are enforced by policy and product validator. Detailed product decisions listed below remain open. |
-| P0-003 | P0 | Reproducible engineering baseline | Green on exact current HEAD | [App CI 38522655908](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655908) and [Master Pack Validation 38522655944](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655944) both passed on `6d674e5d860993c6653c0703a5a9712e75b4fa5f`; App CI reports 11 unit-test files passed and 71 browser tests passed with 4 WebGL-dependent cases skipped. |
+| P0-003 | P0 | Reproducible engineering baseline | Green on exact current HEAD | [App CI 38564908633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633) and [Master Pack Validation 38564908664](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908664) both passed on `d0e88c1433967617b7d92b91ac6bc12891dc7a8d`; App CI reports 11 unit-test files passed and 71 browser tests passed with 4 WebGL-dependent cases skipped. |
 | P1-001 | P1 | Intake-to-pharmacy vertical slice | Implemented / CI green | Domain and browser scenarios cover intake, production, QC, inventory, order, delivery, ledger and traceability. |
 | P1-002 | P1 | Save/load, validation and recovery | Implemented / exact-HEAD CI green | Historical Master Pack V1 and previous active-app V1 migrate into V2 after checksum, payload, ledger and invariant checks. Conflicting balances or unreconstructable assessment references fail closed without overwriting source data. |
 | P1-003 | P1 | Operational dashboard and queue UX | Implemented / CI green | Keyboard, responsive layout, status/error paths, empty states and Axe WCAG 2.1/2.2 A/AA checks pass in CI. |

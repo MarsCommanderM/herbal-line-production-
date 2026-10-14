@@ -161,3 +161,20 @@ Verified implementation revision: `6d674e5d860993c6653c0703a5a9712e75b4fa5f`.
 - This proves the configured engineering gates on the exact SHA only. Final asset/audio rights, legal compatibility/notice review, contributor-rights review, privacy/security sign-off, authoritative fictional economy/progression rules, deterministic cross-engine WebGL rendering, and an actual rollback drill remain open.
 - The subsequent CI hardening adds retained E2E diagnostics and a SHA-256-manifested production-build artifact, and attempts software WebGL in Firefox. Those additions are **not considered verified until their own exact-HEAD CI and Master Pack runs finish successfully**.
 - `main` remains `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; PR #26 remains open and unmerged.
+
+
+## Latest exact-HEAD verification — 2026-10-14
+
+Verified implementation revision: `d0e88c1433967617b7d92b91ac6bc12891dc7a8d`.
+
+- [App CI run 38564908633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633): **SUCCESS** on the exact revision.
+- [Master Pack Validation run 38564908664](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908664): **SUCCESS** on the same revision.
+- Locked install, secret-pattern scan, dependency audit, SBOM/license-metadata comparison, lint, format, strict typecheck, unit tests, production build, E2E, production-preview smoke, Master-Pack validation, 42-file source-snapshot verification, product-policy validation and whitespace check passed.
+- Browser E2E: **71 passed, 4 skipped**. The four skipped tests are Firefox WebGL cases: third-person movement/camera, direct plant selection, plant-care persistence/reload, and old-save visual cleanup. Those scenarios passed on Chromium and WebKit. Firefox renderer parity remains unproven.
+- Production `dist/` was SHA-256 checked and uploaded as [engineering build artifact](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633/artifacts/11896291025); artifact ZIP digest: `9980911af30e91386ada98ce2153824f05ac0952c5037d903ae54951bb5adf4f`. This is not a release approval or deployment/rollback proof.
+- Master-Pack source snapshot verification confirms 42 expected Git blob identities; it does not independently re-hash the original ZIP container.
+- `main` remains `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; PR #26 remains open and unmerged.
+
+### Outstanding release blockers
+
+Firefox WebGL renderer parity; owner-authoritative fictional economy/progression values and numerical compliance-risk rules; final art/audio with provenance and commercial-use rights; legal dependency notices/compatibility and contributor-rights review; privacy/security and title/trademark sign-off; deployment smoke and an executed rollback drill. Green engineering CI does not close these external/product gates.

@@ -67,3 +67,8 @@ The economy/progression restrictions above remain in force. The current branch-h
 ## Current status confirmation — exact HEAD `6d674e5d860993c6653c0703a5a9712e75b4fa5f` (2026-10-14)
 
 The two source-listed upgrade identifiers `sensor_pack_1` and `drying_rack_1` remain locked/unavailable. No purchase prices, effects, prerequisites, XP thresholds or progression numbers were invented. The exact HEAD passed App CI and Master Pack Validation, which proves the implementation respects this restriction; it does not resolve the missing game-design authority. The authoritative fictional balance table remains a design blocker and needs an explicit approved decision before these upgrades are enabled.
+
+
+## Current exact-HEAD engineering verification — 2026-10-14
+
+The current branch head `d0e88c1433967617b7d92b91ac6bc12891dc7a8d` passed [App CI run 38564908633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633) and [Master Pack Validation run 38564908664](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908664). This confirms automated implementation checks, not approval of missing balance rules. `sensor_pack_1` and `drying_rack_1` remain unavailable until authoritative fictional prices/effects/prerequisites/unlocks are supplied; XP/level thresholds and numerical compliance-risk reductions remain open. No values were invented to make CI green.

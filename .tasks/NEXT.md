@@ -2,13 +2,13 @@
 
 ## Exact verified implementation baseline
 
-Current verified implementation HEAD: `6d674e5d860993c6653c0703a5a9712e75b4fa5f` (CI evidence recorded below; subsequent workflow hardening requires its own exact-HEAD run).
+Current verified implementation HEAD: `d0e88c1433967617b7d92b91ac6bc12891dc7a8d`.
 
-- [Full DopeFarm CI, run 38522655908](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655908): **SUCCESS** on this exact SHA.
-- [Master Pack Validation, run 38522655944](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655944): **SUCCESS** on the same SHA.
+- [Full DopeFarm CI, run 38564908633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38564908664](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908664): **SUCCESS** on the same SHA.
 - App CI passed the locked install, credential-pattern scan, `npm audit` (**0 vulnerabilities**), CycloneDX SBOM/license metadata comparison, lint, format, strict TypeScript, unit tests, production build, browser E2E, preview smoke, master-pack validation, preserved-source verification, product-policy validation and whitespace.
 - Unit tests: **11 test files passed**.
-- Browser E2E: **71 passed, 4 skipped**. Four renderer-dependent cases remain skipped when the selected non-reference browser context exposes no WebGL canvas; these are not counted as passes. Chromium/SwiftShader world interaction is required; the graphics-fallback scenario is also tested.
+- Browser E2E: **71 passed, 4 skipped**. Four Firefox WebGL-dependent cases remain skipped: third-person movement/camera, direct plant selection, plant-care persistence/reload, and old-save visual cleanup. These are not passes; Chromium and WebKit passed those same scenarios. Chromium/SwiftShader world interaction is required; the graphics-fallback scenario is also tested.
 - Original Master Pack snapshot: **42/42 files verified against recorded Git blob IDs**. The historical ZIP container is not stored in the repository, so its recorded archive digest is provenance, not a re-hash performed by this CI.
 - Original-source/root parity remains **20/42 exact active-root matches and 22/42 classified active-root differences**; original source bytes remain preserved under `masterpack/source/`.
 - Current `main`: `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`. PR #26 remains open and unmerged.
