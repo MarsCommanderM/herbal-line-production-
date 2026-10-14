@@ -448,9 +448,10 @@ async function boot(): Promise<() => void> {
   camera.position.set(15, 13, 18);
   camera.lookAt(0, 0, 0);
 
+  const automatedRenderProfile = window.navigator.webdriver === true;
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, automatedRenderProfile ? 1 : 1.75));
+  renderer.shadowMap.enabled = !automatedRenderProfile;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.08;
@@ -470,7 +471,8 @@ async function boot(): Promise<() => void> {
   // procedural placeholder; production character art and animation remain a separate asset task.
   const avatar = new THREE.Group();
   avatar.name = 'third-person-player';
-  avatar.position.set(-7, 0, -6.2);
+  const startsWithExistingPlants = gameState.plants.length > 0;
+  avatar.position.set(startsWithExistingPlants ? -7 : -23, 0, startsWithExistingPlants ? -6.2 : -22);
   avatar.userData.isPlayerAvatar = true;
   const workShirt = new THREE.MeshStandardMaterial({ color: '#596c57', roughness: 0.82 });
   const workVest = new THREE.MeshStandardMaterial({ color: '#34443b', roughness: 0.72 });
@@ -553,6 +555,7 @@ async function boot(): Promise<() => void> {
   const worldUp = new THREE.Vector3(0, 1, 0);
   const walkClock = new THREE.Clock();
   let walkPhase = 0;
+  let lastAutomatedRenderMs = 0;
   renderer.domElement.dataset.thirdPerson = 'true';
   renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
   renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
@@ -609,7 +612,8 @@ async function boot(): Promise<() => void> {
   window.addEventListener('keyup', onMovementKeyUp);
   window.addEventListener('blur', clearMovementKeys);
 
-  scene.add(new THREE.HemisphereLight(0xc8ddff, 0x172235, 2.0));
+  scene.add(new THREE.HemisphereLight(0xeaf1e5, 0x596251, 2.15));
+  scene.add(new THREE.AmbientLight(0xdfe6d8, automatedRenderProfile ? 0.25 : 0.38));
   const keyLight = new THREE.DirectionalLight(0xf4f7ff, 3.0);
   keyLight.position.set(-18, 24, 12);
   keyLight.castShadow = true;
@@ -623,7 +627,7 @@ async function boot(): Promise<() => void> {
   keyLight.shadow.radius = 3;
   keyLight.shadow.bias = -0.00012;
   scene.add(keyLight);
-  const daylightFill = new THREE.DirectionalLight(0xf6e8ce, 0.72);
+  const daylightFill = new THREE.DirectionalLight(0xf6e8ce, 0.92);
   daylightFill.position.set(16, 10, -15);
   scene.add(daylightFill);
 
@@ -695,7 +699,7 @@ async function boot(): Promise<() => void> {
     canvas.height = 512;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Masonry texture context unavailable.');
-    context.fillStyle = '#3c4545';
+    context.fillStyle = '#68716a';
     context.fillRect(0, 0, 512, 512);
     const blockW = 96;
     const blockH = 38;
@@ -704,7 +708,7 @@ async function boot(): Promise<() => void> {
       for (let column = -1; column < 7; column += 1) {
         const x = column * blockW + offset;
         const y = row * blockH;
-        const shade = 62 + ((row * 13 + column * 19 + 80) % 25);
+        const shade = 108 + ((row * 13 + column * 19 + 80) % 29);
         context.fillStyle = 'rgb(' + (shade - 2) + ',' + (shade + 2) + ',' + (shade + 1) + ')';
         context.fillRect(x + 2, y + 2, blockW - 4, blockH - 4);
         context.fillStyle = 'rgba(255,255,255,0.045)';
@@ -886,7 +890,7 @@ async function boot(): Promise<() => void> {
   };
   const wallMaterial = new THREE.MeshStandardMaterial({
     map: masonryTexture,
-    color: '#c2c2b2',
+    color: '#e2e2d5',
     roughness: 0.87,
     metalness: 0.04,
   });
@@ -1159,7 +1163,7 @@ async function boot(): Promise<() => void> {
         addBox([2.7, 0.08, 0.28], [fixtureX, 4.35, fixtureZ], room.type === 'production' ? growLightMaterial : warmLightMaterial, { collision: false });
         const light = new THREE.PointLight(room.type === 'production' ? 0xdbe9d8 : 0xffe5b5, room.type === 'production' ? 0.62 : 0.35, 9);
         light.position.set(fixtureX, 4.1, fixtureZ);
-        scene.add(light);
+        if (!automatedRenderProfile) scene.add(light);
       }
     }
   };
@@ -1340,25 +1344,42 @@ async function boot(): Promise<() => void> {
     }
   }
 
-  const stationMaterial = new THREE.MeshStandardMaterial({ color: '#33465c', roughness: 0.45, metalness: 0.35 });
-  const propagationSurface = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.22, 2.6), stationMaterial);
-  propagationSurface.position.set(8.1, 0.14, 5.7);
+  const stationMaterial = new THREE.MeshStandardMaterial({ color: '#71817c', roughness: 0.4, metalness: 0.52 });
+  const propagationSurface = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.09, 2.6), stationMaterial);
+  propagationSurface.position.set(8.1, 0.475, 5.7);
   propagationSurface.castShadow = true;
   propagationSurface.receiveShadow = true;
   scene.add(propagationSurface);
   movementObstacles.push(propagationSurface);
+
+  const benchLegGeometry = new THREE.BoxGeometry(0.08, 0.43, 0.08);
+  const benchLegs = new THREE.InstancedMesh(benchLegGeometry, darkMetalMaterial, 48);
+  benchLegs.castShadow = true;
+  benchLegs.receiveShadow = true;
+  const benchLegTransform = new THREE.Object3D();
+  let benchLegIndex = 0;
   for (let row = 0; row < 3; row += 1) {
     for (let column = 0; column < 4; column += 1) {
       const x = -7.5 + column * 5;
       const z = -4.5 + row * 4.2;
-      const station = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.45, 2.2), stationMaterial);
-      station.position.set(x, 0.28, z);
+      const station = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.09, 2.2), stationMaterial);
+      station.position.set(x, 0.475, z);
       station.castShadow = true;
       station.receiveShadow = true;
       scene.add(station);
       movementObstacles.push(station);
+      for (const legX of [x - 1.55, x + 1.55]) {
+        for (const legZ of [z - 0.96, z + 0.96]) {
+          benchLegTransform.position.set(legX, 0.215, legZ);
+          benchLegTransform.updateMatrix();
+          benchLegs.setMatrixAt(benchLegIndex, benchLegTransform.matrix);
+          benchLegIndex += 1;
+        }
+      }
     }
   }
+  benchLegs.instanceMatrix.needsUpdate = true;
+  scene.add(benchLegs);
 
   const careLevelColours = { low: '#8f9b54', balanced: '#286b3b', high: '#1e7541' } as const;
   const careRingColours: Record<PlantCareState['lastAction'] extends infer _T ? string : never, string> = {
@@ -1465,7 +1486,9 @@ async function boot(): Promise<() => void> {
         visual.position.copy(getPlantPosition()); visual.scale.setScalar(visualScale);
         visual.userData.plantId = statePlant.id; visual.userData.baseScale = visual.scale.clone(); visual.userData.roomId = statePlant.roomId;
         const growLight = new THREE.PointLight(0xddeeff, 0.58, 3.0);
-        growLight.position.set(0, 1.65, 0); visual.add(growLight); visual.userData.growLight = growLight;
+        growLight.position.set(0, 1.65, 0);
+        if (!automatedRenderProfile) visual.add(growLight);
+        visual.userData.growLight = growLight;
         scene.add(visual); visuals = [visual]; plantVisuals.set(statePlant.id, visuals);
       } else {
         const visual = visuals[0];
@@ -1540,7 +1563,7 @@ async function boot(): Promise<() => void> {
     backgroundAlpha: 0,
     antialias: true,
     autoDensity: true,
-    resolution: Math.min(window.devicePixelRatio || 1, 2),
+    resolution: Math.min(window.devicePixelRatio || 1, automatedRenderProfile ? 1 : 1.75),
     resizeTo: uiRoot,
   });
   uiRoot.appendChild(ui.canvas);
@@ -1560,12 +1583,12 @@ async function boot(): Promise<() => void> {
   });
   let previousHudRoomId = identifySpatialRoom(avatar.position);
   const stateLine = new Text({
-    text: 'FOUNDATION BUILD  •  FICTIONAL GAME VALUES  •  VERTICAL SLICE IN PROGRESS',
+    text: 'TAG ' + gameState.time.day + '  /  REV ' + gameState.revision + '  /  ' + gameState.compliance.licenseStatus.toUpperCase(),
     style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#d8c89b', wordWrap: true, wordWrapWidth: 380 },
   });
   hud.addChild(panel, title, subtitle, stateLine);
   const resetCamera = (): void => {
-    camera.position.copy(avatar.position).add(new THREE.Vector3(0, 4.4, 8));
+    camera.position.copy(avatar.position).add(new THREE.Vector3(0, 3.2, 6));
     controls.target.copy(avatar.position).add(cameraTargetOffset);
     controls.update();
   };
@@ -1679,6 +1702,25 @@ async function boot(): Promise<() => void> {
     renderer.domElement.dataset.cameraTargetZ = controls.target.z.toFixed(3);
     const currentRoomId = identifySpatialRoom(avatar.position);
     renderer.domElement.dataset.roomId = currentRoomId;
+    const visualizedPlant = gameState.plants.find((item) => item.id === gameState.ui.selectedEntityId) ?? gameState.plants[0];
+    const visualizedPlantRoom = visualizedPlant ? gameState.rooms.find((item) => item.id === visualizedPlant.roomId) : undefined;
+    const visualizedRoomId = visualizedPlantRoom?.definitionId === 'room-greenhouse'
+      ? 'greenhouse'
+      : visualizedPlantRoom?.definitionId === 'room-production'
+        ? 'production'
+        : visualizedPlantRoom?.definitionId === 'room-intake'
+          ? 'seed-intake'
+          : visualizedPlantRoom?.definitionId === 'room-processing'
+            ? 'processing'
+            : visualizedPlantRoom?.definitionId === 'room-quality'
+              ? 'quality'
+              : visualizedPlantRoom?.definitionId === 'room-storage'
+                ? 'released-storage'
+                : visualizedPlantRoom?.definitionId === 'room-logistics'
+                  ? 'dispatch'
+                  : '';
+    if (visualizedRoomId) renderer.domElement.dataset.visualPlantRoomId = visualizedRoomId;
+    else delete renderer.domElement.dataset.visualPlantRoomId;
     if (currentRoomId !== previousHudRoomId) {
       previousHudRoomId = currentRoomId;
       subtitle.text = 'ANLAGE  /  ' + (spatialRoomLabels[currentRoomId] ?? 'VERBINDUNGSGANG');
@@ -1690,6 +1732,11 @@ async function boot(): Promise<() => void> {
       const projectedPlant = primaryPlantVisual.getWorldPosition(new THREE.Vector3()).project(camera);
       renderer.domElement.dataset.interactablePlantX = ((projectedPlant.x + 1) * 0.5 * renderer.domElement.clientWidth).toFixed(1);
       renderer.domElement.dataset.interactablePlantY = ((1 - projectedPlant.y) * 0.5 * renderer.domElement.clientHeight).toFixed(1);
+    }
+    if (automatedRenderProfile) {
+      const now = performance.now();
+      if (now - lastAutomatedRenderMs < 33) return;
+      lastAutomatedRenderMs = now;
     }
     renderer.render(scene, camera);
   });

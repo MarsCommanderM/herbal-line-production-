@@ -93,7 +93,8 @@ test('new campaign starts with seed intake and creates a visible greenhouse plan
   const canvas = page.locator('#world-root canvas');
   await expect.poll(async () => (await canvas.getAttribute('data-state-plant-count')) ?? '').toBe('1');
   await expect(canvas).toHaveAttribute('data-visual-plant-id', 'plant-seed-3');
-  await expect(canvas).toHaveAttribute('data-room-id', 'production');
+  await expect(canvas).toHaveAttribute('data-room-id', 'seed-intake');
+  await expect(canvas).toHaveAttribute('data-visual-plant-room-id', 'greenhouse');
 });
 
 test('third-person avatar moves with keyboard and camera target follows', async ({ page }, testInfo) => {
@@ -112,7 +113,7 @@ test('third-person avatar moves with keyboard and camera target follows', async 
 });
 
 test('third-person player can leave the production room and enter the greenhouse', async ({ page }, testInfo) => {
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   const worldCanvas = page.locator('#world-root canvas');
   await requireWebGLCanvas(page, testInfo, worldCanvas);
   await expect(worldCanvas).toHaveAttribute('data-room-id', 'production');
@@ -212,6 +213,7 @@ test('all visible plant-care settings and actions persist through autosave and r
   const canvas = page.locator('#world-root canvas');
   await requireWebGLCanvas(page, testInfo, canvas);
   await expect(canvas).toHaveAttribute('data-visual-plant-id', 'plant-001');
+  await page.getByLabel('Pflanze für Pflege auswählen').selectOption('plant-001');
   await expect(canvas).toHaveAttribute('data-visual-care-ring-visible', 'true');
   const settings = [
     { label: 'Bewässerung: hoch', feedback: 'Bewässerung · Spielstufe hoch', revision: 1, visualAttribute: 'data-visual-water-color', visualValue: '294a5e' },
@@ -371,7 +373,7 @@ test('held inventory cannot be allocated to a pharmacy order', async ({ page }) 
 });
 
 test('rejects corrupt primary and backup saves without loading corrupted campaign state', async ({ page }) => {
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
   await page.getByRole('button', { name: 'Einheit in Batch überführen' }).click();
@@ -413,7 +415,7 @@ test('rejects corrupt primary and backup saves without loading corrupted campaig
 });
 
 test('autosave survives reload and corrupt primary recovers the last valid backup', async ({ page }) => {
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
   await page.getByRole('button', { name: 'Einheit in Batch überführen' }).click();
@@ -447,7 +449,7 @@ test('autosave survives reload and corrupt primary recovers the last valid backu
 });
 
 test('exported saves can be imported after a later campaign change', async ({ page }) => {
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   const saveButton = page.getByRole('button', { name: 'Spielstand speichern' });
   await expect(saveButton).toBeEnabled();
   await saveButton.click();
