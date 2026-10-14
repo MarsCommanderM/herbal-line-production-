@@ -66,6 +66,16 @@ jobs:
       - name: Browser end-to-end acceptance
         timeout-minutes: 22
         run: npm run test:e2e
+      - name: Preserve browser E2E diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dopefarm-e2e-diagnostics-${{ github.sha }}
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Serve production build and smoke-test assets
         run: npm run smoke:preview
       - name: Validate master-pack documents and JSON
@@ -76,3 +86,19 @@ jobs:
         run: npm run validate:product-policy
       - name: Check whitespace
         run: git diff --check
+      - name: Generate and verify SHA-256 manifest for production build
+        if: success()
+        run: |
+          test -d dist
+          find dist -type f -print0 | sort -z | xargs -0 sha256sum > dist.sha256
+          sha256sum -c dist.sha256
+      - name: Upload verified engineering build
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dopefarm-verified-build-${{ github.sha }}
+          path: |
+            dist/
+            dist.sha256
+          if-no-files-found: error
+          retention-days: 30

@@ -2,10 +2,10 @@
 
 ## Exact verified implementation baseline
 
-Current verified HEAD: `c099d29b748353b16870d5afd63e04274759e288`.
+Current verified implementation HEAD: `6d674e5d860993c6653c0703a5a9712e75b4fa5f` (CI evidence recorded below; subsequent workflow hardening requires its own exact-HEAD run).
 
-- [Full DopeFarm CI, run 38513719586](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38513719586): **SUCCESS** on this exact SHA.
-- [Master Pack Validation, run 38513719521](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38513719521): **SUCCESS** on the same SHA.
+- [Full DopeFarm CI, run 38522655908](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655908): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38522655944](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655944): **SUCCESS** on the same SHA.
 - App CI passed the locked install, credential-pattern scan, `npm audit` (**0 vulnerabilities**), CycloneDX SBOM/license metadata comparison, lint, format, strict TypeScript, unit tests, production build, browser E2E, preview smoke, master-pack validation, preserved-source verification, product-policy validation and whitespace.
 - Unit tests: **11 test files passed**.
 - Browser E2E: **71 passed, 4 skipped**. Four renderer-dependent cases remain skipped when the selected non-reference browser context exposes no WebGL canvas; these are not counted as passes. Chromium/SwiftShader world interaction is required; the graphics-fallback scenario is also tested.

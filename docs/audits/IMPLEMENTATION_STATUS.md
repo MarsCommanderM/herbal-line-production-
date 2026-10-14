@@ -146,3 +146,18 @@ Verified source revision: `c099d29b748353b16870d5afd63e04274759e288`.
 - P1-004 compliance implementation is present and tested: audit start/complete, incident/case and violation records, corrective-action recording/submission/verification, conditional recovery finalization, persisted case/audit save fields, state invariants, typed domain events, management controls and browser reload coverage.
 - Remaining blockers: authoritative fictional balance/progression rules; deterministic three-engine WebGL world rendering for the four skipped cases; final art/audio asset production and rights evidence; legal/security/privacy sign-offs; rollback and release artifact evidence.
 - `main` remains `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; PR #26 is open and unmerged.
+
+
+## Latest exact-HEAD verification — 2026-10-14
+
+Verified implementation revision: `6d674e5d860993c6653c0703a5a9712e75b4fa5f`.
+
+- [Full DopeFarm App CI, run 38522655908](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655908): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38522655944](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655944): **SUCCESS** on the same SHA.
+- The App CI passed all configured steps, including locked dependency install, full-history credential scan, `npm audit`, CycloneDX/license metadata validation, lint, formatting, strict TypeScript, unit tests, production build, browser E2E, production-preview smoke, Master Pack validation, preserved-source verification, product-policy validation and whitespace.
+- Browser E2E: **71 passed, 4 skipped**. The four skips are Firefox WebGL-dependent scenarios: third-person movement/camera, direct world plant selection, visible plant-care autosave/reload, and stale plant/cutting visual cleanup after importing an older save. They are not passes; deterministic Firefox WebGL parity remains open.
+- The save-import timeout from the prior run was corrected by setting files directly on the hidden `#import-save-file` input in the visual-state restoration test; the separate visible-button import test remains.
+- The run uploaded a CycloneDX SBOM/license inventory artifact. The artifact digest reported by GitHub was `sha256:c4185cf5d78946a1443a87da6998dfaadf2e3ad7f32668a430665ba5c677d761`.
+- This proves the configured engineering gates on the exact SHA only. Final asset/audio rights, legal compatibility/notice review, contributor-rights review, privacy/security sign-off, authoritative fictional economy/progression rules, deterministic cross-engine WebGL rendering, and an actual rollback drill remain open.
+- The subsequent CI hardening adds retained E2E diagnostics and a SHA-256-manifested production-build artifact, and attempts software WebGL in Firefox. Those additions are **not considered verified until their own exact-HEAD CI and Master Pack runs finish successfully**.
+- `main` remains `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; PR #26 remains open and unmerged.
