@@ -86,6 +86,23 @@ test('third-person avatar moves with keyboard and camera target follows', async 
   expect(cameraTargetZ).toBe(playerZ);
 });
 
+test('third-person player can leave the production room and enter the greenhouse', async ({ page }, testInfo) => {
+  await page.goto('/');
+  const worldCanvas = page.locator('#world-root canvas');
+  await requireWebGLCanvas(page, testInfo, worldCanvas);
+  await expect(worldCanvas).toHaveAttribute('data-room-id', 'production');
+
+  // Cross the production aisle to the central doorway, then enter the greenhouse.
+  await page.keyboard.down('d');
+  await page.waitForTimeout(2000);
+  await page.keyboard.up('d');
+  await expect.poll(async () => Math.abs(Number(await worldCanvas.getAttribute('data-player-x')))).toBeLessThan(1.1);
+
+  await page.keyboard.down('w');
+  await expect.poll(async () => await worldCanvas.getAttribute('data-room-id'), { timeout: 15000 }).toBe('greenhouse');
+  await page.keyboard.up('w');
+});
+
 test('nearby cannabis plant can be selected directly from the third-person world', async ({ page }, testInfo) => {
   await page.goto('/');
   const canvas = page.locator('#world-root canvas');
