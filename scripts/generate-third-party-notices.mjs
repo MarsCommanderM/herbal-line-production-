@@ -70,14 +70,43 @@ for (const [packagePath, lockEntry] of Object.entries(lock.packages ?? {})) {
   }
 
   const licenseFiles = candidateLicenseFiles(directory);
-  if (licenseFiles.length === 0) {
+  const fallback = licenseFiles.length === 0 ? licenseFallbacks[pkg.name] : undefined;
+  if (licenseFiles.length === 0 && !fallback) {
     failures.push(packagePath + ': no bundled LICENSE/LICENCE/COPYING/NOTICE text found (declared ' + declaration + ')');
     continue;
   }
 
+  const filesToRead = licenseFiles.length > 0
+    ? licenseFiles.map((file) => ({ file, fallback: false }))
+    : [{ file: path.join(root, fallback.source), fallback: true }];
   const texts = [];
-  for (const licenseFile of licenseFiles) {
-    const content = readFileSync(licenseFile, 'utf8').trim();
+  for (const entry of filesToRead) {
+    const licenseFile = entry.file;
+    let content;
+    try {
+      content = readFileSync(licenseFile, 'utf8').trim();
+    } catch {
+      failures.push(packagePath + ': upstream license fallback is missing: ' + licenseFile);
+      continue;
+    }
+    if (entry.fallback && fallback?.copyright) {
+      if (fallback.replaceLastCopyright) {
+        const index = content.lastIndexOf('Copyright');
+        if (index < 0) {
+          failures.push(packagePath + ': upstream license fallback has no copyright line to replace');
+          continue;
+        }
+        const lineEnd = content.indexOf('\n', index);
+        content = content.slice(0, index) + fallback.copyright + (lineEnd < 0 ? '' : content.slice(lineEnd));
+      } else {
+        const match = content.match(/^Copyright[^\n]*/m);
+        if (!match) {
+          failures.push(packagePath + ': upstream license fallback has no copyright line to replace');
+          continue;
+        }
+        content = content.replace(match[0], fallback.copyright);
+      }
+    }
     if (!content) {
       failures.push(packagePath + ': empty license file ' + path.basename(licenseFile));
       continue;
@@ -86,7 +115,7 @@ for (const [packagePath, lockEntry] of Object.entries(lock.packages ?? {})) {
     if (!licenseTexts.has(digest)) licenseTexts.set(digest, { content, packages: new Set(), filenames: new Set() });
     const record = licenseTexts.get(digest);
     record.packages.add(pkg.name + '@' + pkg.version);
-    record.filenames.add(path.basename(licenseFile));
+    record.filenames.add(entry.fallback ? 'upstream fallback: ' + fallback.source : path.basename(licenseFile));
     texts.push({ filename: entry.fallback ? 'upstream fallback: ' + fallback.source : path.basename(licenseFile), digest });
   }
 
