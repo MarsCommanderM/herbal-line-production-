@@ -64,6 +64,7 @@ jobs:
         timeout-minutes: 12
         run: npx playwright install --with-deps chromium firefox webkit
       - name: Browser end-to-end acceptance
+        timeout-minutes: 12
         run: npm run test:e2e
       - name: Serve production build and smoke-test assets
         run: npm run smoke:preview
