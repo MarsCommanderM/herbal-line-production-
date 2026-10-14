@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { EntityId, GameState, QualityAssessment, SimulationMinute } from '../../contracts/domain';
-import { createInitialGameState } from '../domain/initial-state';
+import { createInitialGameState, createNewCampaignGameState } from '../domain/initial-state';
 import { getCampaignGuidance } from './campaign-guidance';
 
 const entityId = (value: string): EntityId => value as EntityId;
@@ -79,17 +79,14 @@ describe('campaign guidance', () => {
     expect(guidance.tone).toBe('success');
   });
 
-  it('provides a safe generic next step when the campaign has no plant, batch, or order', () => {
-    const state = createInitialGameState();
-    state.plants = [];
-    state.batches = [];
-    state.orders = [];
+  it('guides a clean new campaign to seed intake without mutating state', () => {
+    const state = createNewCampaignGameState();
     const before = structuredClone(state);
 
     expect(getCampaignGuidance(state)).toMatchObject({
-      title: 'Kampagne bereit',
+      title: 'Neue Kampagne: Saatgutannahme',
       tone: 'info',
-      nextStep: 'Verfügbare Aktionen prüfen',
+      nextStep: 'Saatgutlieferung annehmen',
     });
     expect(state).toEqual(before);
   });

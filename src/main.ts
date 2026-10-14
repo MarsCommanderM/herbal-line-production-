@@ -345,6 +345,7 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
         leaflet.position.set(Math.sin(angle) * 0.23, Math.cos(angle) * 0.08, Math.cos(angle) * 0.045);
         leaflet.rotation.z = -angle * 0.9;
         leaflet.rotation.x = -0.2 - Math.abs(angle) * 0.22;
+        leaflet.userData.baseRotation = leaflet.rotation.clone();
         leaflet.scale.set(0.62 + (1 - Math.abs(angle)) * 0.3, 0.68 + (1 - Math.abs(angle)) * 0.2, 0.6);
         leaflet.userData.isCannabisLeaflet = true;
         leaflet.userData.baseScale = leaflet.scale.clone();
@@ -361,6 +362,7 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
     leaflet.position.set(Math.sin(index * Math.PI * 2 / 7) * 0.08, 1.53, Math.cos(index * Math.PI * 2 / 7) * 0.08);
     leaflet.rotation.z = -Math.sin(index * Math.PI * 2 / 7) * 0.55;
     leaflet.rotation.x = -0.28;
+    leaflet.userData.baseRotation = leaflet.rotation.clone();
     leaflet.scale.set(0.72, 0.66, 0.65);
     leaflet.userData.isCannabisLeaflet = true;
     leaflet.userData.baseScale = leaflet.scale.clone();
@@ -568,6 +570,19 @@ async function boot(): Promise<() => void> {
       position.x >= zone.minX && position.x <= zone.maxX &&
       position.z >= zone.minZ && position.z <= zone.maxZ,
     )?.id ?? 'corridor';
+  const spatialRoomLabels: Record<string, string> = {
+    'seed-intake': 'WARENEINGANG & SAMENARCHIV',
+    greenhouse: 'GEWÄCHSHAUS & ANZUCHT',
+    utilities: 'KLIMA & GEBÄUDETECHNIK',
+    'seed-storage': 'SAATGUTLAGER & QUARANTÄNE',
+    production: 'INDOOR-PFLANZENPRODUKTION',
+    processing: 'VERARBEITUNG',
+    office: 'BÜRO & SCHICHTLEITUNG',
+    quality: 'QUALITÄTSSICHERUNG',
+    'released-storage': 'FREIGEGEBENES LAGER',
+    dispatch: 'VERSAND & APOTHEKENÜBERGABE',
+    corridor: 'VERBINDUNGSGANG',
+  };
   renderer.domElement.dataset.roomId = identifySpatialRoom(avatar.position);
   camera.position.copy(avatar.position).add(new THREE.Vector3(0, 4.4, 8));
   controls.target.copy(avatar.position).add(cameraTargetOffset);
@@ -871,6 +886,7 @@ async function boot(): Promise<() => void> {
     // A readable sign is placed inside the room over its south-side threshold.
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(width - 2, 7.0), 1.15), labelMaterialFor(room.name, room.detail));
     sign.position.set(x, 3.45, z + halfDepth - 0.2);
+    sign.rotation.y = Math.PI;
     scene.add(sign);
 
     // Exposed steel ceiling grid and practical fixtures keep the room readable from the player camera.
@@ -1122,8 +1138,9 @@ async function boot(): Promise<() => void> {
     const care = getPlantCareState(statePlant);
     const baseScale = plant.userData.baseScale as THREE.Vector3 | undefined;
     if (baseScale) {
+      const growthScale = 0.55 + THREE.MathUtils.clamp(Number(statePlant.progress), 0, 100) / 100 * 0.45;
       const pruningScale = Math.max(0.72, 1 - Math.min(care.pruningCount, 8) * 0.035);
-      plant.scale.set(baseScale.x, baseScale.y * pruningScale, baseScale.z);
+      plant.scale.set(baseScale.x * growthScale, baseScale.y * growthScale * pruningScale, baseScale.z * growthScale);
     }
     const light = plant.userData.growLight as THREE.PointLight | undefined;
     if (light) light.intensity = ({ low: 0.2, balanced: 0.8, high: 1.3 } as const)[care.lightLevel];
@@ -1140,6 +1157,11 @@ async function boot(): Promise<() => void> {
       if (!(object instanceof THREE.Mesh) || object.userData.isCannabisLeaflet !== true) return;
       const material = Array.isArray(object.material) ? object.material[0] : object.material;
       if (material instanceof THREE.MeshStandardMaterial) material.color.set(careLevelColours[care.nutrientLevel]);
+      const baseRotation = object.userData.baseRotation as THREE.Euler | undefined;
+      if (baseRotation) {
+        const stressRatio = THREE.MathUtils.clamp(Number(statePlant.stressIndex) / 100, 0, 1);
+        object.rotation.set(baseRotation.x - stressRatio * 0.18, baseRotation.y, baseRotation.z + stressRatio * 0.12);
+      }
       const leafBaseScale = object.userData.baseScale as THREE.Vector3 | undefined;
       if (leafBaseScale) {
         const pruneScale = Math.max(0.72, 1 - Math.min(care.pruningCount, 8) * 0.035);
@@ -1275,9 +1297,10 @@ async function boot(): Promise<() => void> {
     style: { fontFamily: 'Arial, sans-serif', fontSize: 20, fontWeight: 'bold', fill: '#f0f5ff', letterSpacing: 2 },
   });
   const subtitle = new Text({
-    text: 'MEDICAL CANNABIS OPERATIONS  /  FACILITY VIEW',
-    style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#8fa8c6', letterSpacing: 1.4 },
+    text: 'ANLAGE  /  ' + (spatialRoomLabels[identifySpatialRoom(avatar.position)] ?? 'VERBINDUNGSGANG'),
+    style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#8fa8c6', letterSpacing: 1.1 },
   });
+  let previousHudRoomId = identifySpatialRoom(avatar.position);
   const stateLine = new Text({
     text: 'FOUNDATION BUILD  •  FICTIONAL GAME VALUES  •  VERTICAL SLICE IN PROGRESS',
     style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#d8c89b', wordWrap: true, wordWrapWidth: 380 },
@@ -1380,9 +1403,13 @@ async function boot(): Promise<() => void> {
       walkPhase += delta * 8;
       leftLeg.rotation.x = Math.sin(walkPhase) * 0.42;
       rightLeg.rotation.x = -Math.sin(walkPhase) * 0.42;
+      leftArm.rotation.x = -Math.sin(walkPhase) * 0.24;
+      rightArm.rotation.x = Math.sin(walkPhase) * 0.24;
     } else {
       leftLeg.rotation.x = THREE.MathUtils.damp(leftLeg.rotation.x, 0, 10, delta);
       rightLeg.rotation.x = THREE.MathUtils.damp(rightLeg.rotation.x, 0, 10, delta);
+      leftArm.rotation.x = THREE.MathUtils.damp(leftArm.rotation.x, 0, 10, delta);
+      rightArm.rotation.x = THREE.MathUtils.damp(rightArm.rotation.x, 0, 10, delta);
     }
     const avatarDelta = new THREE.Vector3().subVectors(avatar.position, previousAvatarPosition);
     camera.position.add(avatarDelta);
@@ -1392,7 +1419,13 @@ async function boot(): Promise<() => void> {
     renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
     renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
     renderer.domElement.dataset.cameraTargetZ = controls.target.z.toFixed(3);
-    renderer.domElement.dataset.roomId = identifySpatialRoom(avatar.position);
+    const currentRoomId = identifySpatialRoom(avatar.position);
+    renderer.domElement.dataset.roomId = currentRoomId;
+    if (currentRoomId !== previousHudRoomId) {
+      previousHudRoomId = currentRoomId;
+      subtitle.text = 'ANLAGE  /  ' + (spatialRoomLabels[currentRoomId] ?? 'VERBINDUNGSGANG');
+      layout();
+    }
     const primaryPlantId = gameState.plants[0]?.id;
     const primaryPlantVisual = primaryPlantId ? plantVisuals.get(primaryPlantId)?.[0] : undefined;
     if (primaryPlantVisual) {
