@@ -131,3 +131,18 @@ Verified implementation revision: `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`.
 - Master Pack: 42/42 preserved source files verified against recorded Git blob IDs. Active-root comparison remains 20/42 exact and 22/42 classified differences; ZIP container SHA is provenance only because the original archive binary is not stored here.
 - This is a green **engineering baseline**, not a release-ready declaration. Open P1 blockers: defined legacy-save schema and formal runtime incident/corrective-action lifecycle. Other blockers: authoritative economy/progression rules, final art/audio/license evidence, and release rights/security/rollback review.
 - Current `main`: `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; it remains untouched. The documentation refresh must be verified on its own exact head before the branch is called green.
+
+
+## Exact current HEAD verification — 2026-10-14
+
+Verified source revision: `c099d29b748353b16870d5afd63e04274759e288`.
+
+- [Full DopeFarm CI, run 38513719586](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38513719586): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38513719521](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38513719521): **SUCCESS** on the same SHA.
+- App CI passed all configured steps: full-history credential scan, locked dependency install, `npm audit` (0 vulnerabilities), SBOM/license metadata comparison, lint, format, strict TypeScript, unit tests, production build, browser E2E, preview smoke, master-pack validation, preserved-source verification, product-policy validation and whitespace.
+- Unit tests: **11 test files passed**.
+- Browser E2E: **71 passed, 4 skipped**. The skipped tests remain renderer-dependent cases in browser contexts with no WebGL canvas and are not counted as passes.
+- Preserved Master Pack snapshot: **42/42 source files verified** against recorded Git blob IDs; active root is intentionally not byte-identical to the historical archive.
+- P1-004 compliance implementation is present and tested: audit start/complete, incident/case and violation records, corrective-action recording/submission/verification, conditional recovery finalization, persisted case/audit save fields, state invariants, typed domain events, management controls and browser reload coverage.
+- Remaining blockers: authoritative fictional balance/progression rules; deterministic three-engine WebGL world rendering for the four skipped cases; final art/audio asset production and rights evidence; legal/security/privacy sign-offs; rollback and release artifact evidence.
+- `main` remains `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; PR #26 is open and unmerged.
