@@ -216,3 +216,34 @@ body { min-width: 320px; min-height: 480px; }
     padding-inline: 4px;
   }
 }
+
+
+#gamepad-hint {
+  position: absolute;
+  z-index: 3;
+  top: 176px;
+  left: 18px;
+  width: min(360px, calc(100vw - 36px));
+  padding: 9px 12px;
+  border: 1px solid rgba(119, 160, 146, 0.48);
+  border-radius: 8px;
+  background: rgba(8, 18, 22, 0.82);
+  color: #d4eadf;
+  font: 700 10px/1.55 Arial, sans-serif;
+  letter-spacing: 0.035em;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+#gamepad-hint[data-connected="true"] {
+  border-color: #62bc91;
+  background: rgba(7, 38, 26, 0.88);
+  color: #c7f5dd;
+}
+@media (max-width: 760px) {
+  #gamepad-hint {
+    top: 58px;
+    left: 14px;
+    width: min(350px, calc(100vw - 28px));
+    font-size: 9px;
+  }
+}

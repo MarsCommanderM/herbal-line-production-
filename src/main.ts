@@ -10,11 +10,13 @@ import { renderManagementUI } from './ui/management';
 import { IndexedDbSaveRepository } from './persistence/indexeddb-save-repository';
 import { createSaveEnvelope, restoreGameState } from './persistence/save-codec';
 import { getPlantCareState } from './domain/plant-care';
+import { GAMEPAD_BUTTON, readGamepadFrame } from './ui/gamepad';
 
 const worldRoot = document.querySelector<HTMLDivElement>('#world-root');
 const uiRoot = document.querySelector<HTMLDivElement>('#ui-root');
 const fatalError = document.querySelector<HTMLDivElement>('#fatal-error');
 const resetCameraButton = document.querySelector<HTMLButtonElement>('#reset-camera');
+const gamepadHint = document.querySelector<HTMLDivElement>('#gamepad-hint');
 const saveGameButton = document.querySelector<HTMLButtonElement>('#save-game');
 const loadGameButton = document.querySelector<HTMLButtonElement>('#load-game');
 const exportGameButton = document.querySelector<HTMLButtonElement>('#export-game');
@@ -456,7 +458,9 @@ async function boot(): Promise<() => void> {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.08;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.domElement.setAttribute('aria-label', '3D medical cannabis production facility');
+  renderer.domElement.setAttribute('aria-label', 'Third-person game world. Gamepad: left stick move, right stick camera, A select or activate, B reset camera, X/Y change nearby plant, D-pad navigate controls.');
+  renderer.domElement.tabIndex = 0;
+  renderer.domElement.setAttribute('data-gamepad-support', 'true');
   worldRoot.appendChild(renderer.domElement);
 
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -1631,6 +1635,30 @@ async function boot(): Promise<() => void> {
 
   const plantRaycaster = new THREE.Raycaster();
   const plantPointer = new THREE.Vector2();
+  const selectNearbyPlant = (direction: -1 | 0 | 1 = 0): void => {
+    const nearbyPlants = gameState.plants
+      .filter((plant) => plant.stage !== 'rejected')
+      .map((plant) => {
+        const visual = plantVisuals.get(plant.id)?.[0];
+        if (!visual) return null;
+        return { plant, distance: avatar.position.distanceTo(visual.getWorldPosition(new THREE.Vector3())) };
+      })
+      .filter((entry): entry is { plant: GameState['plants'][number]; distance: number } => Boolean(entry && entry.distance <= 5.5))
+      .sort((left, right) => left.distance - right.distance);
+    if (nearbyPlants.length === 0) {
+      const hasPlant = gameState.plants.some((plant) => plant.stage !== 'rejected');
+      setFeedback('error', hasPlant ? 'Keine Pflanze in Reichweite. Gehe mit dem linken Stick näher heran.' : 'In dieser Kampagnenphase gibt es noch keine Pflanze zum Auswählen.');
+      return;
+    }
+    const currentIndex = nearbyPlants.findIndex((entry) => entry.plant.id === gameState.ui.selectedEntityId);
+    const index = direction === 0
+      ? (currentIndex < 0 ? 0 : currentIndex)
+      : (currentIndex < 0
+        ? (direction > 0 ? 0 : nearbyPlants.length - 1)
+        : (currentIndex + direction + nearbyPlants.length) % nearbyPlants.length);
+    selectPlant(nearbyPlants[index]!.plant.id);
+    renderer.domElement.focus({ preventScroll: true });
+  };
   const onWorldPointerDown = (event: PointerEvent): void => {
     if (event.button !== 0) return;
     const bounds = renderer.domElement.getBoundingClientRect();
@@ -1655,6 +1683,49 @@ async function boot(): Promise<() => void> {
   };
   renderer.domElement.addEventListener('pointerdown', onWorldPointerDown);
 
+  let previousGamepadButtons = new Set<number>();
+  let previousGamepadConnected = false;
+  const gamepadSpherical = new THREE.Spherical();
+  const focusableGameControls = (): HTMLElement[] =>
+    Array.from(document.querySelectorAll<HTMLElement>(
+      '#game-panel button:not(:disabled), #game-panel select:not(:disabled), #game-panel input:not(:disabled)',
+    )).filter((element) => element.getClientRects().length > 0 && !element.hasAttribute('hidden'));
+
+  const focusNextGameControl = (direction: -1 | 1): void => {
+    const controlsInPanel = focusableGameControls();
+    if (controlsInPanel.length === 0) return;
+    const current = document.activeElement instanceof HTMLElement ? controlsInPanel.indexOf(document.activeElement) : -1;
+    const nextIndex = current < 0 ? (direction > 0 ? 0 : controlsInPanel.length - 1)
+      : (current + direction + controlsInPanel.length) % controlsInPanel.length;
+    const next = controlsInPanel[nextIndex];
+    next?.focus({ preventScroll: true });
+    next?.scrollIntoView({ block: 'nearest' });
+  };
+
+  const isGameControlFocused = (): boolean =>
+    document.activeElement instanceof HTMLElement &&
+    Boolean(document.activeElement.closest('#game-panel')) &&
+    document.activeElement.matches('button, select, input, textarea');
+
+  const activateGamepadPrimary = (): void => {
+    if (isGameControlFocused() && document.activeElement instanceof HTMLElement) {
+      document.activeElement.click();
+      return;
+    }
+    selectNearbyPlant(0);
+  };
+
+  const updateGamepadHint = (connected: boolean): void => {
+    if (!gamepadHint) return;
+    gamepadHint.dataset.connected = String(connected);
+    gamepadHint.textContent = connected
+      ? 'CONTROLLER VERBUNDEN · Linker Stick: bewegen · Rechter Stick: Kamera · A: auswählen/aktivieren · B: Kamera zurücksetzen · X/Y: Pflanze wechseln · Steuerkreuz: Oberfläche'
+      : 'GAMEPAD BEREIT · Linker Stick: bewegen · Rechter Stick: Kamera · A: Pflanze wählen/Aktion aktivieren · B: Kamera zurücksetzen · X/Y: Pflanze wechseln · Steuerkreuz: Oberfläche';
+  };
+  window.addEventListener('gamepadconnected', () => updateGamepadHint(true));
+  window.addEventListener('gamepaddisconnected', () => updateGamepadHint(false));
+  updateGamepadHint(false);
+
   const resize = (): void => {
     const width = Math.max(1, worldRoot.clientWidth);
     const height = Math.max(1, worldRoot.clientHeight);
@@ -1666,11 +1737,45 @@ async function boot(): Promise<() => void> {
   resize();
   renderer.setAnimationLoop(() => {
     const delta = Math.min(walkClock.getDelta(), 0.05);
+    const gamepadFrame = readGamepadFrame(
+      typeof navigator.getGamepads === 'function' ? Array.from(navigator.getGamepads()) : [],
+      previousGamepadButtons,
+    );
+    previousGamepadButtons = new Set(gamepadFrame.pressedButtons);
+    if (gamepadFrame.connected !== previousGamepadConnected) {
+      previousGamepadConnected = gamepadFrame.connected;
+      updateGamepadHint(gamepadFrame.connected);
+      renderer.domElement.dataset.gamepadConnected = String(gamepadFrame.connected);
+    }
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.dpadUp)) focusNextGameControl(-1);
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.dpadDown)) focusNextGameControl(1);
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.dpadLeft)) selectNearbyPlant(-1);
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.dpadRight)) selectNearbyPlant(1);
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.south)) activateGamepadPrimary();
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.east)) resetCamera();
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.west)) selectNearbyPlant(-1);
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.north)) selectNearbyPlant(1);
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.leftShoulder)) selectNearbyPlant(-1);
+    if (gamepadFrame.justPressedButtons.has(GAMEPAD_BUTTON.rightShoulder)) selectNearbyPlant(1);
+
+    if (Math.abs(gamepadFrame.moveX) > 0 || Math.abs(gamepadFrame.moveY) > 0) renderer.domElement.focus({ preventScroll: true });
+    if (Math.abs(gamepadFrame.lookX) + Math.abs(gamepadFrame.lookY) > 0.01) {
+      const cameraOffset = camera.position.clone().sub(controls.target);
+      gamepadSpherical.setFromVector3(cameraOffset);
+      gamepadSpherical.theta -= gamepadFrame.lookX * 2.15 * delta;
+      gamepadSpherical.phi = THREE.MathUtils.clamp(gamepadSpherical.phi + gamepadFrame.lookY * 1.45 * delta, 0.22, 1.32);
+      cameraOffset.setFromSpherical(gamepadSpherical);
+      camera.position.copy(controls.target).add(cameraOffset);
+      camera.lookAt(controls.target);
+    }
+
     movementVector.set(0, 0, 0);
-    const forwardInput = Number(movementKeys.has('w') || movementKeys.has('arrowup')) -
+    const keyboardForward = Number(movementKeys.has('w') || movementKeys.has('arrowup')) -
       Number(movementKeys.has('s') || movementKeys.has('arrowdown'));
-    const rightInput = Number(movementKeys.has('d') || movementKeys.has('arrowright')) -
+    const keyboardRight = Number(movementKeys.has('d') || movementKeys.has('arrowright')) -
       Number(movementKeys.has('a') || movementKeys.has('arrowleft'));
+    const forwardInput = THREE.MathUtils.clamp(keyboardForward - gamepadFrame.moveY, -1, 1);
+    const rightInput = THREE.MathUtils.clamp(keyboardRight + gamepadFrame.moveX, -1, 1);
     if (forwardInput !== 0 || rightInput !== 0) {
       movementForward.subVectors(camera.position, controls.target);
       movementForward.y = 0;
@@ -1722,6 +1827,8 @@ async function boot(): Promise<() => void> {
     previousAvatarRotationY = avatar.rotation.y;
     controls.update();
     renderer.domElement.dataset.playerX = avatar.position.x.toFixed(3);
+    renderer.domElement.dataset.gamepadSupported = String(typeof navigator.getGamepads === 'function');
+    renderer.domElement.dataset.gamepadIndex = gamepadFrame.index === null ? '' : String(gamepadFrame.index);
     renderer.domElement.dataset.playerZ = avatar.position.z.toFixed(3);
     renderer.domElement.dataset.cameraTargetX = controls.target.x.toFixed(3);
     renderer.domElement.dataset.cameraTargetZ = controls.target.z.toFixed(3);
