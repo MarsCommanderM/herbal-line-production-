@@ -373,11 +373,15 @@ function createCannabisPlant(x: number, z: number, variant: number): THREE.Group
   plant.add(crown);
   const potMaterial = new THREE.MeshStandardMaterial({ color: '#8a795f', roughness: 0.9 });
   const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.22, 0.3, 10), potMaterial);
+  pot.name = 'plant-container';
+  pot.userData.isPlantContainer = true;
   pot.position.y = 0.15;
   pot.castShadow = true;
   plant.add(pot);
   const soilMaterial = new THREE.MeshStandardMaterial({ color: '#3e4b42', roughness: 1 });
   const soil = new THREE.Mesh(new THREE.CircleGeometry(0.17, 12), soilMaterial);
+  soil.name = 'plant-pot-soil';
+  soil.userData.isPlantContainer = true;
   soil.rotation.x = -Math.PI / 2;
   soil.position.y = 0.305;
   plant.add(soil);
@@ -611,7 +615,12 @@ async function boot(): Promise<() => void> {
   keyLight.castShadow = true;
   keyLight.shadow.mapSize.set(2048, 2048);
   keyLight.shadow.camera.near = 1;
-  keyLight.shadow.camera.far = 95;
+  keyLight.shadow.camera.far = 110;
+  keyLight.shadow.camera.left = -42;
+  keyLight.shadow.camera.right = 42;
+  keyLight.shadow.camera.top = 38;
+  keyLight.shadow.camera.bottom = -38;
+  keyLight.shadow.radius = 3;
   keyLight.shadow.bias = -0.00012;
   scene.add(keyLight);
   const daylightFill = new THREE.DirectionalLight(0xf6e8ce, 0.72);
@@ -713,6 +722,151 @@ async function boot(): Promise<() => void> {
     return texture;
   })();
 
+  const greenhouseFabricTexture = (() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Greenhouse fabric texture context unavailable.');
+    const gradient = context.createLinearGradient(0, 0, 512, 512);
+    gradient.addColorStop(0, '#f5f0e1');
+    gradient.addColorStop(0.52, '#e8e2d3');
+    gradient.addColorStop(1, '#d9d6c9');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 512, 512);
+    for (let row = 0; row < 512; row += 4) {
+      context.fillStyle = row % 8 === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(89,97,84,0.035)';
+      context.fillRect(0, row, 512, 1);
+    }
+    for (let column = 0; column < 512; column += 5) {
+      context.fillStyle = column % 20 === 0 ? 'rgba(255,255,255,0.09)' : 'rgba(67,78,68,0.025)';
+      context.fillRect(column, 0, 1, 512);
+    }
+    // Sparse weave specks, with deterministic coordinates and no external texture dependency.
+    for (let index = 0; index < 3400; index += 1) {
+      const x = (index * 73 + 17) % 512;
+      const y = (index * 151 + 41) % 512;
+      const alpha = 0.018 + ((index * 11) % 8) / 360;
+      context.fillStyle = index % 2 ? 'rgba(255,255,255,' + alpha + ')' : 'rgba(83,90,78,' + alpha + ')';
+      context.fillRect(x, y, 1 + (index % 2), 1);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(2, 2);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return texture;
+  })();
+
+  const greenhouseEarthTexture = (() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Greenhouse earth texture context unavailable.');
+    context.fillStyle = '#40382a';
+    context.fillRect(0, 0, 512, 512);
+    for (let index = 0; index < 15000; index += 1) {
+      const x = (index * 97 + 19) % 512;
+      const y = (index * 193 + 29) % 512;
+      const alpha = 0.025 + ((index * 5) % 12) / 170;
+      context.fillStyle = index % 3 === 0
+        ? 'rgba(192,165,113,' + alpha + ')'
+        : index % 2 === 0
+          ? 'rgba(12,17,12,' + alpha + ')'
+          : 'rgba(226,207,166,' + alpha + ')';
+      context.fillRect(x, y, 1 + (index % 3), 1 + (index % 2));
+    }
+    for (let row = 0; row < 512; row += 47) {
+      context.fillStyle = 'rgba(10,14,10,0.11)';
+      context.fillRect(0, row, 512, 5);
+      context.fillStyle = 'rgba(220,198,151,0.07)';
+      context.fillRect(0, row + 7, 512, 2);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(3, 6);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return texture;
+  })();
+
+  const greenhouseMulchTexture = (() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Greenhouse mulch texture context unavailable.');
+    context.fillStyle = '#191e19';
+    context.fillRect(0, 0, 256, 512);
+    for (let index = 0; index < 2400; index += 1) {
+      const x = (index * 43 + 7) % 256;
+      const y = (index * 97 + 13) % 512;
+      const alpha = 0.025 + ((index * 7) % 9) / 160;
+      context.fillStyle = index % 2 ? 'rgba(186,193,170,' + alpha + ')' : 'rgba(0,0,0,' + alpha + ')';
+      context.fillRect(x, y, 1 + index % 3, 1);
+    }
+    // Two rows of four planting holes aligned to the in-game bed positions.
+    context.globalCompositeOperation = 'destination-out';
+    for (const x of [72, 184]) {
+      for (const y of [75, 196, 317, 438]) {
+        context.beginPath();
+        context.ellipse(x, y, 14, 17, 0, 0, Math.PI * 2);
+        context.fill();
+      }
+    }
+    context.globalCompositeOperation = 'source-over';
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return texture;
+  })();
+
+  const outdoorFieldTexture = (() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Outdoor field texture context unavailable.');
+    const gradient = context.createLinearGradient(0, 0, 0, 512);
+    gradient.addColorStop(0, '#c9b185');
+    gradient.addColorStop(0.5, '#b99f73');
+    gradient.addColorStop(1, '#a88e65');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 512, 512);
+    for (let row = -20; row < 540; row += 34) {
+      context.strokeStyle = 'rgba(91,83,55,0.18)';
+      context.lineWidth = 3;
+      context.beginPath();
+      context.moveTo(0, row);
+      context.bezierCurveTo(160, row - 3, 340, row + 4, 512, row + 1);
+      context.stroke();
+      context.strokeStyle = 'rgba(245,226,184,0.16)';
+      context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(0, row + 5);
+      context.lineTo(512, row + 6);
+      context.stroke();
+    }
+    for (let index = 0; index < 3600; index += 1) {
+      const x = (index * 97 + 31) % 512;
+      const y = (index * 173 + 9) % 512;
+      context.fillStyle = index % 2 ? 'rgba(244,223,181,0.1)' : 'rgba(75,72,48,0.075)';
+      context.fillRect(x, y, 1 + (index % 3), 1 + (index % 2));
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(8, 12);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return texture;
+  })();
+
   const floorMaterial = new THREE.MeshStandardMaterial({
     map: concreteTexture,
     color: '#d0d1c7',
@@ -721,7 +875,7 @@ async function boot(): Promise<() => void> {
   });
   const roomFloorMaterials: Record<string, THREE.Material> = {
     production: new THREE.MeshStandardMaterial({ map: tileTexture, color: '#d5d0c4', roughness: 0.62, metalness: 0.05 }),
-    greenhouse: new THREE.MeshStandardMaterial({ color: '#776c54', roughness: 0.96, metalness: 0.01 }),
+    greenhouse: new THREE.MeshStandardMaterial({ map: greenhouseEarthTexture, color: '#b7a17a', roughness: 0.98, metalness: 0.0 }),
     storage: new THREE.MeshStandardMaterial({ color: '#777b75', roughness: 0.83, metalness: 0.12 }),
     processing: new THREE.MeshStandardMaterial({ map: tileTexture, color: '#a5aaa5', roughness: 0.5, metalness: 0.08 }),
     quality: new THREE.MeshStandardMaterial({ color: '#b9c2c1', roughness: 0.34, metalness: 0.12 }),
@@ -735,6 +889,42 @@ async function boot(): Promise<() => void> {
     color: '#c2c2b2',
     roughness: 0.87,
     metalness: 0.04,
+  });
+  const greenhouseCurtainMaterial = new THREE.MeshPhysicalMaterial({
+    map: greenhouseFabricTexture,
+    color: '#d9ddd3',
+    roughness: 0.94,
+    metalness: 0.01,
+    transparent: true,
+    opacity: 0.28,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const greenhouseRoofMaterial = new THREE.MeshPhysicalMaterial({
+    map: greenhouseFabricTexture,
+    color: '#f0ebdc',
+    roughness: 0.9,
+    metalness: 0.01,
+    transparent: true,
+    opacity: 0.68,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const greenhouseMulchMaterial = new THREE.MeshStandardMaterial({
+    map: greenhouseMulchTexture,
+    color: '#d5d6c9',
+    roughness: 0.88,
+    metalness: 0.0,
+    transparent: true,
+    alphaTest: 0.22,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const outdoorFieldMaterial = new THREE.MeshStandardMaterial({
+    map: outdoorFieldTexture,
+    color: '#d2ba8f',
+    roughness: 1.0,
+    metalness: 0.0,
   });
   const metalMaterial = new THREE.MeshStandardMaterial({
     color: '#6e7b7d',
@@ -845,6 +1035,7 @@ async function boot(): Promise<() => void> {
   }): void => {
     const { x, z, width, depth } = room;
     const halfWidth = width / 2;
+    const roomWallMaterial = room.greenhouseRoof ? greenhouseCurtainMaterial : wallMaterial;
     const halfDepth = depth / 2;
     const doorWidth = 2.8;
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), roomFloorMaterials[room.type] ?? floorMaterial);
@@ -855,24 +1046,24 @@ async function boot(): Promise<() => void> {
 
     const horizontal = (wallZ: number, hasDoor: boolean): void => {
       if (!hasDoor) {
-        addWallSegment(true, x, wallZ, width);
+        addWallSegment(true, x, wallZ, width, roomWallMaterial);
         return;
       }
       const sideLength = halfWidth - doorWidth / 2;
-      addWallSegment(true, x - doorWidth / 2 - sideLength / 2, wallZ, sideLength);
-      addWallSegment(true, x + doorWidth / 2 + sideLength / 2, wallZ, sideLength);
+      addWallSegment(true, x - doorWidth / 2 - sideLength / 2, wallZ, sideLength, roomWallMaterial);
+      addWallSegment(true, x + doorWidth / 2 + sideLength / 2, wallZ, sideLength, roomWallMaterial);
       addBox([doorWidth, 0.2, 0.34], [x, 3.1, wallZ], darkMetalMaterial, { collision: false });
       addBox([0.12, 3.0, 0.36], [x - doorWidth / 2, 1.5, wallZ], metalMaterial, { collision: false });
       addBox([0.12, 3.0, 0.36], [x + doorWidth / 2, 1.5, wallZ], metalMaterial, { collision: false });
     };
     const vertical = (wallX: number, hasDoor: boolean): void => {
       if (!hasDoor) {
-        addWallSegment(false, z, wallX, depth);
+        addWallSegment(false, z, wallX, depth, roomWallMaterial);
         return;
       }
       const sideLength = halfDepth - doorWidth / 2;
-      addWallSegment(false, z - doorWidth / 2 - sideLength / 2, wallX, sideLength);
-      addWallSegment(false, z + doorWidth / 2 + sideLength / 2, wallX, sideLength);
+      addWallSegment(false, z - doorWidth / 2 - sideLength / 2, wallX, sideLength, roomWallMaterial);
+      addWallSegment(false, z + doorWidth / 2 + sideLength / 2, wallX, sideLength, roomWallMaterial);
       addBox([0.34, 0.2, doorWidth], [wallX, 3.1, z], darkMetalMaterial, { collision: false });
       addBox([0.36, 3.0, 0.12], [wallX, 1.5, z - doorWidth / 2], metalMaterial, { collision: false });
       addBox([0.36, 3.0, 0.12], [wallX, 1.5, z + doorWidth / 2], metalMaterial, { collision: false });
@@ -889,42 +1080,58 @@ async function boot(): Promise<() => void> {
     sign.rotation.y = Math.PI;
     scene.add(sign);
 
-    // Exposed steel ceiling grid and practical fixtures keep the room readable from the player camera.
-    const ceilingY = room.greenhouseRoof ? 5.15 : 4.7;
-    for (let column = -1; column <= 1; column += 1) {
-      addBox([0.09, 0.1, depth], [x + column * (width / 3), ceilingY, z], metalMaterial, { collision: false });
-    }
-    for (let row = -1; row <= 1; row += 1) {
-      addBox([width, 0.1, 0.09], [x, ceilingY, z + row * (depth / 3)], metalMaterial, { collision: false });
+    // Indoor rooms have a practical steel ceiling grid. The hoop house keeps its exposed arched ribs.
+    const ceilingY = 4.7;
+    if (!room.greenhouseRoof) {
+      for (let column = -1; column <= 1; column += 1) {
+        addBox([0.09, 0.1, depth], [x + column * (width / 3), ceilingY, z], metalMaterial, { collision: false });
+      }
+      for (let row = -1; row <= 1; row += 1) {
+        addBox([width, 0.1, 0.09], [x, ceilingY, z + row * (depth / 3)], metalMaterial, { collision: false });
+      }
     }
 
     if (room.greenhouseRoof) {
-      const roofGeometry = (left: boolean): THREE.BufferGeometry => {
-        const z0 = z - halfDepth;
-        const z1 = z + halfDepth;
-        const vertices = left
-          ? [-halfWidth, 5.2, z0, x, 7.0, z0, x, 7.0, z1, -halfWidth, 5.2, z1]
-          : [x, 7.0, z0, x + halfWidth, 5.2, z0, x + halfWidth, 5.2, z1, x, 7.0, z1];
+      const roofGeometry = (): THREE.BufferGeometry => {
+        const widthSegments = 32;
+        const depthSegments = 12;
+        const positions: number[] = [];
+        const uvs: number[] = [];
+        const indices: number[] = [];
+        for (let row = 0; row <= depthSegments; row += 1) {
+          const v = row / depthSegments;
+          const roofZ = z - halfDepth + v * depth;
+          for (let column = 0; column <= widthSegments; column += 1) {
+            const u = column / widthSegments;
+            const normalizedX = u * 2 - 1;
+            const roofX = x - halfWidth + u * width;
+            // Smooth agricultural hoop profile: low at the eaves, high at the ridge.
+            const roofY = 5.2 + 1.8 * Math.cos(normalizedX * Math.PI / 2);
+            positions.push(roofX, roofY, roofZ);
+            uvs.push(u, v);
+          }
+        }
+        const stride = widthSegments + 1;
+        for (let row = 0; row < depthSegments; row += 1) {
+          for (let column = 0; column < widthSegments; column += 1) {
+            const a = row * stride + column;
+            const b = a + 1;
+            const d = (row + 1) * stride + column;
+            const c = d + 1;
+            indices.push(a, d, b, b, d, c);
+          }
+        }
         const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        geometry.setIndex([0, 1, 2, 0, 2, 3]);
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        geometry.setIndex(indices);
         geometry.computeVertexNormals();
         return geometry;
       };
-      const roofMaterial = new THREE.MeshPhysicalMaterial({
-        color: '#dbe5dc',
-        roughness: 0.22,
-        metalness: 0.06,
-        transparent: true,
-        opacity: 0.32,
-        side: THREE.DoubleSide,
-        transmission: 0.12,
-      });
-      for (const left of [true, false]) {
-        const roof = new THREE.Mesh(roofGeometry(left), roofMaterial);
-        roof.receiveShadow = true;
-        scene.add(roof);
-      }
+      const roof = new THREE.Mesh(roofGeometry(), greenhouseRoofMaterial);
+      roof.receiveShadow = true;
+      roof.castShadow = false;
+      scene.add(roof);
       for (let rafter = 0; rafter <= 6; rafter += 1) {
         const roofZ = z - halfDepth + (depth / 6) * rafter;
         const curve = new THREE.QuadraticBezierCurve3(
@@ -940,7 +1147,7 @@ async function boot(): Promise<() => void> {
         for (let line = 1; line <= 3; line += 1) {
           const along = (halfWidth / 4) * line;
           const px = x + side * along;
-          const py = 7.0 - (along / halfWidth) * 1.8 + 0.03;
+          const py = 5.2 + 1.8 * Math.cos((along / halfWidth) * Math.PI / 2) + 0.03;
           addBox([0.045, 0.045, depth], [px, py, z], metalMaterial, { collision: false });
         }
       }
@@ -998,12 +1205,47 @@ async function boot(): Promise<() => void> {
   // Exterior envelope. The south gate is a wide opening; movement remains within the building.
   addBox([0.34, 5.6, 66], [-36, 2.8, 0], wallMaterial, { collision: true });
   addBox([0.34, 5.6, 66], [36, 2.8, 0], wallMaterial, { collision: true });
-  addBox([74, 5.6, 0.34], [0, 2.8, -33], wallMaterial, { collision: true });
+  addBox([24, 5.6, 0.34], [-25, 2.8, -33], wallMaterial, { collision: true });
+  addBox([24, 5.6, 0.34], [25, 2.8, -33], wallMaterial, { collision: true });
   addBox([30, 5.6, 0.34], [-22, 2.8, 33], wallMaterial, { collision: true });
   addBox([30, 5.6, 0.34], [22, 2.8, 33], wallMaterial, { collision: true });
   addBox([0.4, 3.5, 0.4], [-7, 1.75, 33], darkMetalMaterial, { collision: false });
   addBox([0.4, 3.5, 0.4], [7, 1.75, 33], darkMetalMaterial, { collision: false });
   addBox([14, 0.18, 1.7], [0, 3.55, 33], darkMetalMaterial, { collision: false });
+
+  const outsideField = new THREE.Mesh(new THREE.PlaneGeometry(180, 160), outdoorFieldMaterial);
+  outsideField.rotation.x = -Math.PI / 2;
+  outsideField.position.set(0, -0.085, -108);
+  outsideField.receiveShadow = true;
+  scene.add(outsideField);
+
+  const addHorizon = (
+    zPosition: number,
+    color: string,
+    profile: readonly number[],
+  ): void => {
+    const shape = new THREE.Shape();
+    shape.moveTo(-120, -2);
+    shape.lineTo(-120, profile[0] ?? 7);
+    for (let index = 1; index < profile.length; index += 1) {
+      const nextX = -120 + (240 / (profile.length - 1)) * index;
+      const previousX = -120 + (240 / (profile.length - 1)) * (index - 1);
+      const currentY = profile[index] ?? 7;
+      const previousY = profile[index - 1] ?? 7;
+      shape.quadraticCurveTo((previousX + nextX) / 2, Math.max(previousY, currentY) + 3, nextX, currentY);
+    }
+    shape.lineTo(120, -2);
+    shape.closePath();
+    const mountain = new THREE.Mesh(
+      new THREE.ShapeGeometry(shape, 32),
+      new THREE.MeshStandardMaterial({ color, roughness: 1, metalness: 0, side: THREE.DoubleSide }),
+    );
+    mountain.position.z = zPosition;
+    mountain.receiveShadow = true;
+    scene.add(mountain);
+  };
+  addHorizon(-126, '#a6b0a7', [7, 11, 8, 15, 9, 13, 7, 11, 8, 14, 7]);
+  addHorizon(-117, '#b3b59c', [4, 7, 5, 8, 6, 9, 5, 7, 4, 8, 4]);
 
   // Room grid. Every room has real walls, doorway openings, its own floor treatment, ceiling frame and purpose-specific props.
   addRoomShell({ name: 'Wareneingang & Samenarchiv', detail: 'ANNAHME · HERKUNFT · RÜCKVERFOLGBARKEIT', x: -23, z: -22, width: 16, depth: 14, type: 'intake', east: true, south: true });
@@ -1045,14 +1287,24 @@ async function boot(): Promise<() => void> {
   addStorageRack(18.9, -25.1, 4.0, 1.1, '#788887');
   addStorageRack(27.1, 16.8, 4.1, 1.0, '#8f9a8e');
   addStorageRack(18.9, 25.2, 4.0, 1.0, '#7e897f');
-  const greenhouseSoilMaterial = new THREE.MeshStandardMaterial({ color: '#45392b', roughness: 0.98 });
+  const greenhouseSoilMaterial = new THREE.MeshStandardMaterial({
+    map: greenhouseEarthTexture,
+    color: '#a99a79',
+    roughness: 0.98,
+    metalness: 0.0,
+  });
   const greenhouseIrrigationMaterial = new THREE.MeshStandardMaterial({ color: '#3b5550', roughness: 0.52, metalness: 0.28 });
   for (const bedX of [-4.8, 4.8]) {
     addBox([3.7, 0.38, 9.3], [bedX, 0.19, -22.2], woodMaterial, { collision: true });
     addBox([3.42, 0.08, 9.04], [bedX, 0.42, -22.2], greenhouseSoilMaterial, { collision: false, castShadow: false });
+    const mulch = new THREE.Mesh(new THREE.PlaneGeometry(3.24, 8.75), greenhouseMulchMaterial);
+    mulch.rotation.x = -Math.PI / 2;
+    mulch.position.set(bedX, 0.467, -22.2);
+    mulch.receiveShadow = true;
+    scene.add(mulch);
     const irrigation = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 8.7, 12), greenhouseIrrigationMaterial);
     irrigation.rotation.x = Math.PI / 2;
-    irrigation.position.set(bedX, 0.485, -22.2);
+    irrigation.position.set(bedX, 0.488, -22.2);
     scene.add(irrigation);
     for (let emitter = 0; emitter < 7; emitter += 1) {
       const nozzle = new THREE.Mesh(new THREE.SphereGeometry(0.052, 8, 6), greenhouseIrrigationMaterial);
@@ -1222,7 +1474,13 @@ async function boot(): Promise<() => void> {
           visual.userData.baseScale = visual.scale.clone(); visual.userData.roomId = statePlant.roomId;
         }
       }
-      if (visuals) for (const visual of visuals) applyPlantCareVisual(visual, statePlant);
+      if (visuals) for (const visual of visuals) {
+        const inGreenhouse = room?.definitionId === 'room-greenhouse';
+        visual.traverse((object) => {
+          if (object.userData.isPlantContainer === true) object.visible = !inGreenhouse;
+        });
+        applyPlantCareVisual(visual, statePlant);
+      }
 
       const care = getPlantCareState(statePlant);
       const targetCuttings = Math.max(0, care.cuttingsTaken - care.cuttingsSet);
