@@ -1,5 +1,7 @@
 # Projektverantwortung, Urheberrecht und Rechteverwaltung
 
+**Nutzungsumfang:** ausschließlich private, nicht-kommerzielle Nutzung durch den Projektverantwortlichen und höchstens zwei bis drei Freunde. Kein Verkauf, keine Werbung, kein Store-Release und kein Budget für kostenpflichtige Lizenzen oder Assets. Für diese private Nutzung ist `Dr. Green Dump / DopeFarm` nur ein interner Arbeitstitel; keine Aussage zur kommerziellen Markenverfügbarkeit.
+
 **Projekt-/Spielname:** Dr. Green Dump / DopeFarm  
 **Vom Auftraggeber benannter Projektverantwortlicher:** Michael Braunschweig  
 **Vorgesehene Hinweiszeile:** `Copyright © 2026 Michael Braunschweig. All rights reserved, subject to applicable law and documented third-party licenses.`
