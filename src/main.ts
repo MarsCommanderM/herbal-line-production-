@@ -547,7 +547,6 @@ async function boot(): Promise<() => void> {
   keyLight.shadow.bias = -0.00012;
   scene.add(keyLight);
 
-  const movementObstacles: THREE.Mesh[] = [];
   const tileTexture = (() => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
@@ -904,7 +903,7 @@ async function boot(): Promise<() => void> {
           new THREE.BoxGeometry(width / 3 - 0.12, 0.46, depth - 0.12),
           new THREE.MeshStandardMaterial({ color: crateColor, roughness: 0.84, metalness: 0.02 }),
         );
-        crate.position.set(x - width / 3 + (width / 3) * slot + width / 6, shelfY + 0.29, z);
+        crate.position.set(x - width / 3 + (width / 3) * slot, shelfY + 0.29, z);
         crate.castShadow = true;
         crate.receiveShadow = true;
         scene.add(crate);
@@ -997,11 +996,13 @@ async function boot(): Promise<() => void> {
       addBox([0.1, 0.55, 0.1], [ductX, 5.15, hanger], metalMaterial, { collision: false });
     }
   }
-  const northWindows = new THREE.Mesh(new THREE.BoxGeometry(14.0, 0.88, 0.1), glassMaterial);
-  northWindows.position.set(0, 3.1, -8.82);
-  scene.add(northWindows);
-  for (const windowX of [-5, -2.5, 0, 2.5, 5]) {
-    addBox([0.07, 1.05, 0.16], [windowX, 3.1, -8.82], darkMetalMaterial, { collision: false });
+  for (const windowX of [-6.2, 6.2]) {
+    const windowPane = new THREE.Mesh(new THREE.BoxGeometry(4.1, 0.88, 0.1), glassMaterial);
+    windowPane.position.set(windowX, 3.1, -8.82);
+    scene.add(windowPane);
+    for (const frameX of [-1.8, 0, 1.8]) {
+      addBox([0.055, 1.04, 0.14], [windowX + frameX, 3.1, -8.82], darkMetalMaterial, { collision: false });
+    }
   }
 
   const stationMaterial = new THREE.MeshStandardMaterial({ color: '#33465c', roughness: 0.45, metalness: 0.35 });
