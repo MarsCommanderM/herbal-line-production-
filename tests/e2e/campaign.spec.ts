@@ -8,6 +8,17 @@ import { expect, test, type Locator, type Page, type TestInfo } from '@playwrigh
 const entity = (value: string): EntityId => value as EntityId;
 const commandId = (value: string): CommandId => value as CommandId;
 
+test.beforeEach(async ({ page }, testInfo) => {
+  if (!testInfo.title.includes('@cross-browser')) return;
+  await page.addInitScript(`
+    const nativeGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+      if (typeof type === 'string' && /^(webgl2?|experimental-webgl)$/i.test(type)) return null;
+      return nativeGetContext.call(this, type, ...args);
+    };
+  `);
+});
+
 async function requireWebGLCanvas(page: Page, testInfo: TestInfo, canvas: Locator): Promise<void> {
   const graphicsFallback = page.locator('#fatal-error');
   await expect.poll(async () => (await canvas.isVisible()) || (await graphicsFallback.isVisible())).toBe(true);
@@ -36,7 +47,11 @@ function applyOk(
   return result.state;
 }
 
-async function seedCampaignSave(page: Page, state: ReturnType<typeof createInitialGameState>): Promise<void> {
+async function seedCampaignSave(
+  page: Page,
+  state: ReturnType<typeof createInitialGameState>,
+  options: { openManagement?: boolean } = {},
+): Promise<void> {
   const envelope = await createSaveEnvelope(state, '2026-10-12T12:00:00.000Z');
   const serialized = stableStringify(envelope);
   const metadata = {
@@ -68,7 +83,14 @@ async function seedCampaignSave(page: Page, state: ReturnType<typeof createIniti
     });
   }, { saveEnvelope: envelope, saveMetadata: metadata });
   await page.reload();
-  await expect(page.getByLabel('Pflanze für Pflege auswählen')).toBeVisible();
+  await expect(page.locator('#save-status')).toContainText('Autosave wiederhergestellt', { timeout: 15_000 });
+  const plantPicker = page.getByLabel('Pflanze für Pflege auswählen');
+  if (options.openManagement ?? true) {
+    if (!(await plantPicker.isVisible())) await page.locator('#toggle-game-panel').click();
+    await expect(plantPicker).toBeVisible();
+  } else {
+    await expect(plantPicker).toBeHidden();
+  }
 }
 
 test('new campaign starts with seed intake and creates a visible greenhouse plant after inspection', async ({ page }) => {
@@ -186,9 +208,11 @@ test('third-person player can leave the production room and enter the greenhouse
 
   // Cross the production aisle to the central doorway, then enter the greenhouse.
   await page.keyboard.down('d');
-  await page.waitForTimeout(2000);
+  await expect.poll(
+    async () => Math.abs(Number(await worldCanvas.getAttribute('data-player-x'))),
+    { timeout: 12_000, intervals: [50, 100, 150] },
+  ).toBeLessThan(1.1);
   await page.keyboard.up('d');
-  await expect.poll(async () => Math.abs(Number(await worldCanvas.getAttribute('data-player-x')))).toBeLessThan(1.1);
 
   await page.keyboard.down('w');
   await expect.poll(async () => await worldCanvas.getAttribute('data-room-id'), { timeout: 15000 }).toBe('greenhouse');
@@ -234,7 +258,7 @@ test('management remains usable when WebGL initialization fails @cross-browser',
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1', { timeout: 15_000 });
 });
 
-test('campaign controls run a step and restore a saved state', async ({ page }) => {
+test('campaign controls run a step and restore a saved state @cross-browser', async ({ page }) => {
   await seedCampaignSave(page, createInitialGameState());
   await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
@@ -338,7 +362,7 @@ test('all visible plant-care settings and actions persist through autosave and r
 });
 
 
-test('suspended license blocks direct plant care without changing the saved campaign', async ({ page }) => {
+test('suspended license blocks direct plant care without changing the saved campaign @cross-browser', async ({ page }) => {
   const initial = createInitialGameState();
   const suspended = {
     ...initial,
@@ -356,7 +380,7 @@ test('suspended license blocks direct plant care without changing the saved camp
   await expect(waterButton).toHaveAttribute('aria-pressed', 'false');
 });
 
-test('suspended license blocks delivery dispatch without reserving or posting anything new', async ({ page }) => {
+test('suspended license blocks delivery dispatch without reserving or posting anything new @cross-browser', async ({ page }) => {
   let state = createInitialGameState();
   state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
   state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
@@ -407,7 +431,7 @@ test('suspended license blocks delivery dispatch without reserving or posting an
   await expect(page.getByRole('button', { name: 'Lieferung versenden', exact: true })).toBeDisabled();
 });
 
-test('held inventory cannot be allocated to a pharmacy order', async ({ page }) => {
+test('held inventory cannot be allocated to a pharmacy order @cross-browser', async ({ page }) => {
   let state = createInitialGameState();
   state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
   state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
@@ -436,7 +460,7 @@ test('held inventory cannot be allocated to a pharmacy order', async ({ page }) 
   await expect(page.getByRole('button', { name: 'Freigegebenen Bestand reservieren', exact: true })).toHaveCount(0);
 });
 
-test('rejects corrupt primary and backup saves without loading corrupted campaign state', async ({ page }) => {
+test('rejects corrupt primary and backup saves without loading corrupted campaign state @cross-browser', async ({ page }) => {
   await seedCampaignSave(page, createInitialGameState());
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
@@ -480,7 +504,7 @@ test('rejects corrupt primary and backup saves without loading corrupted campaig
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toHaveCount(0);
 });
 
-test('autosave survives reload and corrupt primary recovers the last valid backup', async ({ page }) => {
+test('autosave survives reload and corrupt primary recovers the last valid backup @cross-browser', async ({ page }) => {
   await seedCampaignSave(page, createInitialGameState());
   await page.getByRole('button', { name: 'Simulationsschritt ausführen' }).click();
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
@@ -516,7 +540,7 @@ test('autosave survives reload and corrupt primary recovers the last valid backu
   await expect(page.getByRole('button', { name: 'Batch erstellen' })).toHaveCount(0);
 });
 
-test('exported saves can be imported after a later campaign change', async ({ page }) => {
+test('exported saves can be imported after a later campaign change @cross-browser', async ({ page }) => {
   await seedCampaignSave(page, createInitialGameState());
   const saveButton = page.getByRole('button', { name: 'Spielstand speichern' });
   await expect(saveButton).toBeEnabled();
@@ -592,7 +616,7 @@ test('importing an older save removes stale propagated plant and cutting visuals
   await expect.poll(async () => Number(await canvas.getAttribute('data-cutting-visual-count'))).toBe(0);
 });
 
-test('failed or unresolved QC offers a documented terminal rejection instead of a dead end', async ({ page }) => {
+test('failed or unresolved QC offers a documented terminal rejection instead of a dead end @cross-browser', async ({ page }) => {
   let state = createInitialGameState();
   state = {
     ...state,
@@ -646,7 +670,7 @@ test('failed or unresolved QC offers a documented terminal rejection instead of 
   await expect(page.locator('#game-log')).toContainText('BATCH REJECTED');
 });
 
-test('suspended license disables queueing and preserves the created batch', async ({ page }) => {
+test('suspended license disables queueing and preserves the created batch @cross-browser', async ({ page }) => {
   let state = createInitialGameState();
   state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
   state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
@@ -692,7 +716,7 @@ test('suspended license disables queueing and preserves the created batch', asyn
   expect(persisted).toEqual({ revision: state.revision, batchStatus: 'created', roomOccupancy: 0 });
 });
 
-test('explicit operation hold disables the affected action while leaving unrelated actions available', async ({ page }) => {
+test('explicit operation hold disables the affected action while leaving unrelated actions available @cross-browser', async ({ page }) => {
   let state = createInitialGameState();
   state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
   state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
@@ -710,7 +734,7 @@ test('explicit operation hold disables the affected action while leaving unrelat
   await expect(page.getByRole('button', { name: 'Tag abschließen' })).toBeEnabled();
 });
 
-test('idle campaign is periodically autosaved at the configured interval', async ({ page }) => {
+test('idle campaign is periodically autosaved at the configured interval @cross-browser', async ({ page }) => {
   await page.clock.install();
   await page.goto('/');
   const documentRoot = page.locator('html');
@@ -721,7 +745,7 @@ test('idle campaign is periodically autosaved at the configured interval', async
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
 });
 
-test('keyboard navigation reaches primary controls in a predictable order', async ({ page }, testInfo) => {
+test('keyboard navigation reaches primary controls in a predictable order @cross-browser', async ({ page }, testInfo) => {
   await page.goto('/');
   // Focus the first control explicitly; Firefox also tabs to its scrollable management landmark.
   await page.locator('#reset-camera').focus();
@@ -730,8 +754,11 @@ test('keyboard navigation reaches primary controls in a predictable order', asyn
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toHaveAttribute('id', 'game-panel');
   }
-  const expectedIds = ['save-game', 'load-game', 'export-game', 'import-game'];
-  for (const id of expectedIds) {
+  for (const id of ['toggle-game-panel', 'gamepad-hint']) {
+    await page.keyboard.press('Tab');
+    await expect(page.locator(':focus')).toHaveAttribute('id', id);
+  }
+  for (const id of ['save-game', 'load-game', 'export-game', 'import-game']) {
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toHaveAttribute('id', id);
   }
@@ -744,7 +771,7 @@ test('keyboard navigation reaches primary controls in a predictable order', asyn
 
 test('mobile starts immersive; management opens and closes as a drawer without overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedCampaignSave(page, createInitialGameState());
+  await seedCampaignSave(page, createInitialGameState(), { openManagement: false });
   await expect(page.getByRole('heading', { name: 'Dr. Green Dump / DopeFarm' })).toBeHidden();
   await expect(page.locator('#world-root canvas')).toBeVisible();
   const menu = page.getByRole('button', { name: 'Management öffnen' });
@@ -784,7 +811,7 @@ test('mobile starts immersive; management opens and closes as a drawer without o
   await expect(page.locator('#campaign-guidance')).toContainText('Nächster Prozessschritt bereit');
 });
 
-test('live status semantics and reduced-motion preferences are respected', async ({ page }) => {
+test('live status semantics and reduced-motion preferences are respected @cross-browser', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await expect(page.locator('#campaign-guidance')).toHaveAttribute('aria-live', 'polite');
@@ -793,8 +820,8 @@ test('live status semantics and reduced-motion preferences are respected', async
   expect(animationName).toBe('none');
 });
 
-test('facility controls enforce staffing roles and complete abstract machine maintenance', async ({ page }) => {
-  await page.goto('/');
+test('facility controls enforce staffing roles and complete abstract machine maintenance @cross-browser', async ({ page }) => {
+  await seedCampaignSave(page, createInitialGameState());
   await expect(page.getByRole('button', { name: 'Spielstation warten' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Mara Weiss: Verarbeitung zuweisen' })).toBeVisible();
 
@@ -817,8 +844,8 @@ test('facility controls enforce staffing roles and complete abstract machine mai
 });
 
 
-test('end-of-day settlement updates the campaign clock, ledger and autosave', async ({ page }) => {
-  await page.goto('/');
+test('end-of-day settlement updates the campaign clock, ledger and autosave @cross-browser', async ({ page }) => {
+  await seedCampaignSave(page, createInitialGameState());
   await expect(page.locator('#game-metrics')).toContainText('Tageskosten');
   await expect(page.locator('#game-metrics')).toContainText('Reichweite (0 € Umsatz)');
   await expect(page.locator('#game-metrics')).toContainText('30-Tage-Szenario (0 € Umsatz)');
@@ -836,7 +863,7 @@ test('end-of-day settlement updates the campaign clock, ledger and autosave', as
 });
 
 
-test('unconfigured upgrade IDs remain unavailable until balance rules are approved', async ({ page }) => {
+test('unconfigured upgrade IDs remain unavailable until balance rules are approved @cross-browser', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#game-actions')).toContainText('Upgrades derzeit nicht verfügbar');
   await expect(page.locator('#game-actions')).toContainText('sensor_pack_1');
@@ -848,7 +875,7 @@ test('unconfigured upgrade IDs remain unavailable until balance rules are approv
   await expect(page.locator('#game-actions')).toContainText('drying_rack_1');
 });
 
-test('full browser campaign loop delivers once and restores the ledger after reload', async ({ page }) => {
+test('full browser campaign loop delivers once and restores the ledger after reload @cross-browser', async ({ page }) => {
   test.setTimeout(90_000);
   await seedCampaignSave(page, createInitialGameState());
   await expect(page.locator('#campaign-tutorial')).toContainText('Schritt 1 von 6');
@@ -928,8 +955,8 @@ test('campaign interface has no WCAG 2.1/2.2 A/AA axe violations', async ({ page
   expect(violations, JSON.stringify(violations, null, 2)).toEqual([]);
 });
 
-test('compliance incident, corrective action and audit lifecycle is visible and survives reload', async ({ page }) => {
-  await page.goto('/');
+test('compliance incident, corrective action and audit lifecycle is visible and survives reload @cross-browser', async ({ page }) => {
+  await seedCampaignSave(page, createInitialGameState());
   await page.getByRole('button', { name: 'Abweichung dokumentieren', exact: true }).click();
   await page.getByRole('button', { name: 'Korrekturmaßnahme erfassen', exact: true }).click();
   await page.getByRole('button', { name: 'Korrekturmaßnahme einreichen', exact: true }).click();

@@ -178,7 +178,7 @@ async function autosaveCampaign(): Promise<void> {
 }
 
 async function saveCampaign(): Promise<void> {
-  if (persistenceBusy) return;
+  await waitForPersistenceIdle();
   beginPersistence();
   let feedback: { level: 'success' | 'error'; message: string } | null = null;
   let status: { level: 'success' | 'error'; message: string } | null = null;
@@ -222,7 +222,7 @@ async function applyLoadedSave(): Promise<void> {
 }
 
 async function loadCampaign(): Promise<void> {
-  if (persistenceBusy) return;
+  await waitForPersistenceIdle();
   beginPersistence();
   try {
     await applyLoadedSave();
@@ -1598,6 +1598,8 @@ async function boot(): Promise<() => void> {
     renderer.domElement.dataset.cuttingVisualCount = String([...cuttingVisuals.values()].reduce((sum, visuals) => sum + visuals.length, 0));
   }
 
+  onGameStateChanged = () => syncPlantVisuals(gameState);
+
   const ui = new Application();
   await ui.init({
     backgroundAlpha: 0,
@@ -1892,8 +1894,9 @@ async function boot(): Promise<() => void> {
     const primaryPlantVisual = primaryPlantId ? plantVisuals.get(primaryPlantId)?.[0] : undefined;
     if (primaryPlantVisual) {
       const projectedPlant = primaryPlantVisual.getWorldPosition(new THREE.Vector3()).project(camera);
-      renderer.domElement.dataset.interactablePlantX = ((projectedPlant.x + 1) * 0.5 * renderer.domElement.clientWidth).toFixed(1);
-      renderer.domElement.dataset.interactablePlantY = ((1 - projectedPlant.y) * 0.5 * renderer.domElement.clientHeight).toFixed(1);
+      const canvasBounds = renderer.domElement.getBoundingClientRect();
+      renderer.domElement.dataset.interactablePlantX = ((projectedPlant.x + 1) * 0.5 * canvasBounds.width).toFixed(1);
+      renderer.domElement.dataset.interactablePlantY = ((1 - projectedPlant.y) * 0.5 * canvasBounds.height).toFixed(1);
     }
     renderer.render(scene, camera);
   });
