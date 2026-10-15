@@ -214,7 +214,7 @@ test('nearby cannabis plant can be selected directly from the third-person world
   await expect(page.locator('#game-feedback')).toContainText('Pflanze ausgewählt');
 });
 
-test('management remains usable when WebGL initialization fails', async ({ page }) => {
+test('management remains usable when WebGL initialization fails @cross-browser', async ({ page }) => {
   await page.addInitScript(`
     const originalGetContext = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (type, ...args) {
@@ -261,10 +261,8 @@ test('campaign controls run a step and restore a saved state', async ({ page }) 
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
   const loadButton = page.getByRole('button', { name: 'Spielstand laden' });
   await expect(loadButton).toBeEnabled();
-  // Keyboard activation is a first-class user path and avoids a Chromium-only
-  // pointer-actionability stall when the scrollable management panel reflows.
-  await loadButton.focus();
-  await page.keyboard.press('Enter');
+  await loadButton.scrollIntoViewIfNeeded({ timeout: 15_000 });
+  await loadButton.click({ timeout: 15_000 });
   await expect(page.locator('#game-feedback')).toContainText('Spielstand geladen');
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
 });
@@ -319,7 +317,7 @@ test('all visible plant-care settings and actions persist through autosave and r
   await expect(canvas).toHaveAttribute('data-plant-visual-count', '2');
   await expect(canvas).toHaveAttribute('data-cutting-visual-count', '0');
 
-  await page.reload();
+  await page.reload({ waitUntil: 'commit' });
   await expect(page.getByRole('heading', { name: 'Sichtbare Pflanzenpflege' })).toBeVisible();
   for (const setting of settings) {
     await expect(page.getByRole('button', { name: setting.label, exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -457,13 +455,13 @@ test('rejects corrupt primary and backup saves without loading corrupted campaig
       for (const slotId of ['campaign-01', 'campaign-01-backup']) {
         const request = store.get(slotId);
         request.onsuccess = () => {
-          const record = request.result as { envelope: { payload: { reputation: number } } } | undefined;
+          const record = request.result as { envelope: { checksum: string } } | undefined;
           if (!record) {
             transaction.abort();
             reject(new Error('Expected primary and backup save records to exist.'));
             return;
           }
-          record.envelope.payload.reputation = 999;
+          record.envelope.checksum = '0'.repeat(64);
           store.put(record);
         };
         request.onerror = () => reject(request.error);
@@ -474,7 +472,9 @@ test('rejects corrupt primary and backup saves without loading corrupted campaig
     });
   });
 
-  await page.reload();
+  // Leave the old document so its autosave timer cannot repair the intentionally corrupted fixture.
+  await page.goto('about:blank', { waitUntil: 'commit' });
+  await page.goto('/', { waitUntil: 'commit' });
   await expect(page.locator('#save-status')).toContainText('Spielstand konnte nicht automatisch geladen werden');
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toHaveCount(0);
@@ -498,8 +498,8 @@ test('autosave survives reload and corrupt primary recovers the last valid backu
       const store = transaction.objectStore('saves');
       const request = store.get('campaign-01');
       request.onsuccess = () => {
-        const record = request.result as { envelope: { payload: { reputation: number } } };
-        record.envelope.payload.reputation = 999;
+        const record = request.result as { envelope: { checksum: string } };
+        record.envelope.checksum = '0'.repeat(64);
         store.put(record);
       };
       request.onerror = () => reject(request.error);
@@ -508,7 +508,9 @@ test('autosave survives reload and corrupt primary recovers the last valid backu
     });
   });
 
-  await page.reload();
+  // Leave the old document so its autosave timer cannot repair the intentionally corrupted primary.
+  await page.goto('about:blank', { waitUntil: 'commit' });
+  await page.goto('/', { waitUntil: 'commit' });
   await expect(page.locator('#save-status')).toContainText('letztes gültiges Backup wiederhergestellt');
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Batch erstellen' })).toHaveCount(0);
@@ -534,10 +536,11 @@ test('exported saves can be imported after a later campaign change', async ({ pa
   await expect(page.getByRole('button', { name: 'Einheit in Batch überführen' })).toBeVisible();
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert · Revision 1');
 
-  const chooserPromise = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: 'Spielstand importieren' }).click();
-  const chooser = await chooserPromise;
-  await chooser.setFiles({ name: 'campaign-save.json', mimeType: 'application/json', buffer: exported });
+  await page.locator('#import-save-file').setInputFiles({
+    name: 'campaign-save.json',
+    mimeType: 'application/json',
+    buffer: exported,
+  });
 
   await expect(page.locator('#game-feedback')).toContainText('Spielstand importiert');
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();

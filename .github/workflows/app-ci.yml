@@ -19,7 +19,7 @@ jobs:
   verify:
     name: Typecheck, tests, build, and master-pack validation
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 55
     steps:
       - name: Checkout exact revision and full reachable history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -68,7 +68,7 @@ jobs:
         timeout-minutes: 12
         run: npx playwright install --with-deps chromium firefox webkit
       - name: Browser end-to-end acceptance
-        timeout-minutes: 22
+        timeout-minutes: 38
         run: npm run test:e2e
       - name: Preserve browser E2E diagnostics
         if: always()

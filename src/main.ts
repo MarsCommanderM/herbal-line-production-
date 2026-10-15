@@ -495,7 +495,7 @@ async function boot(): Promise<() => void> {
   const avatar = new THREE.Group();
   avatar.name = 'third-person-player';
   const startsWithExistingPlants = gameState.plants.length > 0;
-  avatar.position.set(startsWithExistingPlants ? -7 : -17.2, 0, startsWithExistingPlants ? -6.2 : -22);
+  avatar.position.set(startsWithExistingPlants ? -7.5 : -17.2, 0, startsWithExistingPlants ? -7.5 : -22);
   avatar.rotation.y = startsWithExistingPlants ? 0 : -Math.PI / 2;
   avatar.userData.isPlayerAvatar = true;
   const workShirt = new THREE.MeshStandardMaterial({ color: '#92958f', roughness: 0.88 });
@@ -580,7 +580,10 @@ async function boot(): Promise<() => void> {
   scene.add(avatar);
 
   const movementKeys = new Set<string>();
-  const movementObstacles: THREE.Mesh[] = [];
+  const movementObstacles: THREE.Box3[] = [];
+  const registerMovementObstacle = (mesh: THREE.Mesh): void => {
+    movementObstacles.push(new THREE.Box3().setFromObject(mesh));
+  };
   const cameraTargetOffset = new THREE.Vector3(0, 1.2, 0);
   const previousAvatarPosition = avatar.position.clone();
   const movementForward = new THREE.Vector3();
@@ -1016,7 +1019,7 @@ async function boot(): Promise<() => void> {
     mesh.castShadow = options.castShadow ?? true;
     mesh.receiveShadow = options.receiveShadow ?? true;
     scene.add(mesh);
-    if (options.collision) movementObstacles.push(mesh);
+    if (options.collision) registerMovementObstacle(mesh);
     return mesh;
   };
 
@@ -1387,7 +1390,7 @@ async function boot(): Promise<() => void> {
   propagationSurface.castShadow = true;
   propagationSurface.receiveShadow = true;
   scene.add(propagationSurface);
-  movementObstacles.push(propagationSurface);
+  registerMovementObstacle(propagationSurface);
 
   const benchLegGeometry = new THREE.BoxGeometry(0.08, 0.43, 0.08);
   const benchLegs = new THREE.InstancedMesh(benchLegGeometry, darkMetalMaterial, 48);
@@ -1404,7 +1407,7 @@ async function boot(): Promise<() => void> {
       station.castShadow = true;
       station.receiveShadow = true;
       scene.add(station);
-      movementObstacles.push(station);
+      registerMovementObstacle(station);
       for (const legX of [x - 1.55, x + 1.55]) {
         for (const legZ of [z - 0.96, z + 0.96]) {
           benchLegTransform.position.set(legX, 0.215, legZ);
@@ -1829,16 +1832,13 @@ async function boot(): Promise<() => void> {
       candidate.x = THREE.MathUtils.clamp(candidate.x, -35.0, 35.0);
       candidate.z = THREE.MathUtils.clamp(candidate.z, -31.0, 31.8);
       const avatarRadius = 0.32;
-      let blocked = false;
-      for (const obstacle of movementObstacles) {
-        const bounds = new THREE.Box3().setFromObject(obstacle);
-        if (candidate.x + avatarRadius > bounds.min.x && candidate.x - avatarRadius < bounds.max.x &&
-            candidate.z + avatarRadius > bounds.min.z && candidate.z - avatarRadius < bounds.max.z) {
-          blocked = true;
-          break;
-        }
-      }
-      if (!blocked) avatar.position.copy(candidate);
+      const isBlockedAt = (x: number, z: number): boolean => movementObstacles.some((bounds) =>
+        x + avatarRadius > bounds.min.x && x - avatarRadius < bounds.max.x &&
+        z + avatarRadius > bounds.min.z && z - avatarRadius < bounds.max.z,
+      );
+      // Resolve axes independently so the character slides around bench corners instead of sticking on diagonal contact.
+      if (!isBlockedAt(candidate.x, avatar.position.z)) avatar.position.x = candidate.x;
+      if (!isBlockedAt(avatar.position.x, candidate.z)) avatar.position.z = candidate.z;
       avatar.rotation.y = Math.atan2(-movementVector.x, -movementVector.z);
       walkPhase += delta * 8;
       leftLeg.rotation.x = Math.sin(walkPhase) * 0.42;
