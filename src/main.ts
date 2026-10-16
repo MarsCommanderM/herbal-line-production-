@@ -496,7 +496,10 @@ async function boot(): Promise<() => void> {
   avatar.name = 'third-person-player';
   const startsWithExistingPlants = gameState.plants.length > 0;
   avatar.position.set(startsWithExistingPlants ? -7.5 : -17.2, 0, startsWithExistingPlants ? -7.5 : -22);
-  avatar.rotation.y = startsWithExistingPlants ? 0 : -Math.PI / 2;
+  avatar.rotation.y = 0;
+  camera.position.set(avatar.position.x, avatar.position.y + 3.2, avatar.position.z + 6);
+  controls.target.copy(avatar.position);
+  camera.lookAt(controls.target);
   avatar.userData.isPlayerAvatar = true;
   const workShirt = new THREE.MeshStandardMaterial({ color: '#92958f', roughness: 0.88 });
   const workVest = new THREE.MeshStandardMaterial({ color: '#707671', roughness: 0.82 });
@@ -584,7 +587,7 @@ async function boot(): Promise<() => void> {
   const registerMovementObstacle = (mesh: THREE.Mesh): void => {
     movementObstacles.push(new THREE.Box3().setFromObject(mesh));
   };
-  const cameraTargetOffset = new THREE.Vector3(0, 1.2, 0);
+  const cameraTargetOffset = new THREE.Vector3(0, 0.6, 0);
   const previousAvatarPosition = avatar.position.clone();
   const movementForward = new THREE.Vector3();
   const movementRight = new THREE.Vector3();
