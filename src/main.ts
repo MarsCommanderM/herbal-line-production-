@@ -470,8 +470,8 @@ async function boot(): Promise<() => void> {
   camera.lookAt(0, 0, 0);
 
   const automatedRenderProfile = window.navigator.webdriver === true;
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, automatedRenderProfile ? 1 : 2));
+  const renderer = new THREE.WebGLRenderer({ antialias: !automatedRenderProfile, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, automatedRenderProfile ? 0.5 : 2));
   renderer.shadowMap.enabled = !automatedRenderProfile;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1517,7 +1517,7 @@ async function boot(): Promise<() => void> {
           const side = roomIndex % 2 === 0 ? -0.72 : 0.72;
           return new THREE.Vector3((bed === 0 ? -4.8 : 4.8) + side, 0.47, -25.3 + Math.floor(roomIndex / 4) * 2.1);
         }
-        if (room?.definitionId === 'room-production') return new THREE.Vector3(-7.5 + (roomIndex % 4) * 5, 0.52, -4.5 + Math.floor(roomIndex / 4) * 4.2);
+        if (room?.definitionId === 'room-production') return new THREE.Vector3(-8.0 + (roomIndex % 4) * 5, 0.52, -4.5 + Math.floor(roomIndex / 4) * 4.2);
         return new THREE.Vector3(0, 0.45, 0);
       };
       const visualScale = statePlant.propagatedFromPlantId ? 0.34 : room?.definitionId === 'room-greenhouse' ? 0.82 : 0.70;
@@ -1603,7 +1603,7 @@ async function boot(): Promise<() => void> {
   const ui = new Application();
   await ui.init({
     backgroundAlpha: 0,
-    antialias: true,
+    antialias: !automatedRenderProfile,
     autoDensity: true,
     resolution: Math.min(window.devicePixelRatio || 1, automatedRenderProfile ? 1 : 1.75),
     resizeTo: uiRoot,
@@ -1781,13 +1781,6 @@ async function boot(): Promise<() => void> {
       updateGamepadHint(gamepadFrame.connected);
       renderer.domElement.dataset.gamepadConnected = String(gamepadFrame.connected);
     }
-    // Test mode still samples controller buttons each frame but limits expensive world updates to 30 Hz.
-    // Real gameplay runs at the browser's normal animation cadence.
-    if (automatedRenderProfile) {
-      const now = performance.now();
-      if (now - lastAutomatedRenderMs < 33) return;
-      lastAutomatedRenderMs = now;
-    }
     const pressedThisUpdate = new Set(pendingGamepadButtonPresses);
     pendingGamepadButtonPresses.clear();
     if (pressedThisUpdate.has(GAMEPAD_BUTTON.dpadUp)) focusNextGameControl(-1);
@@ -1898,7 +1891,15 @@ async function boot(): Promise<() => void> {
       renderer.domElement.dataset.interactablePlantX = ((projectedPlant.x + 1) * 0.5 * canvasBounds.width).toFixed(1);
       renderer.domElement.dataset.interactablePlantY = ((1 - projectedPlant.y) * 0.5 * canvasBounds.height).toFixed(1);
     }
-    renderer.render(scene, camera);
+    if (!automatedRenderProfile) {
+      renderer.render(scene, camera);
+    } else {
+      const now = performance.now();
+      if (now - lastAutomatedRenderMs >= 100) {
+        lastAutomatedRenderMs = now;
+        renderer.render(scene, camera);
+      }
+    }
   });
 
   return () => {

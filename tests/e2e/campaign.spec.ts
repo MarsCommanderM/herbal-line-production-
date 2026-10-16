@@ -124,9 +124,9 @@ test('third-person avatar moves with keyboard and camera target follows', async 
   const worldCanvas = page.locator('#world-root canvas');
   await requireWebGLCanvas(page, testInfo, worldCanvas);
   await expect(worldCanvas).toHaveAttribute('data-third-person', 'true');
-  const initialX = Number(await worldCanvas.getAttribute('data-player-x'));
+  const initialZ = Number(await worldCanvas.getAttribute('data-player-z'));
   await page.keyboard.down('w');
-  await expect.poll(async () => Number(await worldCanvas.getAttribute('data-player-x'))).not.toBe(initialX);
+  await expect.poll(async () => Number(await worldCanvas.getAttribute('data-player-z'))).not.toBe(initialZ);
   await page.keyboard.up('w');
   await expect(worldCanvas).toHaveAttribute('data-camera-target-x', /.+/);
   await expect(worldCanvas).toHaveAttribute('data-camera-target-z', /.+/);
@@ -573,7 +573,7 @@ test('exported saves can be imported after a later campaign change @cross-browse
 
 
 test('importing an older save removes stale propagated plant and cutting visuals', async ({ page }, testInfo) => {
-  await page.goto('/');
+  await seedCampaignSave(page, createInitialGameState());
   const canvas = page.locator('#world-root canvas');
   await requireWebGLCanvas(page, testInfo, canvas);
 
@@ -745,20 +745,13 @@ test('idle campaign is periodically autosaved at the configured interval @cross-
   await expect(page.locator('#save-status')).toContainText('Autosave gespeichert');
 });
 
-test('keyboard navigation reaches primary controls in a predictable order @cross-browser', async ({ page }, testInfo) => {
+test('keyboard navigation reaches primary controls in a predictable order @cross-browser', async ({ page }) => {
   await page.goto('/');
-  // Focus the first control explicitly; Firefox also tabs to its scrollable management landmark.
+  // Assert the actual DOM tab order so controller, keyboard, and screen-reader users share a reliable path.
   await page.locator('#reset-camera').focus();
   await expect(page.locator(':focus')).toHaveAttribute('id', 'reset-camera');
-  if (testInfo.project.name === 'firefox') {
-    await page.keyboard.press('Tab');
-    await expect(page.locator(':focus')).toHaveAttribute('id', 'game-panel');
-  }
-  for (const id of ['toggle-game-panel', 'gamepad-hint']) {
-    await page.keyboard.press('Tab');
-    await expect(page.locator(':focus')).toHaveAttribute('id', id);
-  }
-  for (const id of ['save-game', 'load-game', 'export-game', 'import-game']) {
+
+  for (const id of ['toggle-game-panel', 'gamepad-hint', 'close-game-panel', 'save-game', 'load-game', 'export-game', 'import-game']) {
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toHaveAttribute('id', id);
   }
