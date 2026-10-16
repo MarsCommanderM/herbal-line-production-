@@ -1,14 +1,14 @@
-# Game Vision & Game Design Document
+# Dr. Green Dump / DopeFarm — Game Vision & Game Design Document
 
 ## High Concept
 
-Ein strategisches Management-/Tycoon-Spiel über den Betrieb einer streng regulierten botanischen Anlage. Der Spieler leitet einen kleinen Betrieb und entwickelt ihn zu einem zuverlässigen, dokumentationsstarken Anbieter für fiktive institutionelle Kunden.
+Ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert den Anbau und sichtbare, ausführliche Pflege direkt an erkennbaren Cannabis-Pflanzen, simulierte Verarbeitung, Qualitätssicherung, Lager, Logistik und Auslieferung an fiktive Apothekenkunden. Apothekeninterne Abläufe sind nicht Teil des Spiels.
 
 ## Genre, Plattform, Perspektive
 
 - Genre: Management, Operations Simulation, Tycoon, leichtes Zeitmanagement.
 - Plattform: moderner Desktop-Browser als Primärziel; responsive Managementansicht auf kleineren Displays, wenn Lesbarkeit erhalten bleibt.
-- Weltansicht: schwenk- und zoombare isometrische/taktische 3D-Kamera, Raumfokus und Detailansichten.
+- Weltansicht: verbindliche Third Person 3D-Perspektive mit sichtbarer, steuerbarer Spielfigur innerhalb der Anlage; die Kamera folgt hinter/oberhalb der Figur. Bewegung erfolgt über WASD/Pfeiltasten; Pflanzenaktionen werden direkt aus der Weltansicht und nur innerhalb der Interaktionsreichweite ausgelöst.
 - UI: Operations-Dashboard mit HUD, Dock/Sidebar, Datenpanels, Produktionspipeline und Ereigniszentrum.
 - Single-player, lokale Save-Kampagne. Multiplayer/Cloud-Sync sind keine Release-Abhängigkeit.
 
@@ -36,7 +36,7 @@ Die erste Kampagne startet mit einem kleinen Betriebsbereich, begrenzter Kapazit
 
 ## Production-quality Vertical Slice
 
-Ein kompletter, auf finaler Architektur und finaler visueller Richtung beruhender Spielablauf: Produktionsraum, Lagerbereich, QC, ein fiktiver institutioneller Kunde, eine Charge mit vollständigen Statusübergängen, QC-Ergebnis, Bestellung, Reservierung, Lieferung, Auszahlung, Compliance-Protokoll, Save/Load und Tagesauswertung. Kein Blockout, keine Attrappen.
+Ein kompletter, auf finaler Architektur und finaler visueller Richtung beruhender Spielablauf: Produktionsraum, Lagerbereich, QC, ein fiktiver Apothekenkunde, eine Charge mit vollständigen Statusübergängen, QC-Ergebnis, Bestellung, Reservierung, Lieferung, Auszahlung, Compliance-Protokoll, Save/Load und Tagesauswertung. Kein Blockout, keine Attrappen.
 
 ## Release-Inhalt
 
@@ -69,3 +69,8 @@ Erfolg misst sich an stabiler Auslastung, QC-Erstbestehensquote, vollständiger 
 ## Tonalität
 
 Professionell, präzise, ruhig und leicht futuristisch. Die Spielwelt ist eine fiktive lizenzierte medizinische Einrichtung; sie belohnt Planung, Qualität und nachvollziehbare Abläufe.
+
+
+## Verbindliche Pflanzenpflege und Sichtbarkeit
+
+Die Pflanzenwelt ist eindeutig als medizinische Cannabis-Pflanzenproduktion erkennbar. Der Spieler führt Pflegehandlungen sichtbar an einzelnen Pflanzen oder Pflanzengruppen aus; Aktionen dürfen nicht ausschließlich in abstrakten Menüs stattfinden. Die Interaktionen umfassen im Spiel Bewässerung, Beleuchtung, Klima-/Luftfeuchtigkeitsmanagement, Nährstoffversorgung, Beschneiden und Stecklingsmanagement. Jeder Vorgang besitzt sichtbares Feedback am Pflanzenzustand, eine nachvollziehbare Spielwirkung und fiktive, ausdrücklich nicht reale Balancewerte. Es werden keine realen Anbau-Sollwerte oder Produktionsrezepte verwendet.

@@ -1,34 +1,57 @@
-name: Herbal Line CI
+name: Dr. Green Dump / DopeFarm CI
 
 on:
   push:
-    branches: ["**"]
+    branches: ["main"]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: herbal-line-ci-${{ github.ref }}
+  group: dr-green-dump-dopefarm-ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   verify:
     name: Typecheck, tests, build, and master-pack validation
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 55
     steps:
-      - name: Checkout exact revision
+      - name: Checkout exact revision and full reachable history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22.16.0"
           cache: npm
+      - name: Scan reachable Git history for high-confidence credential patterns
+        run: npm run scan:secrets
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
+      - name: Generate complete third-party license notices for the distributable build
+        run: node scripts/generate-third-party-notices.mjs
+      - name: Audit all locked dependency advisories
+        run: npm audit
+      - name: Generate CycloneDX SBOM and verify dependency license metadata
+        run: |
+          npm sbom --sbom-format=cyclonedx > "$RUNNER_TEMP/dopefarm-sbom.cdx.json"
+          node scripts/generate-dependency-license-inventory.mjs "$RUNNER_TEMP/dopefarm-sbom.cdx.json" > "$RUNNER_TEMP/dopefarm-dependency-license-inventory.md"
+          diff -u rights/DEPENDENCY_LICENSE_INVENTORY.md "$RUNNER_TEMP/dopefarm-dependency-license-inventory.md"
+      - name: Upload CycloneDX SBOM and license inventory
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dopefarm-sbom-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/dopefarm-sbom.cdx.json
+            ${{ runner.temp }}/dopefarm-dependency-license-inventory.md
+          if-no-files-found: error
+          retention-days: 30
       - name: Source policy lint
         run: npm run lint
       - name: Format check
@@ -39,13 +62,47 @@ jobs:
         run: npm test
       - name: Production build
         run: npm run build
-      - name: Install Chromium, Firefox, and WebKit for browser tests
+      - name: Verify distributable third-party notices are present
+        run: test -s dist/THIRD_PARTY_NOTICES.txt
+      - name: Install Chromium, Firefox, and WebKit system dependencies and browsers
+        timeout-minutes: 12
         run: npx playwright install --with-deps chromium firefox webkit
       - name: Browser end-to-end acceptance
+        timeout-minutes: 38
         run: npm run test:e2e
+      - name: Preserve browser E2E diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dopefarm-e2e-diagnostics-${{ github.sha }}
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Serve production build and smoke-test assets
         run: npm run smoke:preview
       - name: Validate master-pack documents and JSON
         run: npm run validate:masterpack
+      - name: Verify preserved original Master Pack source snapshot
+        run: npm run verify:masterpack-source
+      - name: Validate active product policy and visible-care contract
+        run: npm run validate:product-policy
       - name: Check whitespace
         run: git diff --check
+      - name: Generate and verify SHA-256 manifest for production build
+        if: success()
+        run: |
+          test -d dist
+          find dist -type f -print0 | sort -z | xargs -0 sha256sum > dist.sha256
+          sha256sum -c dist.sha256
+      - name: Upload verified engineering build
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dopefarm-verified-build-${{ github.sha }}
+          path: |
+            dist/
+            dist.sha256
+          if-no-files-found: error
+          retention-days: 30

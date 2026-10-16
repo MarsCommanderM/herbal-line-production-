@@ -1,39 +1,77 @@
-# Master Pack Parity Audit — 2026-10-12
+# Master-Pack-Parität und Produkt-Scope-Entscheidung — 2026-10-12
 
-## Result
+## Verbindliche Produktwahrheit
 
-**The current application branch is not a byte-for-byte mirror of the supplied ZIP.** This is measured and intentional; do not describe it as exact synchronization.
+Die aktuelle, ausdrücklich bestätigte Produktvorgabe des Auftraggebers lautet **Dr. Green Dump / DopeFarm**. Die Spielbeschreibung ist:
 
-- Archive: `Herbal-Line-Production-Master-Pack.zip`
-- Archive SHA-256: `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`
-- Comparison target: `main` at `6ddb8849886f35ece5f3d784d06714b4054f5116`
-- Tracked paths in comparison tree: 75
-- Archive source files: 42
-- Exact Git blob matches: 4/42
-- Expected source paths missing: 0
-- Source files with different content: 38/42
-- Additional implementation/tooling paths: 33
+> Ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert Anbau, ausführliche und direkt an der Pflanze sichtbare Pflege, simulierte Verarbeitung, Qualitätssicherung, Lager, Logistik und Auslieferung an Apotheken. Apothekeninterne Abläufe gehören nicht zum Spielumfang.
 
-The comparison uses Git's blob SHA-1 identity: SHA-1 over `blob ${byteLength}\0` followed by the exact file bytes. Expected hashes are retained in `docs/audits/MASTERPACK_EXPECTED_BLOBS.json`; `python scripts/verify_masterpack_parity.py` reproduces the per-path comparison and exits non-zero while mismatches remain.
+Der Spieler muss erkennbare Cannabis-Pflanzen und tatsächlich ausgeführte Pflegeaktionen sehen. Eine generische Kräuter-/Botanikproduktion ist ausdrücklich keine zulässige Ersatzvision. Sämtliche Zahlen, Einstellungen und Effekte bleiben erfundene Spielwerte; es werden keine realen Anbausollwerte oder Produktionsanleitungen eingebaut.
 
-## Why exact mirroring is not the current product goal
+## Quelle und unveränderliche Provenienz
 
-The supplied pack describes a more specific regulated botanical business concept. The live implementation has been deliberately scoped to a fictional, generic botanical operations management game. It uses abstract simulation values, generic customer orders, fictional quality gates, and no real-world controlled-substance cultivation, processing, manufacturing, or distribution instructions.
+- Ursprüngliches Archiv: `Herbal-Line-Production-Master-Pack.zip` — dies ist der historische Dateiname des gelieferten Archivs, **nicht der aktuelle Spielname**.
+- Dokumentierter Archiv-SHA-256: `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`.
+- Archivstatus bei der ursprünglichen Prüfung: 42 Dateien; ZIP-Integritätsprüfung erfolgreich.
+- Der später bestätigte Spielname Dr. Green Dump / DopeFarm hat Vorrang vor älteren Titeln oder Metadaten im gelieferten Material. Diese Nutzerentscheidung ist als autorisierte Scope-/Brand-Änderung zu protokollieren und nicht als heimliche Archiv-Parität auszugeben.
 
-Blindly restoring every source document over the implementation would:
-1. overwrite the working application and its verified build/test setup;
-2. undo reviewed contract and persistence changes; and
-3. reintroduce product-specific details that are outside the approved safe scope for this implementation.
+## Paritätsstatus
 
-Therefore, exact ZIP parity is retained as **historical provenance evidence**, not treated as a merge gate for the generic implementation. The source archive hash and expected blob manifest remain available for auditing. Any future request to switch back to the original product scope requires an explicit product-scope decision and a separate requirements review; this branch does not silently do so.
+Ein früherer Vergleich meldete 4/42 exakte Blob-Treffer für `main@6ddb8849886f35ece5f3d784d06714b4054f5116`. Eine spätere 42/42-Prüfung galt nur für einen Zwischenstand vor den anschließenden, autorisierten Produktnamen- und Inhaltsänderungen.
 
-## Reproducibility and limitations
+**Für den aktuellen Branch wird keine 1:1-Archivparität behauptet.** Änderungen an Spielname, Produkttext, UI und Produktionsrichtlinie weichen bewusst vom historischen Archivnamen ab. Ein künftiger Bericht muss für jeden Pfad unterscheiden zwischen:
+1. unverändertem Originalinhalt;
+2. vom Auftraggeber ausdrücklich geänderter Produktidentität;
+3. anwendungsspezifischer Implementierung;
+4. ungeklärter Abweichung.
 
-The audit compares repository Git tree blob IDs against the source archive manifest. It does not claim that different content is automatically wrong: the mismatches include intentional scope, contract, backlog, and implementation changes. The script is an audit tool, not part of the normal green CI gate, because a clean generic implementation is expected to differ from the historical ZIP.
+Die historische ZIP-Prüfung und ihr Hash bleiben Provenienznachweis. Sie sind kein Beleg dafür, dass der aktuelle Branch unverändert identisch ist. Validator-Erfolg beweist Dateivollständigkeit/Metadaten, nicht den Produkt-Scope und nicht einen erfolgreichen App-Build.
 
-## Decision
+## Arbeits- und Branch-Grenze
 
-- Preserve the archive hash and expected blob manifest.
-- Preserve the current working app and its verified tests.
-- Do not claim 1:1 parity.
-- Track the intentional scope fork in project documentation and continue the generic simulation backlog.
+- Alle Wiederherstellungs- und Produktionsänderungen laufen auf `restore/original-masterpack-product-scope-20261012`.
+- `main` bleibt unangetastet, bis Review und alle erforderlichen Gates erfolgreich sind.
+- Keine blinden Rollbacks, Merges oder großflächigen Überschreibungen.
+- Produktanforderungen gehen vor Altcode. Kompatible Implementierung bleibt erhalten; unbelegte Balancewerte, Upgradeeffekte oder Progressionsregeln werden nicht erfunden.
+- CI-Ergebnisse werden stets dem exakten getesteten Commit zugeordnet.
+
+## Aktueller technischer Prüfstatus
+
+Die verbindliche operative Richtlinie liegt in docs/PRODUCTION_POLICY.md. Sie verlangt direkte, sichtbare Pflanzenpflege in 3D/UI einschließlich typisierter Commands, Logs/Events, Persistenz und E2E-Belegen. Pflegewerte bleiben erfundene Spielstufen.
+
+Auf dem vorherigen Integrationsstand `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38` wurden in GitHub Actions Install, Source-Lint, Formatprüfung, TypeScript-Typecheck, Domain-Unit-Tests und Produktionsbuild erfolgreich gemeldet. Die Browser-E2E-Prüfung lief bei der letzten Beobachtung noch; daraus folgt **kein** Gesamt-CI-PASS. Die separate Master-Pack-Validierung lief erfolgreich, prüft aber nicht die vollständige Spielabnahme.
+
+## Abnahmebedingungen
+
+1. User-facing Namens-/Scope-Prüfung zeigt ausschließlich Dr. Green Dump / DopeFarm als aktiven Produktnamen; historische Archivdateinamen und alte Persistenz-IDs sind nur Provenienz-/Kompatibilitätshinweise, keine UI-Produktlabels.
+2. Cannabis-Pflanzen sind visuell eindeutig; Pflegeaktionen sind mit echtem State-Update, sichtbarer Reaktion, Log und Speicherverhalten verbunden.
+3. Wirtschaft, Progression, Save-/Load und Compliance stimmen mit dokumentierten, belegbaren Spielregeln überein.
+4. Frischer PR-Workflow besteht Typecheck, Unit-Tests, Build, Browser-E2E, Preview-Smoke, Pack-Validation und Whitespace-Check auf demselben Commit.
+5. Erst nach Review und durchgehend grünen Pflichtgates darf ein Merge erwogen werden.
+
+
+## Reconciliation refresh — 2026-10-13
+
+The exact file-level comparison is reproducible from the recorded manifest at branch head 22e60941981bc168c020ae55213b7eab61a486aa:
+
+- Expected original files: 42.
+- Active project-root files with an exact expected Git blob SHA-1: 20/42.
+- Active project-root files with a different blob: 22/42; every differing path is classified in docs/audits/MASTERPACK_PARITY_CLASSIFICATION.md.
+- Additional application/CI/test/audit paths outside the 42-file source pack: 53.
+- The active project root is intentionally not claimed as a byte-identical archive mirror.
+
+The 42 original file contents are preserved separately under masterpack/source/ by referencing the exact Git blob IDs from docs/audits/MASTERPACK_EXPECTED_BLOBS.json. The new source-snapshot verifier recomputes each Git blob SHA-1 from the file bytes, checks all 42 entries, and rejects missing or extra snapshot files. This proves per-file source-snapshot identity against the recorded manifest. The historical ZIP SHA-256 remains a recorded provenance value; the ZIP binary itself is not stored here, so this execution does not independently re-hash the archive container.
+
+Latest application CI before adding the source snapshot: PASS on 22e60941981bc168c020ae55213b7eab61a486aa, run https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38324074349. The separate master-pack validator also passed on that same commit, run https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38324074272. The snapshot-verification gates added in this refresh must pass on the new commit before it can be considered green.
+
+
+## Exact current verification — 2026-10-13
+
+Verified implementation revision: `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`.
+
+- [Full DopeFarm CI, run 38423858305](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858305): **SUCCESS** on the exact revision.
+- [Master Pack Validation, run 38423858306](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858306): **SUCCESS** on the same revision.
+- The App CI passed the preserved-source snapshot verifier; all 42 source files matched the expected Git blob IDs and no unmanifested snapshot file was reported.
+- Active-root reconciliation remains 20/42 exact matches and 22/42 intentional/classified differences, with 53 additional application/CI/test/audit paths as recorded in the comparison at revision 22e60941981bc168c020ae55213b7eab61a486aa. The archive ZIP itself is not stored in this repository; its recorded SHA-256 is provenance and was not re-hashed by the current run.
+- The current source snapshot is verified, but the active root is **not** byte-identical to the historical ZIP. This is a documented scope overlay, not a 1:1 parity claim.
+- The current browser suite reports 59 passed and 4 renderer-dependent skipped cases. This test limitation remains tracked in `.tasks/NEXT.md`.

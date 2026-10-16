@@ -28,6 +28,10 @@ try {
   for (const id of ['save-game', 'load-game', 'export-game', 'import-game', 'game-actions', 'game-feedback']) {
     if (!html.includes('id="' + id + '"')) throw new Error('Production HTML is missing #' + id);
   }
+  const noticesResponse = await fetch(new URL('/THIRD_PARTY_NOTICES.txt', origin));
+  if (!noticesResponse.ok) throw new Error('Third-party notices returned HTTP ' + noticesResponse.status);
+  const notices = await noticesResponse.text();
+  if (!notices.includes('THIRD-PARTY LICENSE NOTICES')) throw new Error('Third-party notices are missing their expected header.');
   const scriptPath = html.match(/<script[^>]+src="([^"]+)"/)?.[1];
   if (!scriptPath) throw new Error('Production HTML has no module script.');
   const scriptResponse = await fetch(new URL(scriptPath, origin));
@@ -39,7 +43,7 @@ try {
   const cssResponse = await fetch(new URL(cssPath, origin));
   if (!cssResponse.ok) throw new Error('Production stylesheet returned HTTP ' + cssResponse.status);
   if (!(await cssResponse.text()).includes('#save-status')) throw new Error('Production CSS is missing save status styles.');
-  console.log('PREVIEW SMOKE: PASS (production HTML, JavaScript, persistence controls and CSS served with HTTP 200)');
+  console.log('PREVIEW SMOKE: PASS (production HTML, JavaScript, persistence controls, CSS and third-party notices served with HTTP 200)');
 } catch (error) {
   console.error('PREVIEW SMOKE: FAIL');
   console.error(error instanceof Error ? error.stack : String(error));

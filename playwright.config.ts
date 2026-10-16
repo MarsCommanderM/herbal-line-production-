@@ -3,8 +3,11 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
+  // Run the full gameplay/WebGL suite once in Chromium; tagged UI fallback smoke tests still run in Firefox and WebKit.
+  workers: process.env.CI ? 1 : undefined,
+  timeout: process.env.CI ? 75_000 : 30_000,
   forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 1 : 0,
+  retries: 0,
   reporter: 'list',
   use: {
     baseURL: 'http://127.0.0.1:4173',
@@ -14,6 +17,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      grepInvert: /@cross-browser/,
       use: {
         ...devices['Desktop Chrome'],
         launchOptions: {
@@ -29,10 +33,24 @@ export default defineConfig({
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      grep: /@cross-browser/,
+      use: {
+        ...devices['Desktop Firefox'],
+        launchOptions: {
+          firefoxUserPrefs: {
+            'webgl.disabled': false,
+            'webgl.force-enabled': true,
+            'webgl.enable-webgl2': true,
+            'layers.acceleration.force-enabled': true,
+            'gfx.webrender.all': true,
+            'gfx.webrender.software': true,
+          },
+        },
+      },
     },
     {
       name: 'webkit',
+      grep: /@cross-browser/,
       use: { ...devices['Desktop Safari'] },
     },
   ],

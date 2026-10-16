@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameState, Score0To100, SimulationMinute } from '../../contracts/domain';
-import { createInitialGameState } from '../domain/initial-state';
+import { createInitialGameState, createNewCampaignGameState } from '../domain/initial-state';
 import { getTutorialProgress } from './tutorial';
 
 const minute = (value: number) => value as SimulationMinute;
@@ -89,4 +89,18 @@ describe('state-derived core-loop tutorial', () => {
     const delivered = { ...state, orders: state.orders.map((item) => item.id === order.id ? { ...item, status: 'delivered' as const } : item) };
     expect(getTutorialProgress(delivered)).toMatchObject({ step: 6, total: 6, status: 'complete', title: 'Kampagnenziel erreicht' });
   });
+
+  it('starts a clean campaign with seed intake and does not mutate state', () => {
+    const state = createNewCampaignGameState();
+    const before = structuredClone(state);
+
+    expect(getTutorialProgress(state)).toMatchObject({
+      step: 1,
+      total: 6,
+      status: 'active',
+      title: 'Saatgutannahme',
+    });
+    expect(state).toEqual(before);
+  });
+
 });

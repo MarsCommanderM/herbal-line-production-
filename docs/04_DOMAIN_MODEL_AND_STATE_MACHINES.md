@@ -88,7 +88,7 @@ Fehlerpfade: `available → expired`, `accepted|allocated|ready_to_ship → canc
 
 `valid ↔ warning → suspended → recovery_review → valid|warning`
 
-Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte Spieldaten konfiguriert. Baseline für die erste Balance-Datei: Risiko 0–100; `warning` ab 40, `suspended` ab 80. Suspendierung blockiert alle fachlich als kritisch markierten Transaktionen. Es gibt keinen UI-Bypass.
+Die versionierte `src/data/balance.json` ist Quelle der fiktiven Startwerte und QC-/Lizenzschwellen; `src/domain/balance.ts` validiert die Datei beim Laden. Die dokumentierte Design-Baseline bleibt Risiko 0–100, `warning` ab 40 und `suspended` ab 80. Die Runtime implementiert Audit-Start/Abschluss, persistente `ComplianceCase`-/`AuditRun`-Daten, verknüpfte Befunde, Korrekturmaßnahmen, Verifikation und ein separates Recovery-Finalisierungsgate. Ungültige Übergänge und doppelte aktive Audits werden atomar abgewiesen; offene Fälle/Befunde verhindern ein klares Audit und eine Wiederherstellung. Eine erfolgreiche Verifikation schließt den konkreten Fall, senkt aber **nicht automatisch das globale Risiko**, weil dafür keine autorisierte fiktive Balance-Regel vorliegt. `autosaveIntervalMs` wird als periodischer Autosave-Timer genutzt. `fixedStepHz` ist weiterhin nur konfiguriert; ein aktiver 20-Hz-Domain-Tick ist noch nicht implementiert. Suspendierung muss alle fachlich als kritisch markierten Transaktionen blockieren; es gibt keinen UI-Bypass.
 
 ### 3.6 Save-Sitzung
 
@@ -103,21 +103,7 @@ Spielinterne Schwellenwerte werden in `src/data/balance.json` als versionierte S
 - Keine freigegebene Lieferung ohne freigegebenen Batch, passende Qualität, vorhandenen Bestand und vollständige Trace-Kette.
 - Kein negativer Bestand und keine Reservierung über verfügbare Menge.
 - Keine doppelten IDs innerhalb eines Entitätstyps.
-- Raumkapazität ist eine positive ganze Zahl; `occupied` bleibt ganzzahlig in `[0, capacity]`.
-- Mitarbeiterzuordnung ist bidirektional: `StaffState.assignedRoomId` und `RoomState.assignedStaffIds` müssen übereinstimmen; Rollen-/Raumkompatibilität wird vor jeder Zuweisung geprüft.
-- Maschinenzuordnung ist bidirektional: `MachineState.roomId` und `RoomState.assignedMachineIds` müssen übereinstimmen.
-- Eine aktive Maschine hat genau einen aktiven Job, und dieser verweist auf einen `processing`-Batch im selben Raum. Maschinen in Wartung sind jobfrei; aktive Maschinen können weder verlegt noch in Wartung gesetzt werden.
 - Keine ungültigen Zahlen: alle Scores sind endlich und innerhalb definierter Grenzen.
-- Der Tagesabschluss verschiebt die Kampagnenzeit auf 08:00 des Folgetags und bucht Tageslöhne sowie Betriebskosten als unveränderliche Ledger-Einträge.
-- Tageskosten werden über den Schlüssel `operating-costs:day:{day}:{wages|utilities}` idempotent gebucht; wiederholte Buchungen desselben Tages dürfen keine doppelten Aufwendungen erzeugen.
-- Der Kontostand wird ausschließlich aus Eröffnungsbestand und Ledger abgeleitet. Ein negativer Kontostand bleibt sichtbar und wird nicht stillschweigend auf null begrenzt.
-- Prognosen sind reine Spiel-Balance-Szenarien: erwarteter Tagesumsatz ist ein expliziter Parameter und standardmäßig null; die 30-Tage-Anzeige kennzeichnet diese Annahme sichtbar. Projektionen verändern weder Ledger noch Kampagnenzustand.
-- Ein Upgrade wird nur bei ausreichendem Kontostand gekauft; die einmalige Investition wird als `investment` im Ledger verbucht und über einen idempotency key gegen Doppelbuchung geschützt. Der Effekt wird ausschließlich aus dem gekauften Upgradezustand abgeleitet.
-- Der Finanzstatus wird aus Kontostand und prognostizierter Reichweite abgeleitet; ein kritischer Status darf nicht durch stilles Zurücksetzen des Kontostands verborgen werden.
-- Die Krisenhilfe ist nur bei Kontostand `<= 0` verfügbar und darf pro Kampagne höchstens einmal gebucht werden. Der `grant`-Ledger-Eintrag gleicht den Fehlbetrag aus und stellt mindestens sieben Tage der aktuell berechneten Betriebskosten bereit.
-
-
-
 - Kein Auftrag wird doppelt erfüllt oder doppelt abgerechnet.
 - Kein suspendierter Betrieb führt kritische Freigaben/Versand durch.
 - Jeder terminale Übergang hat Ursache, Actor, Simulationszeit und auditrelevanten Logeintrag.

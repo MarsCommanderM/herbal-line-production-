@@ -23,22 +23,16 @@ Inhalte sind datengetrieben. Definitionen (Content) sind unveränderliche Versio
 
 ## 3. Ausgangs-Content (Spiel-Fiktion)
 
-- `herb_alpha`: fiktives Pflanzenprofil; Spielzeitdauer 2.880 Game-Minuten; Basiswert 12.000 Cent; Qualitäts-Sensitivität 50; Modell-ID wird im Asset-Inventar hinterlegt.
+- `medical_cannabis_alpha`: fiktives Pflanzenprofil; Spielzeitdauer 2.880 Game-Minuten; Basiswert 12.000 Cent; Qualitäts-Sensitivität 50; Modell-ID wird im Asset-Inventar hinterlegt.
 - Räume: `production_room_small` (Kapazität 6; Preis 200.000 Cent; Power 12 Spiel-Energieeinheiten je Spielstunde), `processing_room_small` (Kapazität 4; Preis 250.000 Cent; Power 8), `quality_lab_small` (Kapazität 3; Preis 300.000 Cent; Power 6), `storage_small` (Kapazität 12; Preis 150.000 Cent; Power 3), `logistics_desk` (Kapazität 4 Auftragsplätze; Preis 100.000 Cent; Power 1).
-- Kunden: `buyer_a` und `buyer_b`, mit ausschließlich abstrakten Zuverlässigkeits-/Qualitätsanforderungen und einer erforderlichen Reputation.
-- Upgrades: `sensor_pack_1` und `drying_rack_1` sind Spielverbesserungen mit in-game Effekten. Sie dürfen keine realen Anleitungen zu Anbau, Verarbeitung kontrollierter Produkte oder Extraktion enthalten.
-- Das aktuell implementierte Wirtschaftsupgrade `energy-efficiency-1` kostet einmalig 250.000 Cent Spielgeld und reduziert die fiktiven Energiekosten um 20 Prozent. Der Kauf erzeugt einen `investment`-Ledger-Eintrag mit idempotency key `upgrade-purchase:energy-efficiency-1`; unzureichendes Guthaben und doppelte Käufe werden abgewiesen.
-- `energy-efficiency-2` ist erst nach `energy-efficiency-1` verfügbar, kostet 150.000 Cent Spielgeld und senkt die verbleibenden Energiekosten zusätzlich um 10 Prozent. Beide Käufe werden separat als `investment` gebucht; der Effekt wird aus dem persistenten Upgradezustand abgeleitet.
-
-- Bei ausgeschöpftem Spielbudget kann einmalig `ECONOMY/ACTIVATE_DISTRESS_SUPPORT` verwendet werden. Die fiktive Krisenhilfe wird als `grant`-Ledger-Eintrag mit key `distress-support:campaign-1` gebucht und stellt mindestens sieben Tage der aktuell berechneten Betriebskosten bereit; bei positivem Kontostand und nach bereits erfolgter Nutzung wird sie abgewiesen.
-
-
+- Kunden: `pharmacy_a` und `clinic_b`, mit nur abstrakten Zuverlässigkeits-/Qualitätsanforderungen und einer erforderlichen Reputation.
+- Upgrade-IDs aus der Spezifikation: `sensor_pack_1` und `drying_rack_1`. Das Quellpaket legt keine Preise, konkreten Effekte, Abhängigkeiten oder Unlock-Schwellen fest. Deshalb sind beide aktuell nicht freigeschaltet und im aktiven Katalog nicht kaufbar. Kosten und Wirkungen werden erst nach autorisierter Balance-Definition aktiviert. Es dürfen keine realen Anbau-, Arzneimittelverarbeitungs- oder Extraktionsanleitungen enthalten sein.
 
 ## 4. Wachstum/Qualität als abstraktes Simulationsmodell
 
 Das Profil nutzt `baseDurationGameMinutes`, `stability`, `careScore`, `stressIndex`, `contaminationIndex` und `qualitySensitivity`. Zeitfortschritt entsteht aus einem vereinfachten Fortschrittswert pro Game-Tick, der aus fiktiven Modifikatoren bestimmt wird. Alle Werte werden vor Anwendung geklemmt und deterministisch berechnet. Es gibt keine realen Sollwerte zu Licht, Temperatur, Luftfeuchte, Substrat, Nährstoffen, Bewässerung, Schnitt, Ernte, Trocknung oder Inhaltsstoffausbeute.
 
-Die Qualitätsbewertung ist ein transparentes Spielmodell: `rawScore = weighted(stability, careScore, cleanliness, timingScore) - fictionalPenalty(stressIndex, contaminationIndex)`; alle Gewichte sind in `balance.json` explizit, versioniert und per Tests abgesichert. QC-Schwelle ist eine Spielregel, keine klinische oder behördliche Empfehlung.
+Die angestrebte vollständige Qualitätsformel lautet `rawScore = weighted(stability, careScore, cleanliness, timingScore) - fictionalPenalty(stressIndex, contaminationIndex)`. **Die Runtime bildet diese Ziel-Formel noch nicht vollständig ab.** Der aktuelle MVP berechnet den Score als gerundeten Durchschnitt der `qualityPotential`-Werte minus `0,5 ×` den durchschnittlichen `contaminationIndex`, begrenzt auf 0–100. Die versionierte `src/data/balance.json` stellt die Spielschwellen bereit: QC-Freigabe ab 70/100, manuelle Prüfung ab 60/100. Die Formel-Parität bleibt ein offener Umsetzungspunkt. Alle Werte sind fiktive Spielregeln, keine klinischen oder behördlichen Empfehlungen.
 
 ## 5. Wirtschaft
 
@@ -55,3 +49,12 @@ Energie, Kapazität, Mitarbeitereffektivität, Wartung und Inventar sind abstrah
 ## 7. Datenvalidierung
 
 Beim Boot: JSON parse → Schema validieren → Referenzen/IDs auf Eindeutigkeit prüfen → Abhängigkeitsgraph validieren → Wertebereiche prüfen → erst dann Spiel starten. Ein ungültiger Content-Datensatz stoppt den Build oder zeigt beim Dev-Boot einen klaren Fehler mit Dateipfad und Feld. Keine stillen Defaults für fehlerhafte Produktionsdaten.
+
+
+## 4.1 Sichtbare Pflanzenpflege — fiktiver Balance-Contract
+
+Die Pflege wird direkt an erkennbaren Cannabis-Pflanzen bedient. Für Bewässerung, Licht, Temperatur, Luftfeuchtigkeit und Nährstoffversorgung verwendet die laufende Spielsimulation ausschließlich dimensionslose Stufen low, balanced und high. Beschneiden, Steckling schneiden und Steckling setzen sind explizite Commands mit nachvollziehbarem Zustand, Log/Event und visuellem Feedback.
+
+Der aktuelle Code liegt in src/domain/plant-care.ts. PLANT/CARE_ACTION wird in den Runtime-Contracts definiert und in src/domain/vertical-slice.ts validiert. Die Stufen stellen keine realen Messwerte oder agronomischen Empfehlungen dar. Es werden keine realen Temperaturen, Luftfeuchtigkeitsprozente, Bewässerungsmengen, Beleuchtungsleistungen, Nährstoffmengen oder realen Produktionspläne angegeben. Eine Pflegeaktion, die ungültigen Status, unbekannte Spielstufen oder unzureichende Raumkapazität verletzt, muss atomar fehlschlagen.
+
+Pflege-Baselines müssen nach Save/Load erhalten bleiben. Alte Saves ohne optionale Care-Felder erhalten zur Laufzeit definierte Default-Stufen, ohne während des Ladens den gespeicherten Payload still zu mutieren.

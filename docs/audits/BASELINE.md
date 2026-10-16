@@ -70,7 +70,7 @@ The first verified application baseline was merged to `main` via PR [#4](https:/
 - Application CI: **PASS** — [run 38181538851](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181538851)
 - Master Pack validation workflow: **PASS** — [run 38181538905](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181538905)
 - Verified gates: `npm ci`, source lint, format check, strict TypeScript typecheck, unit tests, production build, master-pack validation, and `git diff --check`.
-- The merged implementation contains the first deterministic generic botanical operations loop, typed commands/events, abstract QC and traceability gates, inventory reservation, generic buyer order, delivery confirmation, ledger-derived revenue, and accessible management controls.
+- The historical implementation at that revision contained a generic-botanical operations loop. That was an unapproved scope drift, not the accepted product definition; this historical note must not be used to justify generic plants or a generic product identity in current builds.
 
 ### Remaining blockers
 
@@ -92,3 +92,21 @@ The initial save/load implementation was merged via [PR #5](https://github.com/M
 - Added: stable JSON serialization, SHA-256 save checksums, envelope validation, IndexedDB save/load/list/delete/export/import, transient UI reconstruction, manual save/load controls, and tests for checksum corruption and repository lifecycle.
 
 **Remaining persistence acceptance:** real-browser IndexedDB round-trip, schema migration beyond v1, quota exhaustion, interrupted transaction recovery, and browser E2E.
+
+
+## Current owner-approved production directive — 2026-10-12
+
+The current game title is **Dr. Green Dump / DopeFarm**. It is a high-quality web management game about the legal and controlled operation of a strictly regulated medical-cannabis plant production facility. Recognizable cannabis plants and directly visible care actions are required: fictional in-game watering, lighting, climate/humidity control, nutrient care, pruning and cutting placement. All numeric values and effects are invented balance data, not real-world cultivation instructions. The game ends its customer workflow at recorded delivery to pharmacies; internal pharmacy operations are out of scope. This owner directive supersedes prior generic-botanical descriptions in historical baseline notes.
+
+
+## Reproducible verification refresh — 2026-10-13
+
+The former statements that no clean build or browser E2E had been run are historical and superseded for the current restoration branch. On commit 22e60941981bc168c020ae55213b7eab61a486aa, the complete application CI passed, including npm ci, source lint, format check, strict TypeScript typecheck, domain unit tests, production build, Chromium/Firefox/WebKit browser E2E, production preview smoke, master-pack validation, product-policy validation and whitespace checks:
+https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38324074349
+
+The separate Master Pack validation workflow also passed on the same commit:
+https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38324074372
+
+The exact active-root comparison at that commit is 20/42 original blob matches, 22/42 classified differences, and 53 application-specific additional paths. The original 42 file blobs are being preserved under masterpack/source/ and verified against docs/audits/MASTERPACK_EXPECTED_BLOBS.json by a dedicated CI gate. The active project root remains intentionally distinct from the historical archive. The ZIP SHA-256 above is recorded provenance; the archive binary is not currently in the repository, so this refresh does not independently recompute the ZIP container hash.
+
+The current branch incorporates the latest main commit as a merge parent; main itself remains unchanged. The final source-snapshot commit still requires its own complete CI run before its status can be reported green.

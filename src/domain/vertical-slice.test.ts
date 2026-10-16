@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { CommandId, EntityId, Score0To100 } from '../../contracts/domain';
 import type { VerticalSliceCommand } from './vertical-slice';
-import { createInitialGameState } from './initial-state';
-import { applyVerticalSliceCommand, getCampaignBalance } from './vertical-slice';
+import { createInitialGameState, createNewCampaignGameState } from './initial-state';
+import { applyVerticalSliceCommand, getCampaignBalance, isOperationBlocked } from './vertical-slice';
 
 const entity = (value: string): EntityId => value as EntityId;
 const commandId = (value: string): CommandId => value as CommandId;
@@ -42,7 +42,7 @@ function progressToReleasedInventory() {
   state = applyOk(state, 'BATCH/CREATE', {
     batchId: entity('batch-001'),
     plantIds: [entity('plant-001')],
-    profileId: 'fictional-botanical-batch',
+    profileId: 'fictional-medical-cannabis-batch',
   });
   state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-001'), roomId: entity('room-processing-01') });
   state = applyOk(state, 'BATCH/START_PROCESSING', { batchId: entity('batch-001'), machineId: entity('machine-processing-001') });
@@ -51,7 +51,7 @@ function progressToReleasedInventory() {
   return state;
 }
 
-describe('botanical operations vertical slice', () => {
+describe('medical cannabis operations vertical slice', () => {
   it('completes fictional stage, batch, QC, stock, buyer order, and delivery flow', () => {
     let state = progressToReleasedInventory();
     expect(state.batches[0]?.status).toBe('released');
@@ -82,7 +82,7 @@ describe('botanical operations vertical slice', () => {
     expect(state.inventoryLots[0]?.quantityReserved).toBe(0);
     expect(state.inventoryLots[0]?.status).toBe('depleted');
     expect(state.economy.ledger).toHaveLength(1);
-    expect(getCampaignBalance(state)).toBe(25_850_000);
+    expect(getCampaignBalance(state)).toBe(3_350_000);
   });
 
   it('does not post revenue twice when delivery confirmation is repeated', () => {
@@ -99,6 +99,52 @@ describe('botanical operations vertical slice', () => {
     expect(repeated.state.revision).toBe(revision);
     expect(repeated.state.economy.ledger).toHaveLength(1);
 
+  });
+
+  it('applies fictional plant-care settings, logs the change and rejects malformed settings atomically', () => {
+    const initial = createInitialGameState();
+    const cared = applyOk(initial, 'PLANT/CARE_ACTION', { plantId: entity('plant-001'), action: 'light', setting: 'low' });
+    expect(cared.plants[0]?.care?.lightLevel).toBe('low');
+    expect(cared.plants[0]?.stressIndex).toBeGreaterThan(initial.plants[0]!.stressIndex);
+    expect(cared.logs.at(-1)?.code).toBe('PLANT_CARE_ACTION');
+    expect(cared.revision).toBe(initial.revision + 1);
+
+    const malformed = dispatch(initial, 'PLANT/CARE_ACTION', { plantId: entity('plant-001'), action: 'light', setting: 'extreme' });
+    expect(malformed.ok).toBe(false);
+    if (!malformed.ok) expect(malformed.state).toBe(initial);
+  });
+
+  it('blocks visible plant care while the license is suspended without mutating campaign state', () => {
+    const initial = createInitialGameState();
+    const blockedState = {
+      ...initial,
+      compliance: { ...initial.compliance, licenseStatus: 'suspended' as const },
+    };
+    const result = dispatch(blockedState, 'PLANT/CARE_ACTION', {
+      plantId: entity('plant-001'),
+      action: 'water',
+      setting: 'balanced',
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Plant care must be blocked while the license is suspended.');
+    expect(result.error.code).toBe('COMPLIANCE_BLOCKED');
+    expect(result.state).toBe(blockedState);
+    expect(result.state.plants).toEqual(initial.plants);
+    expect(result.state.logs).toEqual(initial.logs);
+    expect(result.state.revision).toBe(initial.revision);
+  });
+
+  it('cuts and sets a fictional propagation cutting with traceable parent linkage and room-capacity accounting', () => {
+    let state = applyOk(createInitialGameState(), 'PLANT/CARE_ACTION', { plantId: entity('plant-001'), action: 'take_cutting' });
+    expect(state.plants[0]?.care?.cuttingsTaken).toBe(1);
+    state = applyOk(state, 'PLANT/CARE_ACTION', { plantId: entity('plant-001'), action: 'set_cutting' });
+    const cutting = state.plants.find((plant) => plant.propagatedFromPlantId === entity('plant-001'));
+    expect(cutting).toBeDefined();
+    expect(cutting?.stage).toBe('active');
+    expect(state.rooms.find((room) => room.id === entity('room-production-01'))?.occupied).toBe(2);
+    expect(state.ui.selectedEntityId).toBe(cutting?.id);
+    expect(state.plants[0]?.care?.cuttingsSet).toBe(1);
   });
 
   it('rejects a stale command without changing the state', () => {
@@ -221,7 +267,7 @@ describe('botanical operations vertical slice', () => {
       economy: { ...initial.economy, openingBalanceCents: 0 as typeof initial.economy.openingBalanceCents },
     };
     const exhausted = applyOk(noOpeningFunds, 'TIME/END_DAY');
-    expect(getCampaignBalance(exhausted)).toBe(-88_000);
+    expect(getCampaignBalance(exhausted)).toBe(-154_000);
 
     const support = dispatch(exhausted, 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT');
     expect(support.ok).toBe(true);
@@ -230,7 +276,7 @@ describe('botanical operations vertical slice', () => {
     expect(grant?.account).toBe('grant');
     expect(grant?.amountCents).toBe(2_500_000);
     expect(grant?.idempotencyKey).toBe('distress-support:campaign-1');
-    expect(getCampaignBalance(support.state)).toBe(2_412_000);
+    expect(getCampaignBalance(support.state)).toBe(2_346_000);
     expect(support.events.map((event) => event.type)).toEqual(['economy.distress_support_granted', 'finance.ledger_posted']);
     expect(support.state.ui.notifications.at(-1)?.code).toBe('DISTRESS_SUPPORT_GRANTED');
 
@@ -241,54 +287,16 @@ describe('botanical operations vertical slice', () => {
     expect(repeated.state.economy.ledger).toHaveLength(3);
   });
 
-  it('purchases the energy-efficiency upgrade atomically and prevents duplicate investment', () => {
+  it('keeps upgrades unavailable until their fictional balance definitions are approved', () => {
     const initial = createInitialGameState();
-    const result = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error(result.error.message);
-
-    expect(result.state.upgrades.find((item) => item.id === 'energy-efficiency-1')?.purchasedAt).toBe(0);
-    expect(result.state.upgrades.find((item) => item.id === 'energy-efficiency-2')?.unlocked).toBe(true);
-    expect(result.state.economy.ledger).toHaveLength(1);
-    expect(result.state.economy.ledger[0]?.account).toBe('investment');
-    expect(result.state.economy.ledger[0]?.amountCents).toBe(250_000);
-    expect(getCampaignBalance(result.state)).toBe(24_750_000);
-    expect(result.events.map((event) => event.type)).toEqual(['upgrade.purchased', 'finance.ledger_posted']);
-
-    const repeated = dispatch(result.state, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
-    expect(repeated.ok).toBe(false);
-    if (repeated.ok) throw new Error('An upgrade cannot be purchased twice.');
-    expect(repeated.error.code).toBe('INVALID_TRANSITION');
-    expect(repeated.state.economy.ledger).toHaveLength(1);
-
-    const secondPurchase = dispatch(result.state, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-2' });
-    expect(secondPurchase.ok).toBe(true);
-    if (!secondPurchase.ok) throw new Error(secondPurchase.error.message);
-    expect(secondPurchase.state.upgrades.find((item) => item.id === 'energy-efficiency-2')?.purchasedAt).toBe(0);
-    expect(secondPurchase.state.economy.ledger).toHaveLength(2);
-    expect(getCampaignBalance(secondPurchase.state)).toBe(24_600_000);
-  });
-
-  it('rejects unaffordable or unknown upgrades without changing the campaign', () => {
-    const initial = createInitialGameState();
-    const lowFunds = { ...initial, economy: { ...initial.economy, openingBalanceCents: 100 as typeof initial.economy.openingBalanceCents } };
-    const unaffordable = dispatch(lowFunds, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-1' });
-    expect(unaffordable.ok).toBe(false);
-    if (unaffordable.ok) throw new Error('Insufficient funds must block an upgrade purchase.');
-    expect(unaffordable.error.code).toBe('INSUFFICIENT_FUNDS');
-    expect(unaffordable.state).toBe(lowFunds);
-
-    const locked = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: 'energy-efficiency-2' });
-    expect(locked.ok).toBe(false);
-    if (locked.ok) throw new Error('A dependent upgrade must remain locked until its prerequisite is purchased.');
-    expect(locked.error.code).toBe('PRECONDITION_FAILED');
-    expect(locked.state).toBe(initial);
-
-    const unknown = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId: '__proto__' });
-    expect(unknown.ok).toBe(false);
-    if (unknown.ok) throw new Error('Unknown upgrade IDs must be rejected.');
-    expect(unknown.error.code).toBe('NOT_FOUND');
-    expect(unknown.state).toBe(initial);
+    for (const upgradeId of ['sensor_pack_1', 'drying_rack_1', 'energy-efficiency-1', 'energy-efficiency-2']) {
+      const result = dispatch(initial, 'UPGRADE/PURCHASE', { upgradeId });
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error('An upgrade without an approved balance definition must not be purchasable.');
+      expect(result.error.code).toBe('NOT_FOUND');
+      expect(result.state).toBe(initial);
+      expect(result.state.economy.ledger).toEqual([]);
+    }
   });
 
   it('ends a campaign day, advances to the next 08:00, and posts wages and utilities once', () => {
@@ -302,7 +310,7 @@ describe('botanical operations vertical slice', () => {
     expect(result.state.time.totalMinutes).toBe(1440);
     expect(result.state.economy.ledger).toHaveLength(2);
     expect(result.state.economy.ledger.map((entry) => entry.reasonCode)).toEqual(['DAILY_STAFF_WAGES', 'DAILY_UTILITIES']);
-    expect(getCampaignBalance(result.state)).toBe(24_912_000);
+    expect(getCampaignBalance(result.state)).toBe(2_346_000);
     expect(result.events.map((event) => event.type)).toEqual(['time.day_ended', 'finance.ledger_posted', 'finance.ledger_posted']);
     expect(result.state.ui.notifications.at(-1)?.code).toBe('DAILY_SETTLEMENT');
   });
@@ -319,7 +327,7 @@ describe('botanical operations vertical slice', () => {
       economy: { ...initial.economy, openingBalanceCents: 1 as typeof initial.economy.openingBalanceCents },
     };
     const overdrawn = applyOk(lowFunds, 'TIME/END_DAY');
-    expect(getCampaignBalance(overdrawn)).toBe(-87_999);
+    expect(getCampaignBalance(overdrawn)).toBe(-153_999);
     expect(overdrawn.ui.notifications.at(-1)?.level).toBe('danger');
   });
 
@@ -396,4 +404,161 @@ describe('botanical operations vertical slice', () => {
     expect(state.machines.every((machine) => machine.status !== 'active' || machine.activeJobId !== null)).toBe(true);
   });
 
+
+  it('uses one canonical compliance gate for global and operation-specific holds', () => {
+    const state = createInitialGameState();
+    expect(isOperationBlocked(state, 'BATCH/QUEUE')).toBe(false);
+    state.compliance.blockedOperationCodes = ['BATCH/QUEUE'];
+    expect(isOperationBlocked(state, 'BATCH/QUEUE')).toBe(true);
+    expect(isOperationBlocked(state, 'ORDER/ACCEPT')).toBe(false);
+    state.compliance.licenseStatus = 'suspended';
+    expect(isOperationBlocked(state, 'ORDER/ACCEPT')).toBe(true);
+  });
+
+  it('blocks batch queueing while the campaign license is suspended without mutating state', () => {
+    let state = createInitialGameState();
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', {
+      batchId: entity('batch-compliance-hold'),
+      plantIds: [entity('plant-001')],
+      profileId: 'fictional-botanical-batch',
+    });
+    state.compliance.licenseStatus = 'suspended';
+    const before = JSON.parse(JSON.stringify(state)) as typeof state;
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('compliance-queue-suspended'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'BATCH/QUEUE',
+      batchId: entity('batch-compliance-hold'),
+      roomId: entity('room-processing-01'),
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Suspended license unexpectedly allowed batch queueing.');
+    expect(result.error.code).toBe('COMPLIANCE_BLOCKED');
+    expect(result.state).toBe(state);
+    expect(state).toEqual(before);
+  });
+
+  it('blocks an explicitly prohibited operation even when the license is active', () => {
+    let state = createInitialGameState();
+    state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-001') });
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-001') });
+    state = applyOk(state, 'BATCH/CREATE', {
+      batchId: entity('batch-operation-hold'),
+      plantIds: [entity('plant-001')],
+      profileId: 'fictional-botanical-batch',
+    });
+    state.compliance.blockedOperationCodes = ['BATCH/QUEUE'];
+    const before = JSON.parse(JSON.stringify(state)) as typeof state;
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('compliance-queue-explicit-hold'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'BATCH/QUEUE',
+      batchId: entity('batch-operation-hold'),
+      roomId: entity('room-processing-01'),
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Explicit operation hold unexpectedly allowed batch queueing.');
+    expect(result.error.code).toBe('COMPLIANCE_BLOCKED');
+    expect(result.state).toBe(state);
+    expect(state).toEqual(before);
+  });
+
+
+  it('executes incident, corrective-action, verification and audit transitions', () => {
+    const initial = createInitialGameState();
+    let state = applyOk(initial, 'COMPLIANCE/RECORD_INCIDENT', {
+      caseId: entity('case-unit-1'), violationId: entity('violation-unit-1'),
+      code: 'FICTIONAL_DEVIATION', severity: 'medium', relatedEntityIds: [initial.player.id],
+    });
+    expect(state.compliance.cases?.[0]?.status).toBe('open');
+    state = applyOk(state, 'COMPLIANCE/RECORD_CORRECTIVE_ACTION', { caseId: entity('case-unit-1'), actionCode: 'DOCUMENTED_GAME_CORRECTION' });
+    state = applyOk(state, 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION', { caseId: entity('case-unit-1') });
+    const rejected = applyOk(state, 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', { caseId: entity('case-unit-1'), passed: false, resolutionCode: 'VERIFICATION_FAILED' });
+    expect(rejected.compliance.cases?.[0]?.status).toBe('corrective_action');
+    expect(rejected.compliance.violations[0]?.resolvedAt).toBeNull();
+    state = applyOk(rejected, 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION', { caseId: entity('case-unit-1') });
+    state = applyOk(state, 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', { caseId: entity('case-unit-1'), passed: true, resolutionCode: 'VERIFICATION_PASSED' });
+    expect(state.compliance.cases?.[0]?.status).toBe('closed');
+    expect(state.compliance.violations[0]?.resolvedAt).toBe(state.time.totalMinutes);
+    state = applyOk(state, 'COMPLIANCE/START_AUDIT', { auditId: entity('audit-unit-1') });
+    state = applyOk(state, 'COMPLIANCE/COMPLETE_AUDIT', { auditId: entity('audit-unit-1') });
+    expect(state.compliance.audits?.[0]?.outcome).toBe('clear');
+    expect(state.logs.at(-1)?.code).toBe('COMPLIANCE_AUDIT_COMPLETED');
+  });
+
+  it('rejects duplicate and out-of-order compliance transitions atomically', () => {
+    const initial = createInitialGameState();
+    const noCase = dispatch(initial, 'COMPLIANCE/RECORD_CORRECTIVE_ACTION', { caseId: entity('missing-case'), actionCode: 'DOCUMENTED_GAME_CORRECTION' });
+    expect(noCase.ok).toBe(false);
+    expect(noCase.state).toEqual(initial);
+    const started = applyOk(initial, 'COMPLIANCE/START_AUDIT', { auditId: entity('audit-atomic-1') });
+    const duplicateStart = dispatch(started, 'COMPLIANCE/START_AUDIT', { auditId: entity('audit-atomic-2') });
+    expect(duplicateStart.ok).toBe(false);
+    expect(duplicateStart.state).toEqual(started);
+    const completed = applyOk(started, 'COMPLIANCE/COMPLETE_AUDIT', { auditId: entity('audit-atomic-1') });
+    const duplicateComplete = dispatch(completed, 'COMPLIANCE/COMPLETE_AUDIT', { auditId: entity('audit-atomic-1') });
+    expect(duplicateComplete.ok).toBe(false);
+    expect(duplicateComplete.state).toEqual(completed);
+  });
+
+  it('requires a clear audit before finalizing license recovery', () => {
+    const initial = createInitialGameState();
+    const suspended = { ...initial, compliance: { ...initial.compliance, licenseStatus: 'suspended' as const } };
+    let state = applyOk(suspended, 'COMPLIANCE/START_AUDIT', { auditId: entity('recovery-audit-1') });
+    state = applyOk(state, 'COMPLIANCE/COMPLETE_AUDIT', { auditId: entity('recovery-audit-1') });
+    expect(state.compliance.licenseStatus).toBe('recovery_review');
+    state = applyOk(state, 'COMPLIANCE/FINALIZE_RECOVERY');
+    expect(state.compliance.licenseStatus).toBe('valid');
+  });
+
+
+});
+
+describe('seed receipt to greenhouse and indoor production', () => {
+  it('starts a clean campaign at intake and traces an inspected seed into the greenhouse and indoor room', () => {
+    let state = createNewCampaignGameState();
+    expect(state.sourceLots).toHaveLength(0);
+    expect(state.plants).toHaveLength(0);
+    expect(state.rooms.find((room) => room.definitionId === 'room-greenhouse')?.occupied).toBe(0);
+
+    state = applyOk(state, 'SOURCE/RECEIVE', { sourceLotId: entity('seed-lot-flow-001'), sourceRef: 'MED-SEED-FLOW-001', quantity: 2 });
+    expect(state.sourceLots[0]?.status).toBe('received');
+    expect(state.logs.at(-1)?.code).toBe('SOURCE_LOT_RECEIVED');
+
+    state = applyOk(state, 'SOURCE/INSPECT', { sourceLotId: entity('seed-lot-flow-001'), accepted: true, qualityScore: 91 as Score0To100, findingCodes: [] });
+    expect(state.sourceLots[0]?.status).toBe('accepted');
+    expect(state.sourceLots[0]?.roomId).toBe(entity('room-seed-storage-01'));
+
+    state = applyOk(state, 'PLANT/CREATE', {
+      plantId: entity('plant-seed-flow-001'), profileId: 'medical-cannabis-campaign-profile',
+      sourceLotId: entity('seed-lot-flow-001'), roomId: entity('room-greenhouse-01'),
+    });
+    expect(state.plants[0]?.roomId).toBe(entity('room-greenhouse-01'));
+    expect(state.sourceLots[0]?.quantity).toBe(1);
+    expect(state.plants[0]?.sourceLotId).toBe(entity('seed-lot-flow-001'));
+    expect(state.plants[0]?.stage).toBe('active');
+
+    for (let step = 0; step < 6 && state.plants[0]?.stage === 'active'; step += 1) {
+      state = applyOk(state, 'PLANT/ADVANCE_FICTIONAL_STEP', { plantId: entity('plant-seed-flow-001') });
+    }
+    expect(state.plants[0]?.stage).toBe('ready_for_harvest');
+    const prematureHarvest = dispatch(state, 'PLANT/HARVEST', { plantId: entity('plant-seed-flow-001') });
+    expect(prematureHarvest.ok).toBe(false);
+    expect(prematureHarvest.state).toEqual(state);
+
+    state = applyOk(state, 'PLANT/MOVE', { plantId: entity('plant-seed-flow-001'), roomId: entity('room-production-01') });
+    expect(state.plants[0]?.roomId).toBe(entity('room-production-01'));
+    expect(state.rooms.find((room) => room.definitionId === 'room-greenhouse')?.occupied).toBe(0);
+    expect(state.rooms.find((room) => room.definitionId === 'room-production')?.occupied).toBe(1);
+    expect(state.logs.at(-1)?.code).toBe('PLANT_MOVED_TO_INDOOR_PRODUCTION');
+
+    state = applyOk(state, 'PLANT/HARVEST', { plantId: entity('plant-seed-flow-001') });
+    expect(state.plants[0]?.stage).toBe('harvested');
+    expect(state.rooms.find((room) => room.definitionId === 'room-production')?.occupied).toBe(0);
+    expect(state.plants[0]?.sourceLotId).toBe(entity('seed-lot-flow-001'));
+  });
 });

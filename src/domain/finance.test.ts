@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EconomyState, LedgerEntry, MoneyCents, EntityId, SimulationMinute } from '../../contracts/domain';
 import { calculateDailyOperatingCosts, createDailyOperatingLedgerEntries, getBalanceCents, getCashRunwayDays, getFinancialHealth, getLedgerTotals, projectCampaignBalance } from './finance';
-import { ENERGY_EFFICIENCY_UPGRADE_2_ID, ENERGY_EFFICIENCY_UPGRADE_ID } from './upgrades';
+import { DRYING_RACK_UPGRADE_ID, ECONOMY_UPGRADES, getEconomyUpgradeDefinition, SENSOR_PACK_UPGRADE_ID } from './upgrades';
 import { createInitialGameState } from './initial-state';
 
 const id = (value: string) => value as EntityId;
@@ -55,8 +55,8 @@ describe('ledger-derived finance', () => {
     const state = createInitialGameState();
     expect(calculateDailyOperatingCosts(state)).toEqual({
       staffWagesCents: 64_000,
-      utilitiesCents: 24_000,
-      totalCents: 88_000,
+      utilitiesCents: 90_000,
+      totalCents: 154_000,
     });
   });
 
@@ -69,49 +69,32 @@ describe('ledger-derived finance', () => {
       'operating-costs:day:1:wages',
       'operating-costs:day:1:utilities',
     ]);
-    expect(postings.reduce((sum, item) => sum + Number(item.amountCents), 0)).toBe(88_000);
+    expect(postings.reduce((sum, item) => sum + Number(item.amountCents), 0)).toBe(154_000);
 
     const withPostings = { ...state, economy: { ...state.economy, ledger: postings } };
     expect(createDailyOperatingLedgerEntries(withPostings, 1, minute(1440))).toEqual([]);
     expect(createDailyOperatingLedgerEntries(withPostings, 2, minute(2880))).toHaveLength(2);
   });
 
-  it('applies the purchased energy-efficiency upgrade to utility costs only', () => {
+  it('keeps upgrades inactive until approved fictional prices and effects are configured', () => {
     const state = createInitialGameState();
-    const upgrade = {
-      ...state,
-      upgrades: state.upgrades.map((item) => item.id === ENERGY_EFFICIENCY_UPGRADE_ID
-        ? { ...item, purchasedAt: minute(0) }
-        : item),
-    };
-    expect(calculateDailyOperatingCosts(upgrade)).toEqual({
-      staffWagesCents: 64_000,
-      utilitiesCents: 19_200,
-      totalCents: 83_200,
-    });
-  });
+    const baseCosts = calculateDailyOperatingCosts(state);
+    expect(baseCosts).toEqual({ staffWagesCents: 64_000, utilitiesCents: 90_000, totalCents: 154_000 });
+    expect(ECONOMY_UPGRADES).toEqual([]);
+    expect(getEconomyUpgradeDefinition(SENSOR_PACK_UPGRADE_ID)).toBeUndefined();
+    expect(getEconomyUpgradeDefinition(DRYING_RACK_UPGRADE_ID)).toBeUndefined();
 
-  it('applies both efficiency tiers in catalog order with deterministic cent rounding', () => {
-    const state = createInitialGameState();
-    const upgraded = {
+    const legacyOrInjectedPurchase = {
       ...state,
-      upgrades: state.upgrades.map((item) => {
-        if (item.id === ENERGY_EFFICIENCY_UPGRADE_ID) return { ...item, purchasedAt: minute(0) };
-        if (item.id === ENERGY_EFFICIENCY_UPGRADE_2_ID) return { ...item, unlocked: true, purchasedAt: minute(0) };
-        return item;
-      }),
+      upgrades: state.upgrades.map((item) => ({ ...item, unlocked: true, purchasedAt: minute(0) })),
     };
-    expect(calculateDailyOperatingCosts(upgraded)).toEqual({
-      staffWagesCents: 64_000,
-      utilitiesCents: 17_280,
-      totalCents: 81_280,
-    });
+    expect(calculateDailyOperatingCosts(legacyOrInjectedPurchase)).toEqual(baseCosts);
   });
 
   it('classifies campaign financial health using balance and runway', () => {
     const state = createInitialGameState();
-    expect(getFinancialHealth(state)).toBe('stable');
-    const lowRunway = { ...state, economy: { ...state.economy, openingBalanceCents: cents(1_000_000) } };
+    expect(getFinancialHealth(state)).toBe('watch');
+    const lowRunway = { ...state, economy: { ...state.economy, openingBalanceCents: cents(1_500_000) } };
     expect(getFinancialHealth(lowRunway)).toBe('watch');
     const negative = { ...state, economy: { ...state.economy, openingBalanceCents: cents(0) } };
     expect(getFinancialHealth(negative)).toBe('critical');
@@ -123,20 +106,20 @@ describe('ledger-derived finance', () => {
     expect(projection).toHaveLength(30);
     expect(projection[0]).toEqual({
       dayOffset: 1,
-      openingBalanceCents: 25_000_000,
+      openingBalanceCents: 2_500_000,
       expectedRevenueCents: 0,
-      operatingCostsCents: 88_000,
-      closingBalanceCents: 24_912_000,
+      operatingCostsCents: 154_000,
+      closingBalanceCents: 2_346_000,
     });
-    expect(projection[29]?.closingBalanceCents).toBe(22_360_000);
+    expect(projection[29]?.closingBalanceCents).toBe(-2_120_000);
     expect(state.economy.ledger).toEqual([]);
   });
 
   it('models explicit daily revenue and estimates cash runway without hiding distress', () => {
     const state = createInitialGameState();
-    expect(projectCampaignBalance(state, 30, 100_000).at(-1)?.closingBalanceCents).toBe(25_360_000);
-    expect(getCashRunwayDays(state)).toBe(284);
-    expect(getCashRunwayDays(state, 100_000)).toBeNull();
+    expect(projectCampaignBalance(state, 30, 200_000).at(-1)?.closingBalanceCents).toBe(3_880_000);
+    expect(getCashRunwayDays(state)).toBe(16);
+    expect(getCashRunwayDays(state, 200_000)).toBeNull();
 
     const lowFunds = { ...state, economy: { ...state.economy, openingBalanceCents: cents(1) } };
     expect(getCashRunwayDays(lowFunds)).toBe(0);

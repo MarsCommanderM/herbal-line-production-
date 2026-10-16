@@ -4,12 +4,9 @@
 
 ## 1. Produktauftrag
 
-Dr. Green Dump / DopeFarm : ist ein hochwertiges Web-Managementspiel über den legalen, kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. In dem der spieler die Leitung führt für einen legalen Produktions- und Lieferprozess für ein reguliertes medizinisches Cannabis Arznei-/Naturprodukt. Es simuliert — Cannabis-Anbau- und  Vertriebsanleitung. 
-Spielwelt: klar erkennbare Cannabis-Pflanzen, professionelle Anbauräume, Lampen, Bewässerung, Klima- und Lüftungstechnik, Arbeitsbereiche, Lager und Verarbeitung.
-Spieleraktionen: Pflege und Betreuung der Pflanzen müssen direkt sichtbar an den Pflanzen stattfinden – nicht nur als abstrakte Schaltflächen in einem Verwaltungsmenü.
-Geschäftsablauf: Pflanzenpflege, simulierte Verarbeitung, Qualitätssicherung, Lager, Logistik und Auslieferung an Apotheken. Die internen Abläufe der Apotheken selbst gehören nicht zum Spielumfang.
-Die Simulationswerte sind fiktive Spielwerte. Das schränkt die Cannabis-Thematik nicht ein: Die Pflanzen dürfen erkennbar sein und die Aktionen müssen visuell verständlich umgesetzt werden.
+Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert Anbau und ausführliche, direkt an den erkennbaren Cannabis-Pflanzen ausgeführte Pflege, simulierte Verarbeitung, Qualitätssicherung, Chargenrückverfolgbarkeit, Lager, Logistik und Auslieferung an Apotheken. Apothekeninterne Abläufe gehören nicht zum Spielumfang.
 
+Die Welt zeigt eindeutig erkennbare Cannabis-Pflanzen in einer professionellen Indoor-Produktionsanlage mit Beleuchtung, Bewässerung, Klima-/Lüftungstechnik und sichtbaren Pflegeinteraktionen. Der Spieler kann Pflanzen im Spiel visuell kontrollieren und Pflegeaktionen auslösen, beispielsweise Bewässerung, Licht-/Klimaeinstellungen, Nährstoffversorgung, Beschneiden und Stecklingspflege. Diese Aktionen sind ausschließlich abstrahierte, erfundene Spielmechaniken; alle Zahlen, Grenzwerte und Effekte sind fiktive Balancewerte. Das Spiel enthält keine realen Kultivierungsrezepte, exakten Klimasollwerte, Nährstoffpläne, Ernte-/Aushärtungsprotokolle, Extraktionsmethoden, Herstellungsbedingungen oder realen Liefer-/Vertriebsverfahren.
 
 ## 2. Spielversprechen
 
@@ -77,7 +74,7 @@ Diese Labels dürfen nur nach Erfüllung ihrer Gates verwendet werden.
 
 ## 8. Feststehende Entscheidungen
 
-- Spielname: Herbal Line; Plattform: Browser/Web.
+- Spielname: Dr. Green Dump / DopeFarm; Plattform: Browser/Web.
 - Stack: Vite, TypeScript, Three.js, PixiJS, Rapier 3D, IndexedDB.
 - Projektverantwortungs-Metadaten und gewünschte Copyright-Zeile: Michael Braunschweig / Copyright © 2026.
 - Welt: medizinische Cannabis-Pflanzenproduktion; Pflanzen- und Prozessmechaniken bleiben abstrahiert/fiktiv.
@@ -87,4 +84,4 @@ Diese Labels dürfen nur nach Erfüllung ihrer Gates verwendet werden.
 
 ## 9. Beweispflichtige Punkte — keine Rückfrage
 
-Der Agent stellt durch Audit und Prüfung fest: tatsächliche Repository-Wahrheit, Zielbrowser, Abhängigkeitsversionen, konkrete Asset-Rechte, Markenstatus von Herbal Line, Deploymentziel, Hardware-Baseline und Testergebnisse. Ungeklärte Rechte-/Markenfragen blockieren öffentliche kommerzielle Veröffentlichung, nicht die lokale Umsetzung abstrakter Spielsysteme.
+Der Agent stellt durch Audit und Prüfung fest: tatsächliche Repository-Wahrheit, Zielbrowser, Abhängigkeitsversionen, konkrete Asset-Rechte, Markenstatus von Dr. Green Dump / DopeFarm, Deploymentziel, Hardware-Baseline und Testergebnisse. Ungeklärte Rechte-/Markenfragen blockieren öffentliche kommerzielle Veröffentlichung, nicht die lokale Umsetzung abstrakter Spielsysteme.

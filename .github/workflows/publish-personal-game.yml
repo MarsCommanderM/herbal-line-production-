@@ -1,0 +1,60 @@
+name: Publish personal DopeFarm game and desktop ZIP
+
+on:
+  push:
+    branches:
+      - restore/original-masterpack-product-scope-20261012
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: dopefarm-personal-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.16.0"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Generate third-party license notices
+        run: node scripts/generate-third-party-notices.mjs
+      - name: Build static game for relative-path hosting
+        run: npm run build -- --base=./
+      - name: Create Windows desktop ZIP
+        run: python scripts/package_desktop_zip.py
+      - name: Upload complete Windows desktop ZIP independently of Pages deployment
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: DopeFarm-Desktop-${{ github.sha }}
+          path: |
+            dist/DopeFarm-Desktop.zip
+            dist/DopeFarm-Desktop.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload game site and downloadable ZIP
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Publish game site
+        id: deployment
+        uses: actions/deploy-pages@v4

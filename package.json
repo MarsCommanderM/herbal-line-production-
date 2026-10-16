@@ -1,9 +1,9 @@
 {
-  "name": "herbal-line",
+  "name": "dr-green-dump-dopefarm",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Herbal Line — a fictional botanical operations management game.",
+  "description": "Dr. Green Dump / DopeFarm — a fictional, strictly regulated medical-cannabis production management game with visible plant-care gameplay and abstract non-operational mechanics.",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
@@ -15,7 +15,10 @@
     "test:watch": "vitest",
     "validate:masterpack": "python scripts/validate_masterpack.py",
     "test:e2e": "playwright test",
-    "smoke:preview": "node scripts/smoke-preview.mjs"
+    "smoke:preview": "node scripts/smoke-preview.mjs",
+    "validate:product-policy": "node scripts/validate-product-policy.mjs",
+    "verify:masterpack-source": "python scripts/verify_masterpack_source_snapshot.py",
+    "scan:secrets": "node scripts/scan-secrets.mjs"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "0.17.3",
@@ -23,11 +26,12 @@
     "three": "0.176.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.64.0",
     "@types/three": "0.176.0",
     "typescript": "5.8.3",
-    "vite": "6.3.5",
-    "vitest": "3.1.2",
-    "@playwright/test": "1.52.0"
+    "vite": "6.4.4",
+    "vitest": "5.0.4"
   },
   "engines": {
     "node": ">=22 <23",

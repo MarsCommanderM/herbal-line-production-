@@ -1,4 +1,5 @@
-import { ENERGY_EFFICIENCY_UPGRADE_2_ID, ENERGY_EFFICIENCY_UPGRADE_ID } from './upgrades';
+import { DRYING_RACK_UPGRADE_ID, SENSOR_PACK_UPGRADE_ID } from './upgrades';
+import { GAME_BALANCE } from './balance';
 import type {
   EntityId,
   EventId,
@@ -32,34 +33,34 @@ export function createInitialGameState(): GameState {
   const sourceAcceptedEventId = eventId('event-seed-source-accepted-001');
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     gameVersion: '0.1.0',
     revision: 0,
     rngState: 17321,
     time: { day: 1, minuteOfDay: 480, totalMinutes: minute(0), speed: 1, paused: true },
     player: { id: playerId, callsign: 'Operations Director', level: 1, experience: 0 },
-    reputation: reputation(240),
+    reputation: reputation(GAME_BALANCE.initialReputation),
     rooms: [
-      { id: productionRoomId, definitionId: 'room-production', displayName: 'Pflanzenraum', kind: 'production', capacity: 12, occupied: 1, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 3, unlocked: true, assignedStaffIds: [entityId('staff-operations-001')], assignedMachineIds: [] },
-      { id: processingRoomId, definitionId: 'room-processing', displayName: 'Verarbeitung', kind: 'processing', capacity: 4, occupied: 0, condition: score(95), cleanliness: score(96), availability: score(97), powerUnitsPerHour: 2, unlocked: true, assignedStaffIds: [entityId('staff-maintenance-001')], assignedMachineIds: [entityId('machine-processing-001')] },
-      { id: qualityRoomId, definitionId: 'room-quality', displayName: 'Qualitätssicherung', kind: 'quality', capacity: 2, occupied: 0, condition: score(98), cleanliness: score(99), availability: score(99), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [entityId('staff-quality-001')], assignedMachineIds: [] },
-      { id: storageRoomId, definitionId: 'room-storage', displayName: 'Freigegebenes Lager', kind: 'storage', capacity: 40, occupied: 0, condition: score(97), cleanliness: score(98), availability: score(99), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [], assignedMachineIds: [] },
-      { id: logisticsRoomId, definitionId: 'room-logistics', displayName: 'Versand', kind: 'logistics', capacity: 5, occupied: 0, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [entityId('staff-logistics-001')], assignedMachineIds: [] },
+      { id: productionRoomId, definitionId: 'room-production', displayName: 'Pflanzenraum', kind: 'production', capacity: 6, occupied: 1, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 12, unlocked: true, assignedStaffIds: [entityId('staff-operations-001')], assignedMachineIds: [] },
+      { id: processingRoomId, definitionId: 'room-processing', displayName: 'Verarbeitung', kind: 'processing', capacity: 4, occupied: 0, condition: score(95), cleanliness: score(96), availability: score(97), powerUnitsPerHour: 8, unlocked: true, assignedStaffIds: [entityId('staff-maintenance-001')], assignedMachineIds: [entityId('machine-processing-001')] },
+      { id: qualityRoomId, definitionId: 'room-quality', displayName: 'Qualitätssicherung', kind: 'quality', capacity: 3, occupied: 0, condition: score(98), cleanliness: score(99), availability: score(99), powerUnitsPerHour: 6, unlocked: true, assignedStaffIds: [entityId('staff-quality-001')], assignedMachineIds: [] },
+      { id: storageRoomId, definitionId: 'room-storage', displayName: 'Freigegebenes Lager', kind: 'storage', capacity: 12, occupied: 0, condition: score(97), cleanliness: score(98), availability: score(99), powerUnitsPerHour: 3, unlocked: true, assignedStaffIds: [], assignedMachineIds: [] },
+      { id: logisticsRoomId, definitionId: 'room-logistics', displayName: 'Versand', kind: 'logistics', capacity: 4, occupied: 0, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [entityId('staff-logistics-001')], assignedMachineIds: [] },
     ],
     sourceLots: [
-      { id: sourceLotId, sourceRef: 'BOTANICAL-DEMO-001', receivedAt: minute(0), status: 'accepted', quantity: 12, qualityScore: score(92), roomId: productionRoomId, inspectionFindings: [], traceEventIds: [sourceAcceptedEventId] },
+      { id: sourceLotId, sourceRef: 'MED-CANNABIS-LOT-001', receivedAt: minute(0), status: 'accepted', quantity: 12, qualityScore: score(92), roomId: productionRoomId, inspectionFindings: [], traceEventIds: [sourceAcceptedEventId] },
     ],
     plants: [
-      { id: plantId, profileId: 'botanical-campaign-profile', sourceLotId, roomId: productionRoomId, stage: 'active', progress: score(80), vitality: score(88), qualityPotential: score(92), stressIndex: score(8), contaminationIndex: score(3), createdAt: minute(0), lastUpdatedAt: minute(0), batchId: null, rejectedReason: null },
+      { id: plantId, profileId: 'medical-cannabis-campaign-profile', sourceLotId, roomId: productionRoomId, stage: 'active', progress: score(80), vitality: score(88), qualityPotential: score(92), stressIndex: score(8), contaminationIndex: score(3), createdAt: minute(0), lastUpdatedAt: minute(0), batchId: null, rejectedReason: null, care: { waterLevel: 'balanced', lightLevel: 'balanced', temperatureLevel: 'balanced', humidityLevel: 'balanced', nutrientLevel: 'balanced', pruningCount: 0, cuttingsTaken: 0, cuttingsSet: 0, lastAction: null }, propagatedFromPlantId: null },
     ],
     batches: [],
     inventoryLots: [],
     qualityAssessments: [],
     orders: [
-      { id: entityId('order-buyer-001'), customerId: buyerId, itemDefinitionId: 'BOT-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
+      { id: entityId('order-buyer-001'), customerId: buyerId, itemDefinitionId: 'MED-CANNABIS-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
     ],
     customers: [
-      { id: buyerId, name: 'Botanischer Abnehmer Nord', kind: 'licensed_buyer', reliabilityScore: score(92), minimumReputation: reputation(100), preferredQuality: score(80), paymentDelayDays: 0, unlocked: true },
+      { id: buyerId, name: 'Apotheke Nord', kind: 'licensed_buyer', reliabilityScore: score(92), minimumReputation: reputation(100), preferredQuality: score(80), paymentDelayDays: 0, unlocked: true },
     ],
     deliveries: [],
     staff: [
@@ -73,14 +74,55 @@ export function createInitialGameState(): GameState {
       { id: entityId('machine-processing-001'), definitionId: 'fictional-processing-station', roomId: processingRoomId, condition: score(95), status: 'idle', activeJobId: null },
     ],
     upgrades: [
-      { id: ENERGY_EFFICIENCY_UPGRADE_ID, unlocked: true, purchasedAt: null },
-      { id: ENERGY_EFFICIENCY_UPGRADE_2_ID, unlocked: false, purchasedAt: null },
+      { id: SENSOR_PACK_UPGRADE_ID, unlocked: false, purchasedAt: null },
+      { id: DRYING_RACK_UPGRADE_ID, unlocked: false, purchasedAt: null },
     ],
-    compliance: { risk: risk(8), licenseStatus: 'valid', violations: [], auditDueAt: minute(4320), lastAuditAt: minute(0), blockedOperationCodes: [] },
-    economy: { openingBalanceCents: cents(25000000), ledger: [] },
+    compliance: { risk: risk(GAME_BALANCE.initialComplianceRisk), licenseStatus: 'valid', violations: [], auditDueAt: minute(4320), lastAuditAt: minute(0), blockedOperationCodes: [], cases: [], audits: [] },
+    economy: { openingBalanceCents: cents(GAME_BALANCE.initialMoneyCents), ledger: [] },
     logs: [
       { id: entityId('log-seed-001'), at: minute(0), category: 'campaign', code: 'CAMPAIGN_READY', message: 'Kampagne gestartet. Alle Produktionswerte sind fiktive Spielwerte.', actorId: playerId, relatedEntityIds: [sourceLotId, plantId] },
     ],
     ui: { selectedEntityId: plantId, activeScreen: 'facility', notifications: [] },
   };
 }
+
+
+/** Clean campaign entry point: real play starts before seed receipt; unit fixtures stay seeded above. */
+export function createNewCampaignGameState(): GameState {
+  const base = createInitialGameState();
+  const makeRoom = (
+    id: string, definitionId: string, displayName: string,
+    kind: GameState['rooms'][number]['kind'], capacity: number, powerUnitsPerHour: number,
+  ): GameState['rooms'][number] => ({
+    id: entityId(id), definitionId, displayName, kind, capacity, occupied: 0,
+    condition: score(98), cleanliness: score(98), availability: score(99), powerUnitsPerHour,
+    unlocked: true, assignedStaffIds: [], assignedMachineIds: [],
+  });
+  const originalRoom = (id: string): GameState['rooms'][number] => {
+    const found = base.rooms.find((item) => item.id === entityId(id));
+    if (!found) throw new Error('Required room fixture is missing: ' + id);
+    return found;
+  };
+  const rooms: GameState['rooms'] = [
+    makeRoom('room-intake-01', 'room-intake', 'Wareneingang & Samenarchiv', 'storage', 12, 1),
+    makeRoom('room-greenhouse-01', 'room-greenhouse', 'Gewächshaus & Anzucht', 'production', 16, 8),
+    makeRoom('room-utility-01', 'room-utility', 'Klima & Gebäudetechnik', 'utility', 4, 4),
+    makeRoom('room-seed-storage-01', 'room-seed-storage', 'Samenlager & Quarantäne', 'storage', 12, 1),
+    { ...originalRoom('room-production-01'), occupied: 0 },
+    originalRoom('room-processing-01'),
+    makeRoom('room-office-01', 'room-office', 'Büro & Schichtleitung', 'office', 6, 1),
+    originalRoom('room-quality-01'),
+    { ...originalRoom('room-storage-01'), occupied: 0 },
+    originalRoom('room-logistics-01'),
+  ];
+  return {
+    ...base, rooms, sourceLots: [], plants: [], batches: [], inventoryLots: [], qualityAssessments: [],
+    logs: [{
+      id: entityId('log-new-campaign-001'), at: minute(0), category: 'campaign', code: 'CAMPAIGN_READY',
+      message: 'Neue Kampagne gestartet. Saatgutannahme, Herkunftsprüfung, Gewächshaus, Indoor-Produktion und die dokumentierte Auslieferung bilden einen durchgängigen Spielablauf.',
+      actorId: base.player.id, relatedEntityIds: [base.player.id],
+    }],
+    ui: { ...base.ui, selectedEntityId: null },
+  };
+}
+

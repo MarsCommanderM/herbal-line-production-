@@ -1,4 +1,4 @@
-import type { CommandId, EntityId, GameState, Score0To100 } from './domain';
+import type { CareLevel, CommandId, EntityId, GameState, PlantCareAction, Score0To100, ViolationSeverity } from './domain';
 
 export interface CommandBase { commandId: CommandId; actorId: EntityId; expectedRevision: number; }
 export type DomainCommand =
@@ -8,9 +8,11 @@ export type DomainCommand =
   | (CommandBase & { type: 'SOURCE/RECEIVE'; sourceLotId: EntityId; sourceRef: string; quantity: number })
   | (CommandBase & { type: 'SOURCE/INSPECT'; sourceLotId: EntityId; accepted: boolean; qualityScore: Score0To100; findingCodes: string[] })
   | (CommandBase & { type: 'PLANT/CREATE'; plantId: EntityId; profileId: string; sourceLotId: EntityId; roomId: EntityId })
+  | (CommandBase & { type: 'PLANT/MOVE'; plantId: EntityId; roomId: EntityId })
   | (CommandBase & { type: 'PLANT/ADVANCE_FICTIONAL_STEP'; plantId: EntityId })
   | (CommandBase & { type: 'PLANT/REJECT'; plantId: EntityId; reasonCode: string })
   | (CommandBase & { type: 'PLANT/HARVEST'; plantId: EntityId })
+  | (CommandBase & { type: 'PLANT/CARE_ACTION'; plantId: EntityId; action: PlantCareAction; setting?: CareLevel })
   | (CommandBase & { type: 'BATCH/CREATE'; batchId: EntityId; plantIds: EntityId[]; profileId: string })
   | (CommandBase & { type: 'BATCH/QUEUE'; batchId: EntityId; roomId: EntityId })
   | (CommandBase & { type: 'BATCH/START_PROCESSING'; batchId: EntityId; machineId: EntityId })
@@ -32,6 +34,12 @@ export type DomainCommand =
   | (CommandBase & { type: 'UPGRADE/PURCHASE'; upgradeId: string })
   | (CommandBase & { type: 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT' })
   | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId })
+  | (CommandBase & { type: 'COMPLIANCE/COMPLETE_AUDIT'; auditId: EntityId })
+  | (CommandBase & { type: 'COMPLIANCE/RECORD_INCIDENT'; caseId: EntityId; violationId: EntityId; code: string; severity: ViolationSeverity; relatedEntityIds: EntityId[] })
+  | (CommandBase & { type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION'; caseId: EntityId; actionCode: string })
+  | (CommandBase & { type: 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION'; caseId: EntityId })
+  | (CommandBase & { type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION'; caseId: EntityId; passed: boolean; resolutionCode: string })
+  | (CommandBase & { type: 'COMPLIANCE/FINALIZE_RECOVERY' })
 ;
 
 export type UICommand =

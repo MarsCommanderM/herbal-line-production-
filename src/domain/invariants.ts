@@ -24,6 +24,37 @@ export function validateGameStateInvariants(state: GameState): StateInvariantVio
     add('INVALID_RNG_STATE', 'rngState', 'RNG state must be a non-negative safe integer.');
   }
 
+  const complianceCases = state.compliance.cases ?? [];
+  const auditRuns = state.compliance.audits ?? [];
+  const violationIds = new Set(state.compliance.violations.map((item) => item.id));
+  const caseIds = new Set<string>();
+  for (const complianceCase of complianceCases) {
+    if (caseIds.has(complianceCase.id)) add('DUPLICATE_COMPLIANCE_CASE_ID', 'compliance.cases.' + complianceCase.id, 'Compliance case IDs must be unique.');
+    caseIds.add(complianceCase.id);
+    if (!violationIds.has(complianceCase.violationId)) add('ORPHAN_COMPLIANCE_CASE', 'compliance.cases.' + complianceCase.id, 'Every compliance case must reference an existing violation.');
+    const violation = state.compliance.violations.find((item) => item.id === complianceCase.violationId);
+    if (complianceCase.status === 'closed' && (!violation || violation.resolvedAt === null || complianceCase.closedAt === null || complianceCase.verifiedAt === null)) {
+      add('CLOSED_CASE_WITHOUT_VERIFICATION', 'compliance.cases.' + complianceCase.id, 'A closed compliance case requires a verified and resolved violation.');
+    }
+    if (complianceCase.status === 'verification' && (complianceCase.correctiveActionCode === null || complianceCase.submittedAt === null)) {
+      add('INVALID_CASE_VERIFICATION_STATE', 'compliance.cases.' + complianceCase.id, 'A case in verification requires a submitted corrective action.');
+    }
+  }
+  const auditIds = new Set<string>();
+  let inProgressAuditCount = 0;
+  for (const audit of auditRuns) {
+    if (auditIds.has(audit.id)) add('DUPLICATE_AUDIT_ID', 'compliance.audits.' + audit.id, 'Audit IDs must be unique.');
+    auditIds.add(audit.id);
+    if (audit.status === 'in_progress') {
+      inProgressAuditCount += 1;
+      if (audit.completedAt !== null || audit.outcome !== null) add('INVALID_ACTIVE_AUDIT', 'compliance.audits.' + audit.id, 'An active audit cannot have a completion time or outcome.');
+    } else if (audit.completedAt === null || audit.outcome === null) {
+      add('INVALID_COMPLETED_AUDIT', 'compliance.audits.' + audit.id, 'A completed audit requires a completion time and outcome.');
+    }
+    if (audit.violationIds.some((id) => !violationIds.has(id))) add('ORPHAN_AUDIT_VIOLATION', 'compliance.audits.' + audit.id, 'Audit references must point to existing violations.');
+  }
+  if (inProgressAuditCount > 1) add('MULTIPLE_ACTIVE_AUDITS', 'compliance.audits', 'Only one audit may be active at a time.');
+
   const rooms = new Map(state.rooms.map((room) => [room.id, room]));
   for (const room of state.rooms) {
     if (!Number.isSafeInteger(room.capacity) || room.capacity < 0) {
@@ -39,6 +70,29 @@ export function validateGameStateInvariants(state: GameState): StateInvariantVio
   const lots = new Map(state.inventoryLots.map((lot) => [lot.id, lot]));
 
   for (const plant of state.plants) {
+    if (plant.care) {
+      const allowedLevels = new Set(['low', 'balanced', 'high']);
+      for (const [field, value] of [
+        ['waterLevel', plant.care.waterLevel],
+        ['lightLevel', plant.care.lightLevel],
+        ['temperatureLevel', plant.care.temperatureLevel],
+        ['humidityLevel', plant.care.humidityLevel],
+        ['nutrientLevel', plant.care.nutrientLevel],
+      ] as const) {
+        if (!allowedLevels.has(value)) add('INVALID_PLANT_CARE_LEVEL', 'plants.' + plant.id + '.care.' + field, 'Plant care settings must use a defined fictional game level.');
+      }
+      for (const [field, value] of [
+        ['pruningCount', plant.care.pruningCount],
+        ['cuttingsTaken', plant.care.cuttingsTaken],
+        ['cuttingsSet', plant.care.cuttingsSet],
+      ] as const) {
+        if (!Number.isSafeInteger(value) || value < 0) add('INVALID_PLANT_CARE_COUNT', 'plants.' + plant.id + '.care.' + field, 'Plant-care counters must be non-negative safe integers.');
+      }
+      if (plant.care.cuttingsSet > plant.care.cuttingsTaken) add('CUTTING_COUNT_MISMATCH', 'plants.' + plant.id + '.care', 'Set cutting count cannot exceed the number cut.');
+    }
+    if (plant.propagatedFromPlantId && !state.plants.some((parent) => parent.id === plant.propagatedFromPlantId)) {
+      add('PROPAGATION_PARENT_MISSING', 'plants.' + plant.id + '.propagatedFromPlantId', 'A propagated plant must reference its parent plant.');
+    }
     if (plant.batchId !== null) {
       const batch = batches.get(plant.batchId);
       if (!batch || !batch.plantIds.includes(plant.id)) {

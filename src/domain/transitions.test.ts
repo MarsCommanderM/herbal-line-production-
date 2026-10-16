@@ -48,6 +48,13 @@ describe('inventory reservation', () => {
     });
   });
 
+  it('allows a previously reserved lot to receive an additional reservation while preserving status', () => {
+    expect(reserveInventory({ ...lot, quantityReserved: 5, status: 'reserved' }, 3)).toEqual({
+      ok: true,
+      reservation: { quantityAvailable: 12, quantityReserved: 8, status: 'reserved' },
+    });
+  });
+
   it('rejects over-allocation without mutating the source', () => {
     expect(reserveInventory(lot, 11)).toEqual({ ok: false, error: 'INSUFFICIENT_STOCK' });
     expect(lot.quantityReserved).toBe(2);

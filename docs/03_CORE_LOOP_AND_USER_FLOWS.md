@@ -1,4 +1,4 @@
-# Core Loop, Zustände und User-Flows
+# Dr. Green Dump / DopeFarm — Core Loop, Zustände und User-Flows
 
 ## Hauptfluss
 
@@ -8,6 +8,14 @@
 - Startscreen bietet Neues Spiel, Fortsetzen, Spielstände, Einstellungen und Credits.
 - Save wird validiert und migriert, bevor er in den Store gelangt.
 - Ein fehlerhafter Save überschreibt nicht automatisch den letzten gültigen Autosave; Recovery-/Backup-Option wird angeboten.
+
+### Cannabis-Pflanzenpflege — zentraler Gameplay-Loop
+
+- Eine Pflanze wird direkt in der 3D-Anlage ausgewählt; der UI-Inspector zeigt genau diese Pflanze und ihren aktuellen simulierten Zustand.
+- Pflegeaktionen sind unmittelbar am Pflanzenobjekt sichtbar und geben klares Feedback: Bewässern, Licht einstellen, fiktive Temperatur-/Luftfeuchtigkeitswerte steuern, Nährstoffversorgung ausbalancieren, Beschneiden sowie Stecklinge schneiden und setzen.
+- Jede Aktion muss einen echten, validierten Domain-Command auslösen, den Zustand und das Anlagenbild nachvollziehbar ändern, einen Logeintrag erzeugen und nachweislich gespeichert werden können.
+- Alle Werte sind erfundene Spiel-Balancewerte. Keine realen Sollwerte oder Anbauanleitungen.
+- Apothekenprozesse enden am Kundenauftrag und an der protokollierten Auslieferung; die interne Arbeit der Apotheke wird nicht simuliert.
 
 ### Tagesplanung
 - Zeigt Aufträge/Fälligkeiten, Lagerwarnungen, Raumbelegung, Schichten, Compliance-Risiko und Wartungsbedarf.

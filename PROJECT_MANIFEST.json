@@ -1,8 +1,8 @@
 {
-  "projectId": "herbal-line-web-management-sim",
-  "title": "Herbal Line",
+  "projectId": "dr-green-dump-dopefarm-web-management-sim",
+  "title": "Dr. Green Dump / DopeFarm",
   "documentVersion": "1.0.0",
-  "documentDate": "2026-10-11",
+  "documentDate": "2026-10-12",
   "projectOwnerMetadata": "Michael Braunschweig",
   "copyrightNotice": "Copyright © 2026 Michael Braunschweig. All rights reserved, subject to applicable law and documented third-party licenses.",
   "platform": "Web Browser",
@@ -15,8 +15,8 @@
   "stateSchemaVersion": 1,
   "saveSchemaVersion": 1,
   "simulationModel": "fixed-step deterministic pure TypeScript domain simulation",
-  "productDescription": "Ein hochwertiges Web-Managementspiel über den Betrieb einer fiktiven, streng regulierten botanischen Anlage.",
-  "simulationBoundary": "Fictional botanical management simulation only; no real-world cultivation, preparation, extraction, or controlled-substance distribution instructions.",
+  "productDescription": "Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Der Spieler steuert Anbau und sichtbare, ausführliche Pflege direkt an erkennbaren Cannabis-Pflanzen, simulierte Verarbeitung, Qualitätssicherung, Lager, Logistik und Auslieferung an Apotheken. Pflegeaktionen umfassen Bewässerung, Licht, fiktive Klima-/Luftfeuchtigkeits-Einstellungen, Nährstoffversorgung, Beschneiden sowie Stecklingspflege und -setzung. Sämtliche Zahlen und Effekte sind erfundene Spielangaben, keine realen Werte oder exakten Anbauanleitungen. Apothekeninterne Abläufe gehören nicht zum Spielumfang.",
+  "simulationBoundary": "Fictional management simulation with visually recognizable cannabis plants and visible care interactions; all parameters/effects are invented game-balance values. No real-world cultivation values, recipes, manufacturing protocols, or pharmacy operations.",
   "releaseStandard": "production-grade; no prototypes, blockouts, fake functionality or placeholder assets represented as final",
   "workingTitleTrademarkStatus": "not cleared; trademark clearance required before public commercial release"
 }

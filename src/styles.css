@@ -111,3 +111,255 @@ body { min-width: 320px; min-height: 480px; }
 .tutorial-card > p:last-child { margin: 0; color: #bac9d9; font-size: 11px; line-height: 1.5; }
 #campaign-tutorial[data-status="blocked"] .tutorial-card { border-color: #94505a; }
 #campaign-tutorial[data-status="complete"] .tutorial-card { border-color: #3d7965; }
+
+
+.plant-care-section {
+  border-top: 1px solid #34445a;
+}
+
+.plant-picker {
+  width: 100%;
+  min-height: 40px;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border: 1px solid #465a73;
+  border-radius: 8px;
+  background: #111c2c;
+  color: #edf4ff;
+  font: inherit;
+}
+
+.plant-care-summary,
+.plant-care-note {
+  color: #aebfd4;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.care-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.care-setting-card {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #33485f;
+  border-radius: 10px;
+  background: #101a29;
+}
+
+.care-setting-card h4 {
+  margin: 0 0 8px;
+  color: #e7eef9;
+  font-size: 0.9rem;
+}
+
+.care-setting-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.care-setting-button,
+.care-action-button {
+  min-height: 36px;
+  padding: 6px 7px;
+  border: 1px solid #425a74;
+  border-radius: 7px;
+  background: #17283b;
+  color: #eaf3ff;
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.care-setting-button[aria-pressed="true"] {
+  border-color: #51d6ad;
+  background: #183f3b;
+  box-shadow: inset 0 0 0 1px #51d6ad;
+}
+
+.care-action-button {
+  font-size: 0.82rem;
+}
+
+.plant-care-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.care-setting-button:disabled,
+.care-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.care-setting-button:focus-visible,
+.care-action-button:focus-visible,
+.plant-picker:focus-visible {
+  outline: 3px solid #8bc9ff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .care-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .care-setting-button {
+    min-height: 40px;
+    padding-inline: 4px;
+  }
+}
+
+
+#gamepad-hint {
+  position: absolute;
+  z-index: 3;
+  top: 176px;
+  left: 18px;
+  width: min(360px, calc(100vw - 36px));
+  padding: 9px 12px;
+  border: 1px solid rgba(119, 160, 146, 0.48);
+  border-radius: 8px;
+  background: rgba(8, 18, 22, 0.82);
+  color: #d4eadf;
+  font: 700 10px/1.55 Arial, sans-serif;
+  letter-spacing: 0.035em;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+#gamepad-hint[data-connected="true"] {
+  border-color: #62bc91;
+  background: rgba(7, 38, 26, 0.88);
+  color: #c7f5dd;
+}
+@media (max-width: 760px) {
+  #gamepad-hint {
+    top: 58px;
+    left: 14px;
+    width: min(350px, calc(100vw - 28px));
+    font-size: 9px;
+  }
+}
+
+
+/* Immersive game-first layout: management is a drawer, not a permanent obstruction. */
+#game-panel[hidden] { display: none !important; }
+.floating-icon-button {
+  position: absolute;
+  z-index: 6;
+  top: calc(env(safe-area-inset-top, 0px) + 13px);
+  right: 13px;
+  width: 46px;
+  height: 46px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(158, 197, 178, 0.74);
+  border-radius: 50%;
+  background: rgba(9, 21, 27, 0.88);
+  color: #e7f4ed;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.floating-icon-button svg { width: 22px; height: 22px; }
+.floating-icon-button:hover { background: rgba(31, 73, 57, 0.94); }
+.floating-icon-button:focus-visible,
+.panel-close-button:focus-visible,
+.gamepad-hint-button:focus-visible { outline: 2px solid #b5f2d5; outline-offset: 3px; }
+.panel-close-button {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(132, 165, 190, 0.5);
+  border-radius: 50%;
+  background: #142334;
+  color: #f4f7fc;
+  font: 400 26px/1 Arial, sans-serif;
+  cursor: pointer;
+}
+.panel-header { position: relative; padding-right: 44px; }
+#reset-camera {
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: 69px;
+  left: auto;
+  padding: 10px 12px;
+  border-radius: 999px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+#gamepad-hint.gamepad-hint-button {
+  position: absolute;
+  z-index: 5;
+  left: 14px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  top: auto;
+  width: auto;
+  max-width: calc(100vw - 84px);
+  padding: 9px 12px;
+  border: 1px solid rgba(119, 160, 146, 0.55);
+  border-radius: 999px;
+  background: rgba(8, 18, 22, 0.78);
+  color: #d4eadf;
+  font: 700 10px/1.35 Arial, sans-serif;
+  letter-spacing: 0.02em;
+  text-align: left;
+  white-space: normal;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+}
+#gamepad-hint.gamepad-hint-button[data-expanded="true"] {
+  width: min(310px, calc(100vw - 28px));
+  max-width: calc(100vw - 28px);
+  border-radius: 12px;
+  line-height: 1.55;
+}
+#gamepad-hint.gamepad-hint-button[data-connected="true"] {
+  border-color: #62bc91;
+  background: rgba(7, 38, 26, 0.9);
+  color: #c7f5dd;
+}
+@media (max-width: 760px) {
+  #game-panel {
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    right: 10px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    left: 10px;
+    width: auto;
+    max-height: none;
+    padding: 16px;
+    padding-top: 20px;
+    border-radius: 18px;
+    background: rgba(7, 14, 25, 0.97);
+  }
+  .panel-header h1 { font-size: 19px; }
+  #reset-camera {
+    top: auto;
+    right: 68px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    left: auto;
+    max-width: 155px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #ui-root { pointer-events: none; }
+}
+@media (max-width: 390px) {
+  #reset-camera { width: 43px; height: 43px; padding: 0; font-size: 0; }
+  #reset-camera::before { content: '↻'; font: 25px/1 Arial, sans-serif; }
+  .floating-icon-button { width: 43px; height: 43px; }
+}

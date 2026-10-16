@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://herbal-line.invalid/schemas/room-definition.schema.json",
+  "title": "Room Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "displayName", "kind", "capacity", "costCents", "powerUnitsPerGameHour", "requiredUnlocks"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$" },
+    "displayName": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["production", "processing", "quality", "storage", "logistics", "office", "utility"] },
+    "capacity": { "type": "integer", "minimum": 1 },
+    "costCents": { "type": "integer", "minimum": 0 },
+    "powerUnitsPerGameHour": { "type": "integer", "minimum": 0 },
+    "requiredUnlocks": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "visualAssetId": { "type": "string" }
+  }
+}

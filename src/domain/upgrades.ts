@@ -1,7 +1,12 @@
 import type { GameState, MoneyCents } from '../../contracts/domain';
 
-export const ENERGY_EFFICIENCY_UPGRADE_ID = 'energy-efficiency-1';
-export const ENERGY_EFFICIENCY_UPGRADE_2_ID = 'energy-efficiency-2';
+/**
+ * The source pack names these upgrade IDs but does not assign prices, effects,
+ * prerequisites or unlock rules. They remain unavailable until those game-only
+ * balance values are explicitly approved and versioned.
+ */
+export const SENSOR_PACK_UPGRADE_ID = 'sensor_pack_1';
+export const DRYING_RACK_UPGRADE_ID = 'drying_rack_1';
 
 export interface EconomyUpgradeDefinition {
   id: string;
@@ -12,23 +17,8 @@ export interface EconomyUpgradeDefinition {
   prerequisiteUpgradeId?: string;
 }
 
-export const ECONOMY_UPGRADES: readonly EconomyUpgradeDefinition[] = [
-  {
-    id: ENERGY_EFFICIENCY_UPGRADE_ID,
-    label: 'Energieeffizienz I',
-    description: 'Senkt die fiktiven Energiekosten dauerhaft um 20 Prozent.',
-    costCents: 250_000 as MoneyCents,
-    utilityReductionPercent: 20,
-  },
-  {
-    id: ENERGY_EFFICIENCY_UPGRADE_2_ID,
-    label: 'Energieeffizienz II',
-    description: 'Reduziert die verbleibenden fiktiven Energiekosten zusätzlich um 10 Prozent.',
-    costCents: 150_000 as MoneyCents,
-    utilityReductionPercent: 10,
-    prerequisiteUpgradeId: ENERGY_EFFICIENCY_UPGRADE_ID,
-  },
-];
+/** Intentionally empty: no unapproved numeric upgrade definitions are active. */
+export const ECONOMY_UPGRADES: readonly EconomyUpgradeDefinition[] = [];
 
 export function getEconomyUpgradeDefinition(id: string): EconomyUpgradeDefinition | undefined {
   return ECONOMY_UPGRADES.find((upgrade) => upgrade.id === id);

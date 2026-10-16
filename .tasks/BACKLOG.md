@@ -1,19 +1,27 @@
-# Herbal Line — Prioritized Backlog
+# Dr. Green Dump / DopeFarm — Prioritized Backlog
 
-| ID | Priority | Work package | Depends on | Acceptance evidence | Status |
-|---|---|---|---|---|---|
-| P0-001 | P0 | Repository truth audit | — | `docs/audits/BASELINE.md`; remote HEAD/path evidence; ZIP SHA-256 and archive validation | Audit documented; historical baseline complete |
-| P0-002 | P0 | Canonical scope/contract reconciliation and source archive provenance | P0-001 | Contract decision log, archive SHA-256, per-path blob report and explicit scope decision | Scope fork documented in `docs/audits/MASTERPACK_PARITY_REPORT.md`; exact ZIP mirror intentionally not claimed |
-| P0-003 | P0 | Reproducible TypeScript/CI baseline | P0-002 | Same-revision install, lint, format, typecheck, unit tests, build, browser E2E, preview smoke, pack validation and diff check | VERIFIED on feature revision `64e29a6fe0165075b61914f296114294c2d3e981`; run 38208111520 green |
-| P1-001 | P1 | Botanical operations vertical slice | P0-003 | Domain transition tests plus real Chromium interaction and WebGL canvas | Full 12-command browser delivery path and reload/ledger assertions added; exact-revision CI pending; negative-path/accessibility acceptance remains open |
-| P1-002 | P1 | Save/load, validation and recovery | P0-003 | SHA-256 envelope, IndexedDB tests, reload round-trip, corrupt-primary fallback, import/export E2E | Functional baseline implemented; migration-chain, quota/interrupted-write and cross-browser hardening open |
-| P1-003 | P1 | Operational dashboard and queue UX | P1-001 | State-derived guidance, blocked-action reasons, keyboard and viewport acceptance | Keyboard order, mobile geometry, live regions and reduced motion covered by 7 Chromium E2E tests; full WCAG review open |
-| P1-004 | P1 | Quality, audit and incident systems | P1-001 | Hold/release gates, audit trail, rejected-batch terminal path and corrective-action tests | Terminal rejection and UI recovery path merged and CI-verified; corrective-action/incident review remains open |
-| P2-001 | P2 | Facility, capacity, staffing and maintenance | P1-001 | Capacity/assignment invariants, maintenance lifecycle, role constraints, unit and Chromium E2E scenarios | Staffing/maintenance implementation added on reconciled branch; same-revision CI verification pending |
-| P2-002 | P2 | Economy and progression | P2-001 | Idempotent daily wages/utilities, multi-day projections, cash runway, tiered ledger-backed upgrades, one-time distress recovery, unit and Chromium E2E scenarios | Daily settlement, forecast/runway, one-time recovery and two prerequisite-gated efficiency tiers implemented on feature branch; exact-revision CI pending; longer-horizon balance tuning remains open |
-| P2-003 | P2 | Content, tutorial and contextual notices | P1-003 | Content review, source register, UX tests | State-derived six-step tutorial, source register and browser assertions added; exact-revision CI pending; contextual notices and accessibility review remain open |
-| P3-001 | P3 | Visual/audio polish and asset pipeline | P1-003 | Asset/license manifest, visual QA, performance evidence | Pending; current facility view is a foundation, not final art |
-| P3-002 | P3 | Release candidate QA/security/rights | P2-* | CI evidence, dependency/secret scan, accessibility and rights review | Pending |
-| P4-001 | P4 | Release and post-launch operations | P3-* | Artifact identity, rollback plan, release smoke tests, incident runbook | Pending |
+**Status source:** exact-HEAD CI and Master Pack Validation both passed on `d0e88c1433967617b7d92b91ac6bc12891dc7a8d`; [App CI 38564908633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633), [Master Pack Validation 38564908664](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908664).
 
-Priorities describe order, not permission to bypass dependencies. No task is complete merely because its files exist.
+| ID | Priority | Work package | Status | Evidence / remaining acceptance |
+|---|---|---|---|---|
+| P0-001 | P0 | Repository truth audit | Complete | Branch, base, manifest, provenance and known risks recorded; do not confuse source-snapshot identity with ZIP-container re-hashing. |
+| P0-002 | P0 | Canonical scope/contract reconciliation | Complete for current implementation | Owner-confirmed medical-cannabis game scope and Third Person are enforced by policy and product validator. Detailed product decisions listed below remain open. |
+| P0-003 | P0 | Reproducible engineering baseline | Green on exact current HEAD | [App CI 38564908633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633) and [Master Pack Validation 38564908664](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908664) both passed on `d0e88c1433967617b7d92b91ac6bc12891dc7a8d`; App CI reports 11 unit-test files passed and 71 browser tests passed with 4 WebGL-dependent cases skipped. |
+| P1-001 | P1 | Intake-to-pharmacy vertical slice | Implemented / CI green | Domain and browser scenarios cover intake, production, QC, inventory, order, delivery, ledger and traceability. |
+| P1-002 | P1 | Save/load, validation and recovery | Implemented / exact-HEAD CI green | Historical Master Pack V1 and previous active-app V1 migrate into V2 after checksum, payload, ledger and invariant checks. Conflicting balances or unreconstructable assessment references fail closed without overwriting source data. |
+| P1-003 | P1 | Operational dashboard and queue UX | Implemented / CI green | Keyboard, responsive layout, status/error paths, empty states and Axe WCAG 2.1/2.2 A/AA checks pass in CI. |
+| P1-004 | P1 | Quality, audit and incident systems | Lifecycle implemented / exact-HEAD CI green; design input remains | Typed audit/case state, incidents, violations, corrective-action transitions, audit events, recovery gate, persisted save validation, invariants, management actions, unit tests and browser reload coverage pass on `c099d29…`. Numerical risk reduction remains blocked by missing approved fictional balance rules. |
+| P1-005 | P1 | Visible cannabis plant care and 3D feedback | Chromium acceptance green; full renderer parity open | Exact-HEAD E2E verifies third-person movement and direct plant selection on Chromium/SwiftShader. Four renderer-dependent browser cases are skipped when a non-reference context has no WebGL canvas and remain explicitly unproven. |
+| P2-001 | P2 | Facility, capacity, staffing and maintenance | Implemented / CI green | Invariants and browser scenarios pass. |
+| P2-002 | P2 | Economy and progression | Blocked by missing authoritative balance | `sensor_pack_1` and `drying_rack_1` remain unavailable; no XP thresholds, prices, effects or unlock rules may be invented. |
+| P2-003 | P2 | Content, tutorial and contextual guidance | Implemented / CI green | State-derived guidance/tutorial and compliance/QC/delivery states have unit and browser coverage. Editorial/content approval remains a release gate. |
+| P3-001 | P3 | Final art/audio/asset pipeline | Blocked by approved final assets | Current procedural scene is a functional foundation, not final premium art. Final art/audio must have recorded provenance and compatible commercial-use rights; visual/performance evidence remains open. |
+| P3-002 | P3 | Release candidate QA/security/rights | Engineering checks green on exact HEAD; release review open | On `c099d29…`: secret-pattern scan, `npm audit` (0 vulnerabilities), CycloneDX/license metadata comparison, axe and source-snapshot checks passed. Legal compatibility/notice review, contributor-rights, privacy/security sign-off, working-title review and final asset rights remain open. |
+| P4-001 | P4 | Release and post-launch operations | Pending | Define release artifact identity, rollback, production smoke and incident response; execute a rollback drill. |
+
+## Hard gates
+
+- Do not merge or modify `main` while P1 blockers and release rights gates remain open.
+- Running, failed, cancelled or skipped workflow **jobs** are not passes. The current browser suite itself reported 4 skipped WebGL-dependent cases; they are explicitly not represented as passed tests.
+- Do not invent prices, progression, legacy-save formats, incident workflows, licenses or owner approvals.
+- Every code change needs exact-SHA App CI and Master Pack Validation, reviewed diff, tests and updated evidence.

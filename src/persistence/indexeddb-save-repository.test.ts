@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { SaveEnvelopeV1 } from '../../contracts/persistence';
+import type { SaveEnvelopeV1, SaveEnvelopeV2 } from '../../contracts/persistence';
 import { createInitialGameState } from '../domain/initial-state';
-import { createSaveEnvelope } from './save-codec';
+import { createSaveEnvelope, sha256Hex, stableStringify } from './save-codec';
 import { IndexedDbSaveRepository } from './indexeddb-save-repository';
 
 interface FakeStoredRecord {
   slotId: string;
-  envelope: SaveEnvelopeV1;
+  envelope: SaveEnvelopeV1 | SaveEnvelopeV2;
   metadata: { slotId: string; revision: number; savedAtRealTime: string; gameVersion: string; byteLength: number };
 }
 
@@ -25,9 +25,12 @@ class FakeObjectStore {
         request.onsuccess?.(new Event('success'));
         queueMicrotask(() => this.transaction.oncomplete?.(new Event('complete')));
       } catch (error) {
-        Object.defineProperty(request, 'error', { value: error, configurable: true });
+        const transactionError = error instanceof DOMException ? error : new DOMException(String(error), 'UnknownError');
+        Object.defineProperty(request, 'error', { value: transactionError, configurable: true });
         request.onerror?.(new Event('error'));
-        this.transaction.onerror?.(new Event('error'));
+        this.transaction.error = transactionError;
+        if (transactionError.name === 'AbortError') this.transaction.onabort?.(new Event('abort'));
+        else this.transaction.onerror?.(new Event('error'));
       }
     });
     return request;
@@ -38,6 +41,10 @@ class FakeObjectStore {
       if (this.database.failNextPut) {
         this.database.failNextPut = false;
         throw new DOMException('Simulated storage quota exhaustion.', 'QuotaExceededError');
+      }
+      if (this.database.abortNextPut) {
+        this.database.abortNextPut = false;
+        throw new DOMException('Simulated interrupted transaction.', 'AbortError');
       }
       this.database.records.set(value.slotId, clone(value));
       return value.slotId;
@@ -79,6 +86,7 @@ class FakeTransaction {
 
 class FakeDatabase {
   failNextPut = false;
+  abortNextPut = false;
   readonly records = new Map<string, FakeStoredRecord>();
   readonly stores = new Set<string>();
   readonly objectStoreNames = {
@@ -194,9 +202,42 @@ describe('IndexedDbSaveRepository', () => {
     expect(await repository.load('campaign-01')).toEqual(goodEnvelope);
   });
 
+  it('surfaces an aborted write and preserves the last committed save', async () => {
+    const { repository, factory } = createRepository();
+    const initial = createInitialGameState();
+    const goodEnvelope = await createSaveEnvelope(initial, '2026-10-12T12:00:00.000Z');
+    await repository.save('campaign-01', goodEnvelope);
+
+    const newerEnvelope = await createSaveEnvelope({ ...initial, revision: 1 }, '2026-10-12T12:01:00.000Z');
+    const database = factory.databases.get('herbal-line-test');
+    if (!database) throw new Error('Test database was not created.');
+    database.abortNextPut = true;
+
+    await expect(repository.save('campaign-01', newerEnvelope)).rejects.toThrow('Simulated interrupted transaction.');
+    expect(await repository.load('campaign-01')).toEqual(goodEnvelope);
+  });
+
   it('validates slot IDs and reports missing exports', async () => {
     const { repository } = createRepository();
     await expect(repository.save('../escape', await createSaveEnvelope(createInitialGameState()))).rejects.toThrow('Save slot IDs');
     await expect(repository.exportSlot('missing-slot')).rejects.toThrow('Save slot not found');
   });
+
+  it('migrates and rewrites an active V1 record to V2 on load', async () => {
+    const { repository, factory } = createRepository();
+    const current = await createSaveEnvelope(createInitialGameState(), '2026-10-12T12:00:00.000Z');
+    const { checksum: _checksum, ...v2Body } = current;
+    const payload = { ...v2Body.payload, schemaVersion: 1 };
+    const v1Body = { ...v2Body, schemaVersion: 1, payload };
+    const v1Envelope = { ...v1Body, checksum: await sha256Hex(stableStringify(v1Body)) } as unknown as SaveEnvelopeV1;
+    const database = factory.databases.get('herbal-line-test') ?? new FakeDatabase();
+    database.stores.add('saves'); factory.databases.set('herbal-line-test', database);
+    database.records.set('campaign-legacy', { slotId: 'campaign-legacy', envelope: v1Envelope,
+      metadata: { slotId: 'campaign-legacy', revision: v1Envelope.revision, savedAtRealTime: v1Envelope.savedAtRealTime, gameVersion: v1Envelope.gameVersion, byteLength: 0 } });
+    const loaded = await repository.load('campaign-legacy');
+    expect(loaded?.schemaVersion).toBe(2);
+    expect(database.records.get('campaign-legacy')?.envelope.schemaVersion).toBe(2);
+    expect(database.records.get('campaign-legacy')?.metadata.byteLength).toBeGreaterThan(0);
+  });
+
 });

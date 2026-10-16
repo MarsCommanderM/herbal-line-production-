@@ -4,7 +4,7 @@
 
 Vorgegebene Projektmetadaten:
 
-`Herbal Line — Copyright © 2026 Michael Braunschweig. All rights reserved.`
+`Dr. Green Dump / DopeFarm — Copyright © 2026 Michael Braunschweig. All rights reserved.`
 
 Diese Zeile wird als gewünschte Projektangabe in die Unterlagen übernommen. Sie beweist nicht von selbst, dass alle Beiträge, Assets, Fonts, Sounds, Codebestandteile, Markenrechte oder Auftragsarbeiten tatsächlich exklusiv dem Genannten zustehen. Der Hauptagent muss die Herkunft jedes Beitrags und jede eingeräumte Nutzungsrechtelage erfassen, anstatt aus dem Namen im Manifest Eigentum abzuleiten.
 
@@ -26,15 +26,15 @@ Nach deutschem Urheberrechtsgesetz ist Urheber grundsätzlich der Schöpfer eine
 
 ## 4. Produktname und Marke
 
-`Herbal Line` ist der Arbeits-/Produktname in diesem Dokument, aber nicht als markenrechtlich freigegeben gekennzeichnet. Vor öffentlicher kommerzieller Nutzung: Recherche nach identischen und ähnlichen Zeichen in relevanten Waren-/Dienstleistungsklassen und Gebieten (mindestens DPMAregister sowie, falls der Zielmarkt es erfordert, EUIPO/TMview/WIPO), Prüfung von Domains/Stores, Dokumentation der Suchstrategie und ggf. fachkundige Rechtsprüfung. Ein einfacher Treffer-freier Suchlauf ist keine Garantie der Verfügbarkeit.
+`Dr. Green Dump / DopeFarm` ist der Arbeits-/Produktname in diesem Dokument, aber nicht als markenrechtlich freigegeben gekennzeichnet. Vor öffentlicher kommerzieller Nutzung: Recherche nach identischen und ähnlichen Zeichen in relevanten Waren-/Dienstleistungsklassen und Gebieten (mindestens DPMAregister sowie, falls der Zielmarkt es erfordert, EUIPO/TMview/WIPO), Prüfung von Domains/Stores, Dokumentation der Suchstrategie und ggf. fachkundige Rechtsprüfung. Ein einfacher Treffer-freier Suchlauf ist keine Garantie der Verfügbarkeit.
 
 ## 5. Third-party dependencies
 
 Vor jeder Release-Freigabe genaue Lockfile-Versionen und Paketlizenzen prüfen. Für Libraries wird ein Software Bill of Materials (SBOM) exportiert; Lizenztexte und Attributionen liegen im Third-Party-Notices-File. Lizenzstatus darf nicht allein aus dem Namen einer Bibliothek oder aus einer alten Recherche abgeleitet werden.
 
-## 6. Fiktive Produkt- und Compliance-Regeln
+## 6. Medizin-/Arzneimittel-Compliance als Spielinhalt
 
-Das Spiel stellt eine fiktive, regulierte botanische Betriebsanlage dar. Alle Compliance-Werte sind reine Spielabstraktionen und ersetzen keine reale Rechts-, Produktions- oder Arzneimittelberatung. Der Quellumfang enthält keine realen Herstellungs- oder Distributionsanleitungen.ette dar. Es ist keine reale Betriebssoftware, keine arzneimittelrechtliche Standard Operating Procedure und keine pharmazeutische Herstellungsanweisung. QC-/Lizenzschwellen sind Spielwerte und dürfen nicht als reale GMP-, Arzneibuch-, Labor- oder Apothekenstandards dargestellt werden. Reale Behauptungen über medizinische Wirkung, konkrete Produktionsverfahren oder aktuelle Zulassungsvorgaben gehören nicht in die Spielregeln ohne fachlich geprüfte Quellen und Rechtsreview.
+Das Spiel stellt eine fiktive, regulierte Produktionskette dar. Es ist keine reale Betriebssoftware, keine arzneimittelrechtliche Standard Operating Procedure und keine pharmazeutische Herstellungsanweisung. QC-/Lizenzschwellen sind Spielwerte und dürfen nicht als reale GMP-, Arzneibuch-, Labor- oder Apothekenstandards dargestellt werden. Reale Behauptungen über medizinische Wirkung, konkrete Produktionsverfahren oder aktuelle Zulassungsvorgaben gehören nicht in die Spielregeln ohne fachlich geprüfte Quellen und Rechtsreview.
 
 ## 7. Release-Gate und Entscheidung
 

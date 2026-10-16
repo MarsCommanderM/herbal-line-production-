@@ -1,14 +1,15 @@
-# Rights Notice
+# Projektverantwortung, Urheberrecht und Rechteverwaltung
 
-**Projekt:** Herbal Line  
-**Vom Projektauftrag benannter Projektverantwortlicher:** Michael Braunschweig  
-**Vorgesehener Vermerk:** Copyright © 2026 Michael Braunschweig. All rights reserved, subject to applicable law and documented third-party licenses.
+**Nutzungsumfang:** ausschließlich private, nicht-kommerzielle Nutzung durch den Projektverantwortlichen und höchstens zwei bis drei Freunde. Kein Verkauf, keine Werbung, kein Store-Release und kein Budget für kostenpflichtige Lizenzen oder Assets. Für diese private Nutzung ist `Dr. Green Dump / DopeFarm` nur ein interner Arbeitstitel; keine Aussage zur kommerziellen Markenverfügbarkeit.
 
-Diese Metadaten sind Projektvorgaben, keine unabhängige rechtliche Prüfung und kein Nachweis, dass sämtliche späteren Mitarbeiter-, Agenten- oder Drittbeiträge exklusiv übertragen wurden.
+**Projekt-/Spielname:** Dr. Green Dump / DopeFarm  
+**Vom Auftraggeber benannter Projektverantwortlicher:** Michael Braunschweig  
+**Vorgesehene Hinweiszeile:** `Copyright © 2026 Michael Braunschweig. All rights reserved, subject to applicable law and documented third-party licenses.`
 
-## Regeln
-- Keine fremden Assets, Texte, Fonts, Musik, Daten oder Code ohne dokumentierte kompatible Lizenz verwenden.
-- Quelle, Urheber, Lizenz und Einschränkungen für alle externen Assets in `rights/LICENSE_REGISTER.md` erfassen.
-- Keine Tokens, Passwörter, API-Keys oder privaten Daten committen.
-- Ungeklärte Rechte blockieren öffentliche kommerzielle Veröffentlichung.
-- Keine Markenfreigabe oder regulatorische Anerkennung behaupten, die nicht nachgewiesen wurde.
+Die Eintragung des Namens dokumentiert die vom Projektauftrag vorgegebene Projekt-Metadaten- und Copyright-Präferenz. Sie ist keine unabhängige Rechtsprüfung und beweist nicht automatisch, dass sämtliche Beiträge aller Personen, Agenten, Auftragnehmer, Drittanbieter oder Rechteinhaber wirksam exklusiv übertragen wurden.
+
+Für den Release muss eine nachvollziehbare Rechtekette vorliegen: eigene Werke, Contributor-Beiträge, Code, Dokumentation, Musik, Sound, Fonts, Logos, 3D-Modelle, Texturen, Animationen, Videos, Daten, Marken, Domains und Bibliotheken werden mit Herkunft, Lizenz, erlaubter Nutzung, erforderlichem Attribution-Text und Nachweis dokumentiert. Inhalte mit unklaren Rechten werden nicht ausgeliefert.
+
+Der Name **Dr. Green Dump / DopeFarm** wird als Arbeitstitel geführt, bis die Markenrecherche für die vorgesehenen Territorien und Waren-/Dienstleistungsklassen abgeschlossen ist. Keine Agenten dürfen behaupten, eine Marke sei frei oder registriert, solange dafür kein belastbarer Register- und Rechtsprüfungsnachweis vorliegt.
+
+Dieses Dokument ist eine operative Rechtepolitik und keine Rechtsberatung. Vor kommerzieller Veröffentlichung sind die konkrete Rechtekette, Contributor-Verträge, Kennzeichenrecherche und relevante lokale Anforderungen qualifiziert zu prüfen.

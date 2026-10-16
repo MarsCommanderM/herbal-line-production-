@@ -1,62 +1,43 @@
-# Contract Reconciliation — 2026-10-12
+# Contract Reconciliation — Dr. Green Dump / DopeFarm — 2026-10-12
 
-## Authority
+## Aktuelle Produkt- und Quellenautorität
 
-The supplied Herbal Line Master Pack is the reference for product requirements, domain concepts, schemas and production gates. The implementation branch currently keeps the playable simulation fictional and generic: abstract botanical units, QC/inventory/compliance states and generic customer orders. No real-world controlled-substance production or distribution instructions are implemented.
+Der Spielname lautet **Dr. Green Dump / DopeFarm**. Das gelieferte Archiv trägt noch den historischen Namen `Herbal-Line-Production-Master-Pack.zip`; dieser Dateiname ist nicht der Produktname. Die verbindliche Spielvision ist eine legale, kontrollierte, streng regulierte medizinische Cannabis-Pflanzenproduktion mit erkennbaren Pflanzen und direkt sichtbarer Pflege. Allgemeine Kräuter-/Botanikdarstellung ist nicht zulässig. Pflege-, Klima-, Nährstoff- und Prozesswerte sind erfundene Spielwerte; reale Produktionsanleitungen sind nicht Teil des Spiels. Apothekeninterne Abläufe sind außerhalb des Scope.
 
-## Decisions recorded
+## Vertragseigentümerschaft
 
-| Contract | Conflict | Resolution |
-|---|---|---|
-| Compliance state | Domain status union omitted `recovery_review`. | Added `recovery_review` to the compliance state union. |
-| Quality assessment | `passed: boolean` duplicated `decision: pass/fail/review`. | Use the decision union as the canonical assessment outcome. |
-| Inventory reservation | Quantity reservation and a `reserved` disposition duplicated state. | Reservation is represented by reserved quantity; lot disposition remains independent. |
-| Economy | Parallel balance and summary totals duplicated the ledger. | Finance selectors derive balances and totals from opening balance plus ledger. |
-| Persistence | UI state was mixed into the save payload. | Persisted payload omits transient UI; UI is reconstructed on restore. |
-| Commands | Domain, UI and persistence commands shared one undifferentiated union. | Separate command categories and retain a composed public union. |
+Die aktuellen aktiven Runtime-Verträge liegen unter contracts/; die unveränderten ursprünglichen Contract-Dateien sind als Provenienz unter masterpack/canonical/contracts/ aufbewahrt. Care-State, PLANT/CARE_ACTION und plant.care_applied sind absichtliche Laufzeiterweiterungen für das vom Auftraggeber bestätigte sichtbare Pflanzenpflege-Gameplay. Diese Runtime-Erweiterungen dürfen nicht fälschlich als byte-identische Original-Contracts ausgegeben werden und müssen durch Contract-/Domain-/Save-/E2E-Tests abgesichert sein.
 
-## Verified implementation and test evidence
+- Laufzeitverträge unter `contracts/` müssen mit der laufenden Domain-Implementierung, Save-Formaten, UI und Tests konsistent sein.
+- Source-Pack-Verträge, die vom Runtime-Vertrag abweichen, dürfen nicht unbemerkt überschrieben oder als identisch ausgegeben werden.
+- Jede beabsichtigte Abweichung erhält einen Decision-Log-Eintrag mit Quelle, Grund, Migrationsauswirkung und Tests.
+- Kein Balancewert, Preis, Upgradeeffekt, XP-Gewinn, Levelschwellenwert oder Unlock wird ohne belegbare Anforderung oder bestätigte Produktentscheidung ergänzt.
+- State-Mutationen passieren über typisierte Commands; abgeleitete Sicht-/UI-Daten bleiben fachlich nicht autoritativ. Neue Pflegeaktionen müssen in Contracts, Reducer/Handler, UI, Persistenz und Tests gemeinsam integriert werden.
 
-Latest verified revision: `bce2a0bd0edda036032be03e8dfea3033057ea52`.
+## Historische CI-Fehler — nicht mehr als aktueller Status ausgeben
 
-[GitHub Actions run 38182289439](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182289439) passed all steps on that exact commit:
+Der frühere Lauf [38290153329](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38290153329) scheiterte beim Typecheck unmittelbar nach dem Einspielen der Originalverträge. Er berichtete unter anderem fehlende Economy-Summaryfelder, `grant`, `recovery_review`, fehlendes `qualityAssessments`, unvereinbare Event-Varianten und Save-Payload-Unterschiede. Dieser Lauf dokumentiert den damaligen Vertragsbruch; er ist kein aktueller Statusbericht für spätere Commits.
 
-- `npm ci --no-audit --no-fund`
-- Source policy lint: 11 TypeScript files checked
-- Format check: 28 source/config files checked
-- Strict TypeScript typecheck
-- Unit tests: 26 passed across 5 test files
-- Production build
-- Chromium E2E: 3 passed
-- Production preview smoke: HTML, JS bundle, save controls and CSS served successfully
-- Master-pack validation: 39 required paths and 6 JSON documents checked
-- `git diff --check`
+Auf dem Integrationsstand `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38` liefen Install, Lint, Formatcheck, Strict Typecheck, Unit-Tests und Produktionsbuild erfolgreich. Browser-E2E war bei der letzten Abfrage noch aktiv. Eine abgeschlossene, vollständig grüne Gesamtpipeline ist für diesen Stand daraus noch nicht belegt. [App-CI-Lauf](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38305545109) · [Master-Pack-Validierung](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38305545140).
 
-## Persistence behavior now implemented
+## Aktuelle offene Integrationspunkte
 
-- Canonical JSON serialization and SHA-256 integrity check.
-- Version-1 save envelope with UI excluded.
-- IndexedDB save repository with validation before writes and reads.
-- Manual save/load plus autosave after successful domain commands.
-- Last-known-good backup written before replacing a valid primary save.
-- Fallback to backup if the primary save fails validation.
-- JSON export and validated import.
-- Browser E2E coverage for reload persistence, corrupt-primary recovery and export/import round-trip.
-
-## Remaining blockers
-
-1. **Exact Master Pack parity remains unverified.** The ZIP SHA-256 is `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`; it contains 42 files. The historical pack-shaped recovery snapshot had 42 matching paths but 36 blob-content mismatches. The current implementation branch must not be called a 1:1 mirror until a reproducible per-path comparison proves it.
-2. Save schema migration beyond v1, quota exhaustion, and interrupted-write recovery need explicit tests before release acceptance.
-3. Chromium is the only automated browser target so far.
-4. Full game-loop UX, comprehensive accessibility, final licensed assets, visual/performance QA, security review and release acceptance remain open.
+1. Alle Browser-E2E-Tests müssen gegen den aktuellen Produktnamen laufen; veraltete Erwartungen wie `Botanical Operations` sind zu beseitigen.
+2. Sichtbare Cannabis-Pflegeaktionen müssen echte Fachzustände ändern, sichtbare Reaktionen auslösen, protokolliert und nach Reload wiederherstellbar sein.
+3. Save-Migration, beschädigte Daten, Export/Import und Recovery müssen für den aktuellen State geprüft werden.
+4. Economy/Progression benötigt belegte Regeln und deterministische Grenzfalltests; nicht autorisierte Upgrade-Preise/-Effekte sind kein kanonischer Default.
+5. UI-Inhalte, Asset-/Rechteregister und Produktionsrichtlinie müssen denselben Produktumfang benennen.
+6. Das finale CI-Ergebnis ist an den exakten Commit zu binden; laufende oder abgebrochene Workflows zählen nicht als bestanden.
 
 ## Decision rule
 
-Do not rewrite canonical documents to fit the current implementation silently. Record any intentional deviation, explain why it is needed, add a migration or compatibility plan where applicable, and verify the resulting contract and implementation on the same commit.
+Produktname und Produktumfang werden durch die neueste ausdrückliche Owner-Anweisung festgelegt. Das historische Archiv wird mit seinem originalen Hash als Quelle dokumentiert, aber nicht als Grund verwendet, eine spätere, bestätigte Produktidentität zurückzusetzen. Änderungen an technischen Verträgen bleiben kontrolliert, nachvollziehbar und mit Tests belegt. `main` wird erst nach Review und erfolgreichen Pflichtgates geändert.
 
 
-## Source archive provenance and scope decision
+## Exact original-source and runtime-extension decision log — 2026-10-13
 
-The source archive is preserved as historical input, but the current app is intentionally a fictional generic botanical operations simulator. A measured per-path comparison is documented in `docs/audits/MASTERPACK_PARITY_REPORT.md`; expected source hashes remain in `docs/audits/MASTERPACK_EXPECTED_BLOBS.json`. Do not claim exact 1:1 ZIP parity and do not overwrite the working app with the historical pack as a bulk operation.
+The recorded 42-file original source manifest is used to preserve an exact source snapshot under masterpack/source/. Active application files remain at their normal project paths. This is a deliberate separation, not a claim that the application root is byte-identical to the old pack.
 
-The implementation has also closed the QC review/failure dead end with a terminal `BATCH/REJECT` command. It requires a documented reason, releases room occupancy, clears any active machine assignment, removes the batch from the active queue, and prevents later release. The management UI exposes this action only when a stored QC decision is `fail` or `review`; domain guards remain authoritative.
+The four active runtime contract files differ from the original pack because the approved application requires typed plant-care commands, domain state, events and persistence for visible third-person plant-care gameplay. The exact original versions are retained in the source snapshot and in the existing canonical contract copies. Active runtime extensions must continue to be backed by domain, persistence and browser tests.
+
+The original-path reconciliation classifies all 22 root-file mismatches: product identity/scope and work-tracking overlays; the four runtime-contract extensions; and the adapted master-pack validator. No mismatch is silently treated as an original blob. The exact source snapshot is checked by scripts/verify_masterpack_source_snapshot.py and wired into both application CI and the dedicated Master Pack validation workflow. The active root remains intentionally non-identical to the historical archive.

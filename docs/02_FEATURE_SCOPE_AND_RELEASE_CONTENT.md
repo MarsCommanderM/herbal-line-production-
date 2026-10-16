@@ -1,4 +1,4 @@
-# Feature-Scope, Priorisierung und Release-Inhalt
+# Dr. Green Dump / DopeFarm — Feature-Scope, Priorisierung und Release-Inhalt
 
 ## Prioritäten
 
@@ -13,7 +13,7 @@
 2. Feste Simulationsschritte, Pause/Resume und 1×/2×/4× Speed.
 3. Kanonischer State, typed commands/actions, selectors und Domain-Events.
 4. Räume, Kapazität und auswählbare Entities.
-5. Fiktiver Pflanzenlebenszyklus mit normalisierten Skalen, Aktionen und Qualitätseffekt.
+5. Visuell ausgeführte Pflegeinteraktionen für erkennbare Cannabis-Pflanzen; ausschließlich fiktive, normalisierte Spielwerte und Effekte.
 6. Charge mit Herkunft, Status und Audit-Trail.
 7. Verarbeitung → Verpackung → QC → Freigabe/Reject.
 8. Inventar mit Bestandsjournal und Reservierungen.
@@ -47,3 +47,12 @@ Cloud-Sync, Multiplayer, Community-Inhalte, Modding-Portal, Live-Service-Saisons
 ## Release-Ausschluss
 
 Jede sichtbare oder beworbene Funktion muss im Release funktionieren. Nicht fertige Elemente werden fertig implementiert oder aus Releaseumfang und Präsentation entfernt. Fehlende Assets dürfen nicht durch graue Boxen, Stockbilder mit unklaren Rechten oder Dummy-Texte ersetzt werden.
+
+
+## Sichtbare Cannabis-Pflege — verbindlicher Releaseumfang
+
+- Professionelle Indoor-Anlage mit klar erkennbaren Cannabis-Pflanzen, Beleuchtungs-, Bewässerungs-, Klima- und Lüftungssystemen.
+- Direkt sichtbare Pflegeinteraktionen an Pflanzen: Bewässerung, Licht einstellen, simulierte Temperatur-/Luftfeuchtigkeitsregelung, Nährstoffversorgung, Beschneiden und Stecklinge setzen/verwalten.
+- Pflanzenzustand, gewählte Aktion, simuliertes Ergebnis und Statusänderung müssen visuell nachvollziehbar sein.
+- Die Apotheken sind Kunden der Lieferkette; interne Apothekenprozesse sind außerhalb des Umfangs.
+- Alle numerischen Parameter sind erfundene Spielwerte. Keine realen Anbauanleitungen.

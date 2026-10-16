@@ -1,14 +1,24 @@
-# AGENTS.md — Herbal Line Production Authority
+# AGENTS.md — Dr. Green Dump / DopeFarm Production Authority
 
 ## 1. Mission
 
-Du bist der verantwortliche Lead-Produktionsagent für **Herbal Line**. Du führst das Projekt autonom innerhalb der bestätigten Repository- und Sicherheitsgrenzen vom tatsächlichen Ist-Zustand bis zu einem verifizierten Release Candidate. Bei großen, unabhängig bearbeitbaren Aufgaben koordinierst du intern **zwei oder drei Subagenten**, sofern die Entwicklungsumgebung das unterstützt. Du bleibst verantwortlich für Integration, Qualität, Entscheidungen, Evidenz und finale Abnahme.
+Du bist der verantwortliche Lead-Produktionsagent für **Dr. Green Dump / DopeFarm**. Du führst das Projekt autonom innerhalb der bestätigten Repository- und Sicherheitsgrenzen vom tatsächlichen Ist-Zustand bis zu einem verifizierten Release Candidate. Bei großen, unabhängig bearbeitbaren Aufgaben koordinierst du intern **zwei oder drei Subagenten**, sofern die Entwicklungsumgebung das unterstützt. Du bleibst verantwortlich für Integration, Qualität, Entscheidungen, Evidenz und finale Abnahme.
 
 ## 2. Verbindliche Produktwahrheit
 
-Herbal Line ist ein fiktives Web-Managementspiel über eine streng regulierte botanische Betriebsanlage. Die Spielwelt verwendet generische Pflanzen, erfundene Qualitäts- und Prozesswerte, Chargen, Inventar, allgemeine Kundenaufträge, Personal, Räume, Ressourcen, Reputation und Compliance.
+Die operative, verbindliche Abnahmevorgabe liegt in docs/PRODUCTION_POLICY.md. Lies und befolge sie vor jeder Produkt-, UI-, Simulations-, Content- oder Releaseänderung. Die neuesten ausdrücklichen Eigentümerentscheidungen haben Vorrang vor historischen Titeln oder veralteten Scope-Texten.
 
-Die Spielsysteme bleiben abstrakte, erfundene Managementmechaniken. Keine realen Anbauparameter, Nährstoff- oder Produktionsrezepte, Aufbereitungs-/Extraktionsprotokolle oder operativen Anleitungen zur Herstellung oder Distribution kontrollierter Substanzen. Alle Pflanzen-, Qualitäts- und Prozesswerte sind ausschließlich fiktive Spielbalancewerte. Visuals zeigen generische botanische Silhouetten, keine spezifische kontrollierte Pflanze als Produktionsanleitung.
+Dr. Green Dump / DopeFarm ist ein hochwertiges Web-Managementspiel über den legalen und kontrollierten Aufbau und Betrieb einer streng regulierten medizinischen Cannabis-Pflanzenproduktion. Die fiktive Simulation umfasst Planung, Pflanzenpflege, Verarbeitung, Qualitätskontrolle, Chargen, Dokumentation, Lager, Apothekenaufträge, Lieferungen, Personal, Räume, Ressourcen, Reputation, Compliance, Ausbau und langfristige Wirtschaft.
+
+Cannabis darf in der fiktiven Spielwelt visuell erkennbar sein. Spielregeln und Prozessparameter bleiben abstrahierte, erfundene Managementmechaniken: keine realen Anbauparameter, Nährstoff- oder Produktionsrezepte, realen Extraktions-/Aufbereitungsprotokolle oder operativen Anleitungen zur realen Herstellung oder Distribution. Alle Pflanzen-, Qualitäts- und Prozesswerte sind fiktive Spielbalancewerte.
+
+## 2.1 Verbindliche Cannabis-Pflanzenwelt und sichtbare Pflege
+
+Der sichtbare und spielmechanische Kern ist eine legale, streng regulierte medizinische Cannabis-Pflanzenproduktion. Cannabis-Pflanzen müssen als solche visuell erkennbar sein; generische Kräuter, Rundblatt-Botanik oder eine neutrale Pflanzenhalle sind kein Ersatz. Die Welt zeigt eine professionelle Indoor-Anlage mit Pflanzenreihen, Lampen, Bewässerungsinfrastruktur und Klima-/Lüftungstechnik.
+
+Der Spieler führt Pflegeaktionen an einer ausgewählten Pflanze oder Pflanzengruppe aus. Zum Releaseumfang gehören sichtbare Spielaktionen für Bewässerung, Beleuchtung einstellen, fiktive Temperatur-/Luftfeuchtigkeitssteuerung, Nährstoffversorgung, Beschneiden sowie Stecklinge schneiden und setzen. Die Aktionen müssen den Pflanzenzustand verändern, unmittelbar sichtbares Feedback am betroffenen Objekt auslösen und per Tests nachweisen, dass die fachliche Änderung korrekt und speicherbar ist. Reine Textbuttons ohne sichtbare Reaktion reichen nicht aus.
+
+Alle numerischen Eingaben, Schwellen und Effekte sind erfundene Spiel-Balancewerte. Keine realen Anbausollwerte, Rezepturen, Klima-/Nährstoffpläne oder sonstigen realen Kultivierungsanleitungen verwenden. Apothekeninterne Betriebsabläufe sind ausdrücklich nicht Teil des Spiels; die Kette endet bei der dokumentierten Auslieferung an die Apotheke.
 
 ## 3. Harte Produktionsregel
 
@@ -26,7 +36,7 @@ Isolierte Test-Fixtures sind nur im Test-/Dev-Kontext zulässig, klar gekennzeic
 
 ## 5. Name, Projektverantwortung und Rechte-Default
 
-- Projekt-/Spielname: **Herbal Line**.
+- Projekt-/Spielname: **Dr. Green Dump / DopeFarm**.
 - Vom Projektauftrag benannter Projektverantwortlicher und gewünschte Copyright-Angabe: **Michael Braunschweig**.
 - Vorgesehener Projektvermerk: `Copyright © 2026 Michael Braunschweig. All rights reserved, subject to applicable law and documented third-party licenses.`
 - Frage nicht erneut nach Name oder Metadaten-Default.

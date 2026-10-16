@@ -1,0 +1,410 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://herbal-line.invalid/schemas/save-envelope-v2.schema.json",
+  "title": "Dr. Green Dump / DopeFarm Save Envelope V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "schemaVersion",
+    "gameVersion",
+    "revision",
+    "savedAtRealTime",
+    "rngState",
+    "checksum",
+    "payload"
+  ],
+  "properties": {
+    "format": {
+      "const": "herbal-line-save"
+    },
+    "schemaVersion": {
+      "const": 2
+    },
+    "gameVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "savedAtRealTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rngState": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checksum": {
+      "type": "string",
+      "minLength": 8
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "gameVersion",
+        "revision",
+        "rngState",
+        "time",
+        "player",
+        "reputation",
+        "rooms",
+        "sourceLots",
+        "plants",
+        "batches",
+        "inventoryLots",
+        "qualityAssessments",
+        "orders",
+        "customers",
+        "deliveries",
+        "staff",
+        "assignments",
+        "machines",
+        "upgrades",
+        "compliance",
+        "economy",
+        "logs"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 2
+        },
+        "gameVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rngState": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "time": {
+          "type": "object"
+        },
+        "player": {
+          "type": "object"
+        },
+        "reputation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "rooms": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "sourceLots": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "plants": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "batches": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "inventoryLots": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "qualityAssessments": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "customers": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "deliveries": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "staff": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "assignments": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "machines": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "upgrades": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "compliance": {
+          "type": "object",
+          "properties": {
+            "risk": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "licenseStatus": {
+              "enum": [
+                "valid",
+                "warning",
+                "suspended",
+                "recovery_review"
+              ]
+            },
+            "violations": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "auditDueAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lastAuditAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "blockedOperationCodes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "violationId",
+                  "code",
+                  "severity",
+                  "status",
+                  "openedAt",
+                  "relatedEntityIds",
+                  "correctiveActionCode",
+                  "submittedAt",
+                  "verifiedAt",
+                  "closedAt"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "violationId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "code": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "severity": {
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high",
+                      "critical"
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "open",
+                      "corrective_action",
+                      "verification",
+                      "closed"
+                    ]
+                  },
+                  "openedAt": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "relatedEntityIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "correctiveActionCode": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "submittedAt": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "verifiedAt": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "closedAt": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "audits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "startedAt",
+                  "completedAt",
+                  "status",
+                  "outcome",
+                  "findingCodes",
+                  "violationIds"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "startedAt": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "completedAt": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "status": {
+                    "enum": [
+                      "in_progress",
+                      "completed"
+                    ]
+                  },
+                  "outcome": {
+                    "enum": [
+                      "clear",
+                      "findings",
+                      null
+                    ]
+                  },
+                  "findingCodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "violationIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "risk",
+            "licenseStatus",
+            "violations",
+            "auditDueAt",
+            "lastAuditAt",
+            "blockedOperationCodes"
+          ]
+        },
+        "economy": {
+          "type": "object",
+          "properties": {
+            "openingBalanceCents": {
+              "type": "integer"
+            },
+            "ledger": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "revenueTodayCents": {
+              "type": "integer"
+            },
+            "expensesTodayCents": {
+              "type": "integer"
+            },
+            "lifetimeRevenueCents": {
+              "type": "integer"
+            },
+            "lifetimeExpensesCents": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "openingBalanceCents",
+            "ledger"
+          ]
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

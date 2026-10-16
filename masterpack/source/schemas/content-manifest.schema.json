@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://herbal-line.invalid/schemas/content-manifest.schema.json",
+  "title": "Content Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "gameVersionRange", "assets", "dataSets"],
+  "properties": {
+    "manifestVersion": { "type": "integer", "minimum": 1 },
+    "gameVersionRange": { "type": "string", "minLength": 1 },
+    "assets": { "type": "array", "items": { "type": "object", "required": ["id", "path", "sha256", "licenseId", "creatorOrSource"], "properties": { "id": { "type": "string" }, "path": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }, "licenseId": { "type": "string" }, "creatorOrSource": { "type": "string" }, "proofPath": { "type": "string" } }, "additionalProperties": false } },
+    "dataSets": { "type": "array", "items": { "type": "object", "required": ["id", "version", "path"], "properties": { "id": { "type": "string" }, "version": { "type": "string" }, "path": { "type": "string" } }, "additionalProperties": false } }
+  }
+}

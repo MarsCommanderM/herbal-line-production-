@@ -1,10 +1,12 @@
 import type { EntityId, GameState } from '../../contracts/domain';
 import { calculateDailyOperatingCosts, getCashRunwayDays, getFinancialHealth, projectCampaignBalance } from '../domain/finance';
 import { ECONOMY_UPGRADES, isEconomyUpgradePurchased } from '../domain/upgrades';
-import { getCampaignBalance, type VerticalSliceCommand } from '../domain/vertical-slice';
+import { getCampaignBalance, isOperationBlocked, type VerticalSliceCommand } from '../domain/vertical-slice';
 import { roomSupportsStaffRole } from '../domain/facility';
 import { getCampaignGuidance } from './campaign-guidance';
 import { getTutorialProgress } from './tutorial';
+import { getPlantCareState } from '../domain/plant-care';
+import type { CareLevel, PlantCareAction, PlantCareState } from '../../contracts/domain';
 
 type Action = {
   label: string;
@@ -18,24 +20,125 @@ const entityId = (value: string): EntityId => value as EntityId;
 
 function availableActions(state: GameState): Action[] {
   const actions: Action[] = [];
-  const plant = state.plants[0];
+  const plant = state.plants.find((item) => item.id === state.ui.selectedEntityId) ?? state.plants.find((item) => item.stage === 'active') ?? state.plants[0];
   const batch = state.batches[state.batches.length - 1];
   const order = state.orders[0];
+  const complianceCases = state.compliance.cases ?? [];
+  const complianceAudits = state.compliance.audits ?? [];
+  const addSeedActions = (): void => {
+    const pending = state.sourceLots.find((lot) => lot.status === 'received');
+    const seedStock = state.sourceLots.find((lot) => lot.status === 'accepted' && lot.quantity > 0);
+    const activeLot = state.sourceLots.some((lot) => lot.status === 'received' || (lot.status === 'accepted' && lot.quantity > 0));
+    if (pending) {
+      actions.push({
+        label: 'Saatgutprüfung freigeben',
+        detail: 'Dokumentiert eine fiktive Eingangsprüfung. Erst nach erfolgreicher Prüfung kann Saatgut ausgesät werden.',
+        type: 'SOURCE/INSPECT',
+        payload: { sourceLotId: pending.id, accepted: true, qualityScore: 92, findingCodes: [] },
+      });
+    } else if (seedStock) {
+      const greenhouse = state.rooms.find((room) => room.definitionId === 'room-greenhouse' && room.unlocked);
+      if (greenhouse) actions.push({
+        label: 'Samen im Gewächshaus aussäen',
+        detail: 'Verbraucht eine fiktive Saatgut-Spiel-Einheit und legt eine individuelle, rückverfolgbare Cannabis-Pflanze im Gewächshaus an.',
+        type: 'PLANT/CREATE',
+        payload: { plantId: entityId('plant-seed-' + (state.revision + 1)), profileId: 'medical-cannabis-campaign-profile', sourceLotId: seedStock.id, roomId: greenhouse.id },
+        disabled: greenhouse.occupied >= greenhouse.capacity,
+      });
+    } else if (!activeLot) {
+      const sequence = state.revision + 1;
+      actions.push({
+        label: 'Saatgutlieferung annehmen',
+        detail: 'Erfasst ein fiktives Saatgutlos im Wareneingang mit eindeutiger Herkunftsreferenz. Die Aussaat bleibt bis zur Prüfung gesperrt.',
+        type: 'SOURCE/RECEIVE',
+        payload: { sourceLotId: entityId('seed-source-lot-' + sequence), sourceRef: 'MED-SEED-LOT-' + String(sequence).padStart(3, '0'), quantity: 12 },
+      });
+    }
+  };
+  if (state.plants.length === 0) addSeedActions();
+  // Compliance workflow is grouped after the core campaign actions so keyboard users
+  // encounter plant care and production first; compliance actions remain state-derived.
+  const activeAudit = complianceAudits.find((item) => item.status === 'in_progress');
+  const openComplianceCase = complianceCases.some((item) => item.status !== 'closed');
+  const complianceActions: Action[] = [];
+  if (activeAudit) {
+    complianceActions.push({ label: 'Audit abschließen', detail: 'Prüft offene Befunde und dokumentiert das Ergebnis der fiktiven Audit-Runde.', type: 'COMPLIANCE/COMPLETE_AUDIT', payload: { auditId: activeAudit.id } });
+  } else {
+    complianceActions.push({ label: 'Audit starten', detail: 'Startet eine nachvollziehbar gespeicherte Compliance-Prüfung.', type: 'COMPLIANCE/START_AUDIT', payload: { auditId: entityId('audit-' + (state.revision + 1)) } });
+  }
+  if (!openComplianceCase) {
+    complianceActions.push({
+      label: 'Abweichung dokumentieren', detail: 'Eröffnet einen fiktiven, protokollierten Betriebsfall mit verknüpftem Befund.',
+      type: 'COMPLIANCE/RECORD_INCIDENT',
+      payload: {
+        caseId: entityId('case-' + (state.revision + 1)),
+        violationId: entityId('violation-' + (state.revision + 1)),
+        code: 'OPERATOR_REPORTED_DEVIATION', severity: 'medium', relatedEntityIds: [state.player.id],
+      },
+    });
+  }
+  for (const complianceCase of complianceCases) {
+    if (complianceCase.status === 'open') {
+      complianceActions.push({ label: 'Korrekturmaßnahme erfassen', detail: 'Dokumentiert eine abstrakte Korrekturmaßnahme für den offenen Fall.', type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, actionCode: 'DOCUMENTED_GAME_CORRECTION' } });
+    } else if (complianceCase.status === 'corrective_action') {
+      complianceActions.push({ label: 'Korrekturmaßnahme einreichen', detail: 'Übergibt die dokumentierte Maßnahme in den Verifikationszustand.', type: 'COMPLIANCE/SUBMIT_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id } });
+    } else if (complianceCase.status === 'verification') {
+      complianceActions.push({ label: 'Korrekturmaßnahme bestanden', detail: 'Schließt den fiktiven Fall nach erfolgreicher Verifikation.', type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, passed: true, resolutionCode: 'VERIFICATION_PASSED' } });
+      complianceActions.push({ label: 'Korrekturmaßnahme nicht bestanden', detail: 'Lässt den Fall zur Überarbeitung offen, wenn die Verifikation fehlschlägt.', type: 'COMPLIANCE/VERIFY_CORRECTIVE_ACTION', payload: { caseId: complianceCase.id, passed: false, resolutionCode: 'VERIFICATION_FAILED' } });
+    }
+  }
+  if (state.compliance.licenseStatus === 'recovery_review') {
+    complianceActions.push({ label: 'Lizenz-Wiederherstellung abschließen', detail: 'Schließt die Wiederherstellung nur nach klarem letztem Audit und ohne offene Fälle/Befunde ab.', type: 'COMPLIANCE/FINALIZE_RECOVERY', payload: {} });
+  }
 
   if (plant && plant.stage === 'active') {
     actions.push({ label: 'Simulationsschritt ausführen', detail: 'Fortschritt im fiktiven Kampagnenmodell aktualisieren.', type: 'PLANT/ADVANCE_FICTIONAL_STEP', payload: { plantId: plant.id } });
   } else if (plant && plant.stage === 'ready_for_harvest' && plant.batchId === null) {
-    actions.push({ label: 'Einheit in Batch überführen', detail: 'Den freigegebenen Spielzustand für den nächsten Prozessschritt protokollieren.', type: 'PLANT/HARVEST', payload: { plantId: plant.id } });
+    const currentRoom = state.rooms.find((room) => room.id === plant.roomId);
+    if (currentRoom?.definitionId === 'room-greenhouse') {
+      const indoorRoom = state.rooms.find((room) => room.definitionId === 'room-production' && room.unlocked);
+      actions.push({
+        label: 'Pflanze in Indoor-Produktion überführen',
+        detail: 'Verschiebt die bereitstehende Pflanze aus dem Gewächshaus in den Indoor-Pflanzenraum. Die ID und Herkunft bleiben erhalten.',
+        type: 'PLANT/MOVE',
+        payload: { plantId: plant.id, roomId: indoorRoom?.id ?? entityId('room-production-01') },
+        disabled: !indoorRoom || indoorRoom.occupied >= indoorRoom.capacity,
+      });
+    } else {
+      actions.push({ label: 'Einheit in Batch überführen', detail: 'Den freigegebenen Spielzustand für den nächsten Prozessschritt protokollieren.', type: 'PLANT/HARVEST', payload: { plantId: plant.id } });
+    }
   } else if (plant && plant.stage === 'harvested' && plant.batchId === null) {
-    actions.push({ label: 'Batch erstellen', detail: 'Herkunft und Einheiten unter einer eindeutigen Batch-ID verbinden.', type: 'BATCH/CREATE', payload: { batchId: entityId('batch-001'), plantIds: [plant.id], profileId: 'fictional-botanical-batch' } });
+    actions.push({ label: 'Batch erstellen', detail: 'Herkunft und Einheiten unter einer eindeutigen Batch-ID verbinden.', type: 'BATCH/CREATE', payload: { batchId: entityId('batch-001'), plantIds: [plant.id], profileId: 'fictional-medical-cannabis-batch' } });
   }
 
   if (batch && batch.status === 'created') {
     const room = state.rooms.find((item) => item.kind === 'processing' && item.unlocked);
-    if (room) actions.push({ label: 'Verarbeitung einplanen', detail: 'Kapazität und Compliance prüfen, bevor der Batch eingeplant wird.', type: 'BATCH/QUEUE', payload: { batchId: batch.id, roomId: room.id } });
+    if (room) {
+      const blocked = isOperationBlocked(state, 'BATCH/QUEUE');
+      actions.push({
+        label: 'Verarbeitung einplanen',
+        detail: blocked
+          ? 'Compliance-Sperre aktiv. Die Verarbeitung bleibt gesperrt, bis Lizenzstatus und Auditfreigabe wieder gültig sind.'
+          : 'Kapazität und Compliance prüfen, bevor der Batch eingeplant wird.',
+        type: 'BATCH/QUEUE',
+        payload: { batchId: batch.id, roomId: room.id },
+        disabled: blocked,
+      });
+    }
   } else if (batch && batch.status === 'queued') {
     const machine = state.machines.find((item) => item.status === 'idle' && item.roomId === batch.currentRoomId);
-    if (machine) actions.push({ label: 'Spielprozess starten', detail: 'Den rein fiktiven Verarbeitungsschritt starten.', type: 'BATCH/START_PROCESSING', payload: { batchId: batch.id, machineId: machine.id } });
+    if (machine) {
+      const blocked = isOperationBlocked(state, 'BATCH/START_PROCESSING');
+      actions.push({
+        label: 'Spielprozess starten',
+        detail: blocked
+          ? 'Compliance-Sperre aktiv. Der Spielprozess bleibt gesperrt, bis Lizenzstatus und Auditfreigabe wieder gültig sind.'
+          : 'Den rein fiktiven Verarbeitungsschritt starten.',
+        type: 'BATCH/START_PROCESSING',
+        payload: { batchId: batch.id, machineId: machine.id },
+        disabled: blocked,
+      });
+    }
   } else if (batch && batch.status === 'processing') {
     actions.push({ label: 'Qualitätsprüfung ausführen', detail: 'Die versionierten fiktiven Spielregeln und die Rückverfolgbarkeit prüfen.', type: 'BATCH/SUBMIT_QC', payload: { batchId: batch.id, assessmentId: entityId('assessment-001') } });
   } else if (batch && batch.status === 'awaiting_qc') {
@@ -47,15 +150,33 @@ function availableActions(state: GameState): Action[] {
     }
   }
 
-  if (order && order.status === 'available') {
-    actions.push({ label: 'Abnehmerauftrag annehmen', detail: 'Kundenstatus, Reputation und Lizenzstatus prüfen.', type: 'ORDER/ACCEPT', payload: { orderId: order.id } });
+  if (order && order.status === 'available' && state.inventoryLots.some((item) => item.status === 'released' && item.quantityAvailable > item.quantityReserved)) {
+    const blocked = isOperationBlocked(state, 'ORDER/ACCEPT');
+    actions.push({
+      label: 'Abnehmerauftrag annehmen',
+      detail: blocked
+        ? 'Compliance-Sperre aktiv. Der Auftrag bleibt gesperrt, bis Lizenzstatus und Auditfreigabe wieder gültig sind.'
+        : 'Kundenstatus, Reputation und Lizenzstatus prüfen.',
+      type: 'ORDER/ACCEPT',
+      payload: { orderId: order.id },
+      disabled: blocked,
+    });
   } else if (order && order.status === 'accepted') {
     const lots = state.inventoryLots.filter((item) => item.status === 'released' && item.quantityAvailable > item.quantityReserved && item.qualityScore >= order.minQuality);
     if (lots.length > 0) actions.push({ label: 'Freigegebenen Bestand reservieren', detail: 'Die angeforderte Menge atomar aus freigegebenen Lots reservieren.', type: 'ORDER/ALLOCATE', payload: { orderId: order.id, lotIds: lots.map((item) => item.id) } });
   } else if (order && order.status === 'allocated' && order.deliveryId === null) {
     actions.push({ label: 'Lieferung vorbereiten', detail: 'Auftrag, reservierte Lots und Lieferroute verknüpfen.', type: 'DELIVERY/CREATE', payload: { deliveryId: entityId('delivery-001'), orderId: order.id, routeId: 'fictional-route-local-01' } });
   } else if (order && order.status === 'ready_to_ship' && order.deliveryId) {
-    actions.push({ label: 'Lieferung versenden', detail: 'Lizenzstatus und reservierten Bestand vor dem Versand erneut prüfen.', type: 'DELIVERY/DISPATCH', payload: { deliveryId: order.deliveryId } });
+    const blocked = isOperationBlocked(state, 'DELIVERY/DISPATCH');
+    actions.push({
+      label: 'Lieferung versenden',
+      detail: blocked
+        ? 'Compliance-Sperre aktiv. Der Versand bleibt gesperrt, bis Lizenzstatus und Auditfreigabe wieder gültig sind.'
+        : 'Lizenzstatus und reservierten Bestand vor dem Versand erneut prüfen.',
+      type: 'DELIVERY/DISPATCH',
+      payload: { deliveryId: order.deliveryId },
+      disabled: blocked,
+    });
   } else if (order && order.status === 'shipped' && order.deliveryId) {
     actions.push({ label: 'Wareneingang bestätigen', detail: 'Den Empfang idempotent bestätigen und den Umsatz einmalig verbuchen.', type: 'DELIVERY/CONFIRM', payload: { deliveryId: order.deliveryId, proofCode: 'RX-ACK-001' } });
   }
@@ -117,13 +238,15 @@ function availableActions(state: GameState): Action[] {
     });
   }
 
+  if (state.plants.length > 0) addSeedActions();
+
   actions.push({
     label: 'Tag abschließen',
     detail: 'Schließt den aktuellen Kampagnentag ab und bucht fiktive Tageslöhne sowie Betriebskosten genau einmal ins Finanz-Ledger.',
     type: 'TIME/END_DAY',
     payload: {},
   });
-  return actions;
+  return [...actions, ...complianceActions];
 }
 
 function metric(labelText: string, valueText: string): HTMLElement {
@@ -167,9 +290,110 @@ function renderFacilityOverview(state: GameState, root: HTMLElement): void {
   }
 }
 
+type CareSettingAction = Extract<PlantCareAction, 'water' | 'light' | 'temperature' | 'humidity' | 'nutrients'>;
+type CareSettingField = keyof Pick<PlantCareState, 'waterLevel' | 'lightLevel' | 'temperatureLevel' | 'humidityLevel' | 'nutrientLevel'>;
+
+function renderPlantCare(
+  state: GameState,
+  root: HTMLElement,
+  runCommand: (type: VerticalSliceCommand['type'], payload: Record<string, unknown>) => void,
+  selectPlant?: (plantId: EntityId) => void,
+): void {
+  root.replaceChildren();
+  const plant = state.plants.find((item) => item.id === state.ui.selectedEntityId)
+    ?? state.plants.find((item) => item.stage === 'active')
+    ?? state.plants[0];
+  if (!plant) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-state';
+    empty.textContent = 'Noch keine Pflanze angelegt.';
+    root.append(empty);
+    return;
+  }
+
+  const care = getPlantCareState(plant);
+  const plantPicker = document.createElement('select');
+  plantPicker.className = 'plant-picker';
+  plantPicker.setAttribute('aria-label', 'Pflanze für Pflege auswählen');
+  for (const item of state.plants) {
+    const option = document.createElement('option');
+    option.value = item.id;
+    option.textContent = item.id + ' · ' + item.stage.replaceAll('_', ' ');
+    option.selected = item.id === plant.id;
+    plantPicker.append(option);
+  }
+  plantPicker.addEventListener('change', () => selectPlant?.(entityId(plantPicker.value)));
+
+  const summary = document.createElement('p');
+  summary.className = 'plant-care-summary';
+  summary.textContent = 'Ausgewählt: ' + plant.id + ' · Vitalität ' + plant.vitality + '/100 · Stress ' + plant.stressIndex + '/100 · Pflegewerte sind ausschließlich fiktive Spielstufen.';
+
+  const stageNote = document.createElement('p');
+  stageNote.className = 'plant-care-note';
+  stageNote.textContent = plant.stage === 'active'
+    ? 'Die folgenden Aktionen werden am gewählten Pflanzenobjekt simuliert und im Betriebsprotokoll gespeichert.'
+    : 'Pflegeaktionen sind für diese Pflanze gesperrt, solange sie nicht aktiv ist.';
+
+  const levels: CareLevel[] = ['low', 'balanced', 'high'];
+  const levelNames: Record<CareLevel, string> = { low: 'niedrig', balanced: 'Standard', high: 'hoch' };
+  const groups: { action: CareSettingAction; label: string; field: CareSettingField }[] = [
+    { action: 'water', label: 'Bewässerung', field: 'waterLevel' },
+    { action: 'light', label: 'Licht', field: 'lightLevel' },
+    { action: 'temperature', label: 'Temperatur', field: 'temperatureLevel' },
+    { action: 'humidity', label: 'Luftfeuchtigkeit', field: 'humidityLevel' },
+    { action: 'nutrients', label: 'Nährstoffniveau', field: 'nutrientLevel' },
+  ];
+
+  const settingsGrid = document.createElement('div');
+  settingsGrid.className = 'care-settings-grid';
+  for (const group of groups) {
+    const card = document.createElement('div');
+    card.className = 'care-setting-card';
+    const heading = document.createElement('h4');
+    heading.textContent = group.label;
+    const buttons = document.createElement('div');
+    buttons.className = 'care-setting-buttons';
+    for (const level of levels) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'care-setting-button';
+      button.textContent = group.label + ': ' + levelNames[level].toLowerCase();
+      button.setAttribute('aria-pressed', String(care[group.field] === level));
+      button.disabled = plant.stage !== 'active';
+      button.addEventListener('click', () => runCommand('PLANT/CARE_ACTION', { plantId: plant.id, action: group.action, setting: level }));
+      buttons.append(button);
+    }
+    card.append(heading, buttons);
+    settingsGrid.append(card);
+  }
+
+  const actionRow = document.createElement('div');
+  actionRow.className = 'plant-care-action-row';
+  const addAction = (label: string, action: PlantCareAction, disabled: boolean, detail: string): void => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'care-action-button';
+    button.textContent = label;
+    button.title = detail;
+    button.disabled = disabled;
+    button.addEventListener('click', () => runCommand('PLANT/CARE_ACTION', { plantId: plant.id, action }));
+    actionRow.append(button);
+  };
+  addAction('Beschneiden', 'prune', plant.stage !== 'active', 'Fiktive Pflegeaktion; verändert die Pflanzenwerte und Darstellung.');
+  addAction('Steckling schneiden', 'take_cutting', plant.stage !== 'active', 'Erzeugt ein verfügbares Stecklingsobjekt in der Spielsimulation.');
+  addAction(
+    'Steckling setzen (' + Math.max(0, care.cuttingsTaken - care.cuttingsSet) + ')',
+    'set_cutting',
+    plant.stage !== 'active' || care.cuttingsTaken <= care.cuttingsSet || !state.rooms.some((room) => room.id === plant.roomId && room.unlocked && room.occupied < room.capacity),
+    'Setzt einen zuvor geschnittenen Spiel-Steckling in die Kampagne.',
+  );
+  root.append(plantPicker, summary, stageNote, settingsGrid, actionRow);
+}
+
 export function renderManagementUI(
   state: GameState,
   runCommand: (type: VerticalSliceCommand['type'], payload: Record<string, unknown>) => void,
+  selectPlant?: (plantId: EntityId) => void,
 ): void {
   const metricsRoot = document.querySelector<HTMLDivElement>('#game-metrics');
   const actionsRoot = document.querySelector<HTMLDivElement>('#game-actions');
@@ -177,6 +401,7 @@ export function renderManagementUI(
   const guidanceRoot = document.querySelector<HTMLDivElement>('#campaign-guidance');
   const tutorialRoot = document.querySelector<HTMLDivElement>('#campaign-tutorial');
   const facilityRoot = document.querySelector<HTMLDivElement>('#facility-overview');
+  const plantCareRoot = document.querySelector<HTMLDivElement>('#plant-care');
   if (!metricsRoot || !actionsRoot || !logRoot || !guidanceRoot || !tutorialRoot || !facilityRoot) return;
 
   const plant = state.plants[0];
@@ -203,6 +428,7 @@ export function renderManagementUI(
   );
 
   renderFacilityOverview(state, facilityRoot);
+  if (plantCareRoot) renderPlantCare(state, plantCareRoot, runCommand, selectPlant);
 
   const guidance = getCampaignGuidance(state);
   guidanceRoot.replaceChildren();
@@ -272,6 +498,14 @@ export function renderManagementUI(
     detail.className = 'action-detail';
     detail.textContent = action.detail;
     actionsRoot.append(detail);
+  }
+
+  if (ECONOMY_UPGRADES.length === 0) {
+    const upgradeNotice = document.createElement('p');
+    upgradeNotice.className = 'action-detail upgrade-policy-notice';
+    upgradeNotice.setAttribute('role', 'note');
+    upgradeNotice.textContent = 'Upgrades derzeit nicht verfügbar: Für sensor_pack_1 und drying_rack_1 sind noch keine bestätigten fiktiven Preise oder Wirkungen definiert. Es werden daher keine unbestätigten Upgrades angeboten.';
+    actionsRoot.append(upgradeNotice);
   }
 
   logRoot.replaceChildren();

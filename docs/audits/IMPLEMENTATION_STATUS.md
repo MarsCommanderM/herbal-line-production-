@@ -40,18 +40,19 @@ The checksum is an integrity check for the save format, not an authentication me
 - Supplied archive SHA-256: `4e783542951f573ed7412444e9e2ed00c490a9b7919f67c30399b86297a4b8972`.
 - Archive file count: 42.
 - A previous pack-shaped recovery snapshot matched all 42 paths but had 36 blob-content mismatches.
-- **Current tree parity remains unverified.** Do not mark the repository as synchronized until all 42 paths have a reproducible expected-vs-actual blob comparison and intentional differences are documented.
+- The active root is intentionally not byte-identical to the historical archive: the recorded comparison is 20/42 exact matches, 22/42 classified intentional/content differences, plus 53 application-specific paths. The exact original 42 source files are preserved under `masterpack/source/` and their expected Git blob IDs are verified by CI. This resolves provenance/classification; it does **not** claim 1:1 active-root parity.
 
 ### P1 — Persistence hardening
 
 - Explicit migration chain for a future schema version.
-- Quota exhaustion and interrupted/aborted transaction tests.
-- Cross-browser E2E beyond Chromium.
-- Defined behavior for recovery when both primary and backup are invalid.
+- Quota exhaustion and interrupted/aborted transaction tests are implemented and passed in the verified suite.
+- Cross-browser save/load, corrupt-save handling, backup recovery and import/export are exercised in the three-browser E2E suite; the full run reported 44 passed and 4 graphics-dependent skips.
+- Recovery when both primary and backup are invalid is explicitly tested; invalid state is not loaded.
+- Remaining persistence item: a migration chain for a specifically defined legacy schema. Unsupported versions are rejected safely; no fictional legacy schema will be invented.
 
 ### P1 — Gameplay and UX
 
-- Expand negative-path browser acceptance across QC rejection, held inventory, compliance blocks and duplicate delivery/finance events.
+- Expand negative-path browser acceptance for held inventory, compliance blocks and duplicate delivery/finance events; QC terminal rejection is already covered by E2E.
 - Improve queue/dashboard UX, keyboard navigation, empty/error states and accessibility.
 - The current facility rendering is a functional foundation, not final production art.
 
@@ -61,4 +62,119 @@ Final asset licensing inventory, visual regression/performance proof, security/p
 
 ## Next action
 
-Resolve the P0 per-path Master Pack comparison without overwriting valuable implementation work. Then continue P1 dashboard/accessibility and persistence fault-injection coverage.
+Continue P1-004 with a formal compliance incident/corrective-action lifecycle and browser negative-path tests for compliance blocks, held inventory and duplicate financial/delivery events. Keep P1-002's migration-chain item blocked until a concrete legacy schema exists. Economy/progression balance values and final art/audio/licensing remain explicit release blockers.
+
+
+## Status interpretation — current production branch
+
+The PASS entries above are evidence for their explicitly named historical snapshots/runs only. The old `c9116b8b65f4ce9d59b8f1dc54cfabe3c8bc3f38` paragraph is historical and superseded by the verified restoration baseline below. For the current branch state, use the exact SHA and linked CI runs in the latest verification section; a parent commit's green result never proves a newer commit.
+
+
+## Latest exact-commit verification — 2026-10-13
+
+Verified code revision: `41ae376e527a79d28ff1692fd19d6db2a4052631`.
+
+- [Full DopeFarm CI, run 38355313631](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38355313631): **SUCCESS** on the exact SHA.
+- [Master Pack Validation, run 38355313567](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38355313567): **SUCCESS** on the same SHA.
+- All configured gates passed: locked install, source lint, format, strict TypeScript, domain tests, production build, browser E2E, preview smoke, master-pack and preserved-source verification, product-policy validation and whitespace.
+- The E2E suite includes third-person movement/direct plant selection, plant-care state and visual feedback, save/load/recovery, compliance holds, held inventory, QC rejection, keyboard/mobile/accessibility paths, maintenance, settlement/delivery and an explicit WebGL initialization failure-injection test.
+- WebGL-dependent world tests may be skipped in browser environments that expose no WebGL canvas; the explicit fallback test is the acceptance path for renderer failure. Skipped tests are not counted as passes.
+- This is the latest verified engineering baseline, not a release-ready declaration. Product-contract, balance, final art/audio/licensing, security/rights and release-operations blockers remain open as recorded in `.tasks/NEXT.md`.
+
+
+## Latest exact-commit verification — restoration branch head
+
+Verified source revision: `341344b8f29be93f8f979056ed33b55c7bb9a1c6`.
+
+- [Full DopeFarm CI, run 38405281308](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38405281308): **SUCCESS** on the exact SHA.
+- [Master Pack Validation, run 38405263958](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38405263958): **SUCCESS** on the same SHA.
+- Every configured job step completed successfully: locked install, source lint, format, strict TypeScript, unit tests, production build, browser E2E, preview smoke, master-pack validation, original source snapshot verification, product-policy validation and whitespace.
+- The branch head is green for the configured engineering gates. This does not mean all release blockers are resolved or authorize a merge.
+- Open blockers remain exactly as recorded in `.tasks/NEXT.md`: evidenced legacy-save schema, authoritative incident/corrective-action contract, approved fictional economy/progression table, final licensed art/audio, and security/privacy/rights/release-operation evidence.
+- `main` remains unchanged at `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`.
+
+
+## Dependency-security baseline — exact verified revision
+
+Verified source revision: `41ff3d43f01da61fa54a645e685a3361c685cab6`.
+
+- [Full DopeFarm CI, run 38417104774](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38417104774): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38417104628](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38417104628): **SUCCESS** on the same SHA.
+- Dependency audit reported **0 vulnerabilities**. Locked development dependencies are pinned to Vite 6.4.4, Vitest 5.0.4 and Playwright 1.64.0.
+- The CI-generated CycloneDX SBOM contained 58 components, each with SPDX license metadata. The SBOM content SHA-256 is `6bc6940c06cb7ae50979181c287cda28da6fd6eb09dd0b67a43db5e91f8c48ea`.
+- This verifies automated dependency/security metadata and the configured engineering gates only. It does not substitute for secret scanning, legal compatibility/notice review, accessibility/privacy review, final asset rights, or release/rollback acceptance.
+- The subsequent commit adds deterministic license-inventory validation and branch-trigger coverage. Its own SHA must be verified by fresh CI; do not transfer this baseline's PASS to a later revision.
+
+
+## Expanded security and accessibility gates
+
+The subsequent QA revision adds:
+
+- a high-confidence credential-pattern scan across Git objects reachable from the full-history checkout (findings report path/category/blob ID, never secret values);
+- a full `npm audit` gate rather than only high/critical severity;
+- a Playwright Axe scan for WCAG 2.1/2.2 A/AA on the primary campaign interface;
+- deterministic CycloneDX/SPDX dependency license inventory comparison and artifact upload.
+
+The earlier `41ff3d43f01da61fa54a645e685a3361c685cab6` and `e28dd9977a63a290728f24d370b43bd5851e41c1` results are historical baselines only. The current head's own full CI and Master Pack Validation runs are the acceptance evidence for these added gates. Legal compatibility/notice review, final asset rights, privacy/security review and release/rollback evidence remain distinct release gates.
+
+
+## Exact current branch-head verification — 2026-10-13
+
+Verified implementation revision: `1a2bd1779617f39d0f7d5a383a02f18f82c3ad3d`.
+
+- [Full DopeFarm CI, run 38423858305](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858305): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38423858306](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38423858306): **SUCCESS** on the same SHA.
+- The App CI's 23 reported steps completed successfully, including the full-history credential scan, `npm audit`, SBOM/license-inventory comparison, lint, format, strict TypeScript, unit tests, production build, browser E2E, preview smoke, master-pack/source snapshot validation, product policy and whitespace.
+- Unit tests: **9 files, 76 tests passed**.
+- Browser E2E: **59 passed, 4 skipped**. The skips are renderer-dependent tests when a browser context has no WebGL canvas. These are explicitly not represented as passing tests; deterministic WebGL acceptance remains open.
+- Secret scan: 802 reachable text blobs scanned, no high-confidence credential pattern found. Dependency audit reported zero vulnerabilities. These automated checks do not replace legal compatibility review, asset rights review or privacy/security sign-off.
+- Master Pack: 42/42 preserved source files verified against recorded Git blob IDs. Active-root comparison remains 20/42 exact and 22/42 classified differences; ZIP container SHA is provenance only because the original archive binary is not stored here.
+- This is a green **engineering baseline**, not a release-ready declaration. Open P1 blockers: defined legacy-save schema and formal runtime incident/corrective-action lifecycle. Other blockers: authoritative economy/progression rules, final art/audio/license evidence, and release rights/security/rollback review.
+- Current `main`: `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; it remains untouched. The documentation refresh must be verified on its own exact head before the branch is called green.
+
+
+## Exact current HEAD verification — 2026-10-14
+
+Verified source revision: `c099d29b748353b16870d5afd63e04274759e288`.
+
+- [Full DopeFarm CI, run 38513719586](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38513719586): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38513719521](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38513719521): **SUCCESS** on the same SHA.
+- App CI passed all configured steps: full-history credential scan, locked dependency install, `npm audit` (0 vulnerabilities), SBOM/license metadata comparison, lint, format, strict TypeScript, unit tests, production build, browser E2E, preview smoke, master-pack validation, preserved-source verification, product-policy validation and whitespace.
+- Unit tests: **11 test files passed**.
+- Browser E2E: **71 passed, 4 skipped**. The skipped tests remain renderer-dependent cases in browser contexts with no WebGL canvas and are not counted as passes.
+- Preserved Master Pack snapshot: **42/42 source files verified** against recorded Git blob IDs; active root is intentionally not byte-identical to the historical archive.
+- P1-004 compliance implementation is present and tested: audit start/complete, incident/case and violation records, corrective-action recording/submission/verification, conditional recovery finalization, persisted case/audit save fields, state invariants, typed domain events, management controls and browser reload coverage.
+- Remaining blockers: authoritative fictional balance/progression rules; deterministic three-engine WebGL world rendering for the four skipped cases; final art/audio asset production and rights evidence; legal/security/privacy sign-offs; rollback and release artifact evidence.
+- `main` remains `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; PR #26 is open and unmerged.
+
+
+## Latest exact-HEAD verification — 2026-10-14
+
+Verified implementation revision: `6d674e5d860993c6653c0703a5a9712e75b4fa5f`.
+
+- [Full DopeFarm App CI, run 38522655908](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655908): **SUCCESS** on this exact SHA.
+- [Master Pack Validation, run 38522655944](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38522655944): **SUCCESS** on the same SHA.
+- The App CI passed all configured steps, including locked dependency install, full-history credential scan, `npm audit`, CycloneDX/license metadata validation, lint, formatting, strict TypeScript, unit tests, production build, browser E2E, production-preview smoke, Master Pack validation, preserved-source verification, product-policy validation and whitespace.
+- Browser E2E: **71 passed, 4 skipped**. The four skips are Firefox WebGL-dependent scenarios: third-person movement/camera, direct world plant selection, visible plant-care autosave/reload, and stale plant/cutting visual cleanup after importing an older save. They are not passes; deterministic Firefox WebGL parity remains open.
+- The save-import timeout from the prior run was corrected by setting files directly on the hidden `#import-save-file` input in the visual-state restoration test; the separate visible-button import test remains.
+- The run uploaded a CycloneDX SBOM/license inventory artifact. The artifact digest reported by GitHub was `sha256:c4185cf5d78946a1443a87da6998dfaadf2e3ad7f32668a430665ba5c677d761`.
+- This proves the configured engineering gates on the exact SHA only. Final asset/audio rights, legal compatibility/notice review, contributor-rights review, privacy/security sign-off, authoritative fictional economy/progression rules, deterministic cross-engine WebGL rendering, and an actual rollback drill remain open.
+- The subsequent CI hardening adds retained E2E diagnostics and a SHA-256-manifested production-build artifact, and attempts software WebGL in Firefox. Those additions are **not considered verified until their own exact-HEAD CI and Master Pack runs finish successfully**.
+- `main` remains `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; PR #26 remains open and unmerged.
+
+
+## Latest exact-HEAD verification — 2026-10-14
+
+Verified implementation revision: `d0e88c1433967617b7d92b91ac6bc12891dc7a8d`.
+
+- [App CI run 38564908633](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633): **SUCCESS** on the exact revision.
+- [Master Pack Validation run 38564908664](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908664): **SUCCESS** on the same revision.
+- Locked install, secret-pattern scan, dependency audit, SBOM/license-metadata comparison, lint, format, strict typecheck, unit tests, production build, E2E, production-preview smoke, Master-Pack validation, 42-file source-snapshot verification, product-policy validation and whitespace check passed.
+- Browser E2E: **71 passed, 4 skipped**. The four skipped tests are Firefox WebGL cases: third-person movement/camera, direct plant selection, plant-care persistence/reload, and old-save visual cleanup. Those scenarios passed on Chromium and WebKit. Firefox renderer parity remains unproven.
+- Production `dist/` was SHA-256 checked and uploaded as [engineering build artifact](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38564908633/artifacts/11896291025); artifact ZIP digest: `9980911af30e91386ada98ce2153824f05ac0952c5037d903ae54951bb5adf4f`. This is not a release approval or deployment/rollback proof.
+- Master-Pack source snapshot verification confirms 42 expected Git blob identities; it does not independently re-hash the original ZIP container.
+- `main` remains `2b2dd96ed1739f4395ff02ac6a9cd399e940be94`; PR #26 remains open and unmerged.
+
+### Outstanding release blockers
+
+Firefox WebGL renderer parity; owner-authoritative fictional economy/progression values and numerical compliance-risk rules; final art/audio with provenance and commercial-use rights; legal dependency notices/compatibility and contributor-rights review; privacy/security and title/trademark sign-off; deployment smoke and an executed rollback drill. Green engineering CI does not close these external/product gates.
