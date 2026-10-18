@@ -342,11 +342,17 @@ async function boot(): Promise<() => void> {
   });
 
   scene.add(new THREE.HemisphereLight(0xc8ddff, 0x172235, 2.0));
-  const keyLight = new THREE.DirectionalLight(0xf4f7ff, 3.0);
+  const keyLight = new THREE.DirectionalLight(0xfff5e6, 4.2);
   keyLight.position.set(8, 16, 7);
   keyLight.castShadow = true;
   keyLight.shadow.mapSize.set(1024, 1024);
   scene.add(keyLight);
+  // Purple grow lights over the plant stations (fictional visual only)
+  for (let i = 0; i < 4; i += 1) {
+    const grow = new THREE.PointLight(0xb48cff, 1.8, 8);
+    grow.position.set(-4 + i * 2.5, 3.2, -2);
+    scene.add(grow);
+  }
 
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(24, 18),

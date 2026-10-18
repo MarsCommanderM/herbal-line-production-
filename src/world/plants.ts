@@ -33,14 +33,15 @@ export async function loadCannabisModel(): Promise<THREE.Group> {
   model.position.sub(center.multiplyScalar(scale));
   model.position.y += 0.1;
   // Apply a cannabis-like material
-  const mat = new THREE.MeshStandardMaterial({
-    color: '#2d5a3d',
-    roughness: 0.65,
-    metalness: 0.05,
+  const leafMat = new THREE.MeshStandardMaterial({
+    color: '#3a7a4a',
+    roughness: 0.55,
+    metalness: 0.02,
+    side: THREE.DoubleSide,
   });
   model.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
-      (child as THREE.Mesh).material = mat;
+      (child as THREE.Mesh).material = leafMat;
       (child as THREE.Mesh).castShadow = true;
       (child as THREE.Mesh).receiveShadow = true;
     }
