@@ -397,3 +397,34 @@ describe('medical cannabis operations vertical slice', () => {
   });
 
 });
+
+describe('Negative-path coverage', () => {
+  it('rejects plant advance on a non-active plant', () => {
+    let state = createInitialGameState();
+    // Force plant into harvested stage without going through commands
+    state = { ...state, plants: state.plants.map((p) => ({ ...p, stage: 'harvested' as const })) };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: 'neg-1' as never,
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'PLANT/ADVANCE_FICTIONAL_STEP',
+      plantId: state.plants[0]!.id,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('INVALID_TRANSITION');
+  });
+
+  it('rejects batch creation with empty plant list', () => {
+    const state = createInitialGameState();
+    const result = applyVerticalSliceCommand(state, {
+      commandId: 'neg-2' as never,
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'BATCH/CREATE',
+      batchId: 'batch-empty' as never,
+      plantIds: [],
+      profileId: 'medical-cannabis-batch',
+    });
+    expect(result.ok).toBe(false);
+  });
+});

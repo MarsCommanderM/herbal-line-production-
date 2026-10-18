@@ -31,7 +31,7 @@
 
 - **Implemented:** canonical SHA-256 save envelope; deterministic serialization; IndexedDB persistence; manual save/load; autosave after successful actions; last-known-good backup; fallback recovery; JSON export/import; validation before import; transient UI excluded from persisted payload.
 - **Evidence:** unit tests plus Chromium E2E tests for save/load, autosave across reload, corrupted-primary fallback to backup, and export/import round-trip.
-- **Remaining:** explicit migration chain when a new schema version is introduced, quota/interrupted-write recovery tests, and cross-browser coverage.
+- **Remaining:** cross-browser coverage beyond Chromium. Migration chain and quota/interrupted-write recovery tests are now present.
 
 ## P1-003 — Operational Dashboard and Queue UX (FUNCTIONAL BASELINE; ACCESSIBILITY REVIEW OPEN)
 
