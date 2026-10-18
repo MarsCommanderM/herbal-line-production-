@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { createThirdPersonCharacter } from './world/character';
+import { createEnhancedCannabisPlant, type PlantAction } from './world/plants';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
 import type { CommandId } from '../contracts/domain';
@@ -231,35 +233,6 @@ function showFatalError(error: unknown): void {
 }
 
 
-function createCannabisPlant(x: number, z: number, variant: number): THREE.Group {
-  const plant = new THREE.Group();
-  const stemMaterial = new THREE.MeshStandardMaterial({ color: '#527c63', roughness: 0.82 });
-  const leafMaterial = new THREE.MeshStandardMaterial({
-    color: variant % 2 === 0 ? '#4f9470' : '#6ca77b',
-    roughness: 0.78,
-    side: THREE.DoubleSide,
-  });
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.075, 1.45, 8), stemMaterial);
-  stem.position.y = 0.78;
-  stem.castShadow = true;
-  plant.add(stem);
-  for (let level = 0; level < 4; level += 1) {
-    for (const side of [-1, 1]) {
-      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), leafMaterial);
-      leaf.scale.set(0.72, 0.22, 0.42);
-      leaf.position.set(side * (0.16 + level * 0.035), 0.38 + level * 0.28, 0);
-      leaf.rotation.z = side * 0.38;
-      leaf.rotation.y = (variant % 3) * 0.22;
-      leaf.castShadow = true;
-      plant.add(leaf);
-    }
-  }
-  const crown = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), leafMaterial);
-  crown.position.y = 1.55;
-  plant.add(crown);
-  plant.position.set(x, 0, z);
-  return plant;
-}
 
 async function boot(): Promise<() => void> {
   if (!worldRoot || !uiRoot) throw new Error('Required application roots are missing.');
@@ -310,6 +283,50 @@ async function boot(): Promise<() => void> {
   controls.maxDistance = 38;
   controls.maxPolarAngle = Math.PI * 0.47;
 
+  // Third-person character
+  const character = createThirdPersonCharacter(scene, camera);
+  let clock = new THREE.Clock();
+
+  // Interaction raycaster
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let selectedPlant: THREE.Object3D | null = null;
+  const actionFeedback = document.getElementById('game-feedback');
+
+  function onPointerMove(event: PointerEvent) {
+    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  }
+  function onPointerClick(_event: PointerEvent) {
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    for (const hit of intersects) {
+      let obj: THREE.Object3D | null = hit.object;
+      while (obj && !obj.userData.actionHandler) obj = obj.parent;
+      if (obj && obj.userData.actionHandler) {
+        selectedPlant = obj;
+        const actions: PlantAction[] = ['prune', 'cutting', 'plant', 'repot'];
+        const action = actions[Math.floor(Math.random() * actions.length)]; // demo cycle; real UI can map keys
+        const msg = obj.userData.actionHandler(action);
+        if (actionFeedback) actionFeedback.textContent = msg;
+        break;
+      }
+    }
+  }
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('click', onPointerClick as EventListener);
+
+  // Keyboard plant actions when near plant
+  window.addEventListener('keydown', (e) => {
+    if (!selectedPlant || !selectedPlant.userData.actionHandler) return;
+    const map: Record<string, PlantAction> = { Digit1: 'prune', Digit2: 'cutting', Digit3: 'plant', Digit4: 'repot' };
+    const action = map[e.code];
+    if (action) {
+      const msg = selectedPlant.userData.actionHandler(action);
+      if (actionFeedback) actionFeedback.textContent = msg;
+    }
+  });
+
   scene.add(new THREE.HemisphereLight(0xc8ddff, 0x172235, 2.0));
   const keyLight = new THREE.DirectionalLight(0xf4f7ff, 3.0);
   keyLight.position.set(8, 16, 7);
@@ -355,11 +372,13 @@ async function boot(): Promise<() => void> {
       station.receiveShadow = true;
       scene.add(station);
 
-      // Fictional medical cannabis plant silhouettes. Decorative game assets only; not real-world cultivation guidance.
+      // Interactive medical cannabis plants (fictional visuals only)
       for (let pod = 0; pod < 3; pod += 1) {
-        const plant = createCannabisPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
-        plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
-        station.add(plant);
+        const interactive = createEnhancedCannabisPlant(row * 4 + column * 3 + pod);
+        interactive.group.position.set(-0.7 + pod * 0.7, 0.45, 0);
+        interactive.group.scale.setScalar(0.7);
+        interactive.group.userData.actionHandler = interactive.applyAction;
+        station.add(interactive.group);
       }
     }
   }
@@ -428,6 +447,8 @@ async function boot(): Promise<() => void> {
   window.addEventListener('resize', resize);
   resize();
   renderer.setAnimationLoop(() => {
+    const delta = clock.getDelta();
+    character.update(delta);
     controls.update();
     renderer.render(scene, camera);
   });

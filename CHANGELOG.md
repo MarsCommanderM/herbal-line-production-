@@ -1,4 +1,5 @@
 ## Unreleased
+- Added third-person character controller (WASD + mouse) and interactive medical cannabis plants with actions: prune, take cuttings, plant, repot. Visuals enhanced; all values remain fictional.
 
 - Added an accessible, state-derived campaign guidance panel with next-step recommendations and explanations for quality, compliance, and availability blockers.
 - Added a terminal batch rejection path with documented reason codes, queue/room cleanup, and a UI recovery action for failed or unresolved quality checks.
