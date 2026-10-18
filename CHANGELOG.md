@@ -1,4 +1,5 @@
 ## Unreleased
+- Plant action feedback refined. 3D foundation notes added. Final art pipeline remains open.
 - Owner sign-off template added. Release readiness notes updated. Actual owner decision still open.
 - Focus restoration: after successful save and backup recovery, focus moves to game-feedback. Real AT session remains open.
 - Canvas accessibility description improved. Focus and canvas notes added. Real AT session and focus restoration remain open.

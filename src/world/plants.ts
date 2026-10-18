@@ -98,7 +98,7 @@ export function createEnhancedCannabisPlant(variant: number = 0): InteractivePla
       leaves.slice(0, Math.min(3, leaves.length)).forEach((c) => group.remove(c));
       state.pruned = true;
       state.health = Math.max(70, state.health - 5);
-      return 'Pflanze beschnitten. Fiktive Spielaktion – keine realen Anbauparameter.';
+      return 'Beschnitten: Fächerblätter reduziert. Fiktive Spielaktion.';
     }
     if (action === 'cutting' && state.cuttingsTaken < 2) {
       state.cuttingsTaken += 1;
@@ -114,7 +114,7 @@ export function createEnhancedCannabisPlant(variant: number = 0): InteractivePla
     if (action === 'repot') {
       state.potted = !state.potted;
       group.scale.setScalar(state.potted ? 1 : 0.82);
-      return state.potted ? 'Umtopfen abgeschlossen.' : 'Pflanze ausgetopft.';
+      return state.potted ? 'Umtopfen abgeschlossen. Pflanze im Topf.' : 'Pflanze ausgetopft.';
     }
     return 'Aktion nicht verfügbar.';
   }
