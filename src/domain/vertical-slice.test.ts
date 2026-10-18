@@ -496,7 +496,7 @@ describe('Property-style command sequences', () => {
       } as VerticalSliceCommand);
       if (result.ok) state = result.state;
     }
-    // After any successful steps the state must still satisfy basic invariants
+    // After successful steps the state must still satisfy basic invariants
     expect(state.revision).toBeGreaterThanOrEqual(0);
     expect(state.compliance.licenseStatus).toBeDefined();
   });
