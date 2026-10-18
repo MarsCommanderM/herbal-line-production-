@@ -1,4 +1,5 @@
 ## Unreleased
+- Added release evidence capture script and snapshot. P4-001 status updated.
 - Asset gate current state documented. Procedural plants and character marked not release-cleared. P3-001 status updated.
 - Extended property-style tests (repeated end-day, incompatible staff assignment). Artifact identity note added.
 - WCAG deepening: secondary text contrast lifted, import button labeled, main landmark confirmed. Progress note added.

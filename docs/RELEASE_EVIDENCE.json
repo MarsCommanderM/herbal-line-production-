@@ -1,0 +1,9 @@
+{
+  "capturedAt": "2026-10-18T17:43:28.186Z",
+  "branch": "fix/remove-botanical-scope-medical-cannabis",
+  "commit": "99607761d3506b062762f685abf7dedebda763eb",
+  "version": "0.1.0",
+  "typecheck": "PASS",
+  "unitTests": "Test Files  9 passed (9)\n      Tests  82 passed (82)\n   Start at  17:43:32\n   Duration  2.24s (transform 338ms, setup 0ms, collect 494ms, tests 132ms, environment 2ms, prepare 573ms)",
+  "notes": "Evidence capture only. Not a release artifact. ASSET_LICENSE_GATE remains PENDING."
+}
