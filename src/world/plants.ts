@@ -33,9 +33,17 @@ export async function loadCannabisModel(): Promise<THREE.Group> {
   model.position.sub(center.multiplyScalar(scale));
   model.position.y += 0.1;
   // Apply a cannabis-like material
+  const textureLoader = new THREE.TextureLoader();
+  const leafColor = textureLoader.load('/assets/marijuana_leaf_color.jpg');
+  const leafOpacity = textureLoader.load('/assets/marijuana_leaf_opacity.jpg');
+  leafColor.colorSpace = THREE.SRGBColorSpace;
   const leafMat = new THREE.MeshStandardMaterial({
-    color: '#3a7a4a',
-    roughness: 0.55,
+    map: leafColor,
+    alphaMap: leafOpacity,
+    transparent: true,
+    alphaTest: 0.35,
+    color: '#4a9a5a',
+    roughness: 0.5,
     metalness: 0.02,
     side: THREE.DoubleSide,
   });
