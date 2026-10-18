@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createThirdPersonCharacter } from './world/character';
-import { createEnhancedCannabisPlant, type PlantAction } from './world/plants';
+import { loadCannabisModel, createInteractivePlantFromModel, type PlantAction } from './world/plants';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
 import type { CommandId } from '../contracts/domain';
@@ -386,11 +386,12 @@ async function boot(): Promise<() => void> {
       station.receiveShadow = true;
       scene.add(station);
 
-      // Interactive medical cannabis plants (fictional visuals only)
+      // Detailed cannabis plant model (fictional visuals only)
+      const baseModel = await loadCannabisModel();
       for (let pod = 0; pod < 3; pod += 1) {
-        const interactive = createEnhancedCannabisPlant(row * 4 + column * 3 + pod);
-        interactive.group.position.set(-0.7 + pod * 0.7, 0.45, 0);
-        interactive.group.scale.setScalar(0.7);
+        const interactive = createInteractivePlantFromModel(baseModel, row * 4 + column * 3 + pod);
+        interactive.group.position.set(-0.7 + pod * 0.7, 0.55, 0);
+        interactive.group.scale.setScalar(0.55);
         interactive.group.userData.actionHandler = interactive.applyAction;
         station.add(interactive.group);
       }
