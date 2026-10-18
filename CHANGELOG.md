@@ -1,4 +1,5 @@
 ## Unreleased
+- Focus restoration: after successful save and backup recovery, focus moves to game-feedback. Real AT session remains open.
 - Canvas accessibility description improved. Focus and canvas notes added. Real AT session and focus restoration remain open.
 - Screenreader-oriented pass: actions group and log landmarks improved. Report in docs/SCREENREADER_PASS.md. Real AT session remains open.
 - Added contrast check script (key pairs meet AA). Viewport and contrast notes documented. P1-003 status updated.

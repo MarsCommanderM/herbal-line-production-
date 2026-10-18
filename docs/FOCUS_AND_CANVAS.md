@@ -20,3 +20,9 @@
 - Optional live summary of nearby interactive plants.
 
 All values remain fictional game balance.
+
+
+## Focus restoration (added)
+
+- After successful manual save and backup recovery, focus is moved to `#game-feedback` (tabindex=-1).
+- This gives screenreader users an immediate announcement point.

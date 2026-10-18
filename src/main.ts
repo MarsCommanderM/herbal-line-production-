@@ -60,6 +60,15 @@ function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<stri
   void autosaveCampaign();
 }
 
+
+function focusFeedback(): void {
+  const el = document.getElementById('game-feedback');
+  if (el) {
+    el.setAttribute('tabindex', '-1');
+    el.focus();
+  }
+}
+
 function setFeedback(level: 'success' | 'error', message: string): void {
   if (!gameFeedback) return;
   gameFeedback.dataset.level = level;
@@ -131,6 +140,7 @@ async function saveCampaign(): Promise<void> {
       return { revision: saved.revision, byteLength: JSON.stringify(saved).length };
     });
     setFeedback('success', 'Spielstand gespeichert · Revision ' + metadata.revision + ' · ' + metadata.byteLength + ' Byte.');
+    focusFeedback();
     setSaveStatus('success', 'Manueller Spielstand gespeichert · Revision ' + metadata.revision + '.');
   } catch (error) {
     setFeedback('error', 'Speichern fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
@@ -154,6 +164,7 @@ async function applyLoadedSave(): Promise<void> {
   onGameStateChanged();
   if (result.recoveredFromBackup) {
     setFeedback('success', 'Wiederherstellung aus Backup · Revision ' + gameState.revision + '.');
+    focusFeedback();
     setSaveStatus('error', 'Primärer Spielstand ungültig; letztes gültiges Backup wurde geladen.');
   } else {
     setFeedback('success', 'Spielstand geladen · Revision ' + gameState.revision + '.');
