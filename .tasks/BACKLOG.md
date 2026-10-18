@@ -13,7 +13,7 @@
 | P2-002 | P2 | Economy and progression | P2-001 | Idempotent daily wages/utilities, multi-day projections, cash runway, tiered ledger-backed upgrades, one-time distress recovery, unit and Chromium E2E scenarios | Daily settlement, forecast/runway, one-time recovery and two prerequisite-gated efficiency tiers implemented on feature branch; exact-revision CI pending; longer-horizon balance tuning remains open |
 | P2-003 | P2 | Content, tutorial and contextual notices | P1-003 | Content review, source register, UX tests | State-derived six-step tutorial, source register and browser assertions added; exact-revision CI pending; contextual notices and accessibility review remain open |
 | P3-001 | P3 | Visual/audio polish and asset pipeline | P1-003 | Asset/license manifest, visual QA, performance evidence | Pending; current facility view is a foundation, not final art |
-| P3-002 | P3 | Release candidate QA/security/rights | P2-* | CI evidence, dependency/secret scan, accessibility and rights review | Pending |
-| P4-001 | P4 | Release and post-launch operations | P3-* | Artifact identity, rollback plan, release smoke tests, incident runbook | Pending |
+| P3-002 | P3 | Release candidate QA/security/rights | P2-* | CI evidence, dependency/secret scan, accessibility and rights review | Release readiness checklist added (`docs/RELEASE_READINESS_P3_P4.md`); full WCAG/AT and cross-browser still open |
+| P4-001 | P4 | Release and post-launch operations | P3-* | Artifact identity, rollback plan, release smoke tests, incident runbook | Release readiness document created; artifact identity and owner sign-off still open |
 
 Priorities describe order, not permission to bypass dependencies. No task is complete merely because its files exist.
