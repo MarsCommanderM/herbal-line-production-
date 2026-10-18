@@ -1,4 +1,5 @@
 ## Unreleased
+- Added contrast check script (key pairs meet AA). Viewport and contrast notes documented. P1-003 status updated.
 - Added release evidence capture script and snapshot. P4-001 status updated.
 - Asset gate current state documented. Procedural plants and character marked not release-cleared. P3-001 status updated.
 - Extended property-style tests (repeated end-day, incompatible staff assignment). Artifact identity note added.
