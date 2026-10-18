@@ -111,3 +111,26 @@ body { min-width: 320px; min-height: 480px; }
 .tutorial-card > p:last-child { margin: 0; color: #bac9d9; font-size: 11px; line-height: 1.5; }
 #campaign-tutorial[data-status="blocked"] .tutorial-card { border-color: #94505a; }
 #campaign-tutorial[data-status="complete"] .tutorial-card { border-color: #3d7965; }
+
+/* Accessibility: skip link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 10000;
+}
+.skip-link:focus {
+  left: 12px;
+  top: 12px;
+  width: auto;
+  height: auto;
+  padding: 8px 12px;
+  background: #0b1423;
+  color: #f4f7fc;
+  border: 2px solid #9ecbff;
+  border-radius: 6px;
+  outline: none;
+}

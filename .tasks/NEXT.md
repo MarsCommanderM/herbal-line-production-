@@ -37,7 +37,7 @@
 
 - **Implemented:** state-derived campaign guidance, recommended next step, quality/compliance blockers, station availability, and delivered-goal completion.
 - **Evidence:** Chromium E2E run 38207213170 passed 7 scenarios, including predictable keyboard tab order, focus-visible styling, 390×844 mobile layout without horizontal overflow, live-region semantics, and reduced-motion handling.
-- **Remaining:** full WCAG contrast/semantics review, broader assistive-technology testing, and more viewport coverage.
+- **Remaining:** broader assistive-technology testing and more viewport coverage. Skip link and focus-visible basics added; reduced-motion already present.
 - **Gate:** every primary action has a clear precondition, visible result, and tested error state.
 
 ## P2-001 — Facility, capacity, staffing and maintenance (IMPLEMENTATION INTEGRATED; CI PENDING)

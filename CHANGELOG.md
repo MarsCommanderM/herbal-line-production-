@@ -1,4 +1,5 @@
 ## Unreleased
+- Accessibility: added skip link to management panel, confirmed focus-visible styles and prefers-reduced-motion support.
 - Added explicit migration chain entry point (migrateEnvelope). Current version is identity; future versions are rejected cleanly. Strengthened quota and interrupted-write recovery coverage.
 - Improved third-person character proportions and camera. Enhanced cannabis plant visuals (layered fan leaves, buds, branches). Interaction now uses proximity + fixed keys 1-4 (no random). All actions remain fictional game mechanics.
 - Added third-person character controller (WASD + mouse) and interactive medical cannabis plants with actions: prune, take cuttings, plant, repot. Visuals enhanced; all values remain fictional.
