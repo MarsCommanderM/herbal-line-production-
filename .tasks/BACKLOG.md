@@ -14,6 +14,6 @@
 | P2-003 | P2 | Content, tutorial and contextual notices | P1-003 | Content review, source register, UX tests | State-derived six-step tutorial, source register and browser assertions added; exact-revision CI pending; contextual notices and accessibility review remain open |
 | P3-001 | P3 | Visual/audio polish and asset pipeline | P1-003 | Asset/license manifest, visual QA, performance evidence | Current procedural assets documented as not release-cleared (`docs/ASSET_GATE_CURRENT.md`); final art pipeline still open |
 | P3-002 | P3 | Release candidate QA/security/rights | P2-* | CI evidence, dependency/secret scan, accessibility and rights review | Release readiness checklist added (`docs/RELEASE_READINESS_P3_P4.md`); full WCAG/AT and cross-browser still open |
-| P4-001 | P4 | Release and post-launch operations | P3-* | Artifact identity, rollback plan, release smoke tests, incident runbook | Evidence capture script added; signed artifact and owner sign-off still open |
+| P4-001 | P4 | Release and post-launch operations | P3-* | Artifact identity, rollback plan, release smoke tests, incident runbook | Owner sign-off template added; signed artifact and actual owner decision still open |
 
 Priorities describe order, not permission to bypass dependencies. No task is complete merely because its files exist.
