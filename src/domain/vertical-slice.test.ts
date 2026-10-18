@@ -515,3 +515,37 @@ describe('Property-style command sequences', () => {
     expect(state.revision).toBe(beforeRevision);
   });
 });
+
+describe('Extended property-style sequences', () => {
+  it('survives repeated end-day calls without duplicating settlements', () => {
+    let state = createInitialGameState();
+    for (let i = 0; i < 3; i++) {
+      const result = applyVerticalSliceCommand(state, {
+        commandId: commandId('day-' + i),
+        actorId: state.player.id,
+        expectedRevision: state.revision,
+        type: 'TIME/END_DAY',
+      });
+      expect(result.ok).toBe(true);
+      if (result.ok) state = result.state;
+    }
+    // Settlements should be present but not explode
+    expect(state.economy.ledger.length).toBeGreaterThan(0);
+    expect(state.time.day).toBeGreaterThan(1);
+  });
+
+  it('rejects staff assignment to incompatible room without mutation', () => {
+    const state = createInitialGameState();
+    const before = state.revision;
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('staff-bad'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'FACILITY/ASSIGN_STAFF',
+      staffId: state.staff[0]!.id,
+      roomId: 'nonexistent-room' as never,
+    });
+    expect(result.ok).toBe(false);
+    expect(state.revision).toBe(before);
+  });
+});

@@ -1,4 +1,5 @@
 ## Unreleased
+- Extended property-style tests (repeated end-day, incompatible staff assignment). Artifact identity note added.
 - WCAG deepening: secondary text contrast lifted, import button labeled, main landmark confirmed. Progress note added.
 - Added P3/P4 release readiness checklist with current gate evidence. Updated P3-002 and P4-001 status.
 - Added property-style command sequence test and unknown-upgrade rejection test. P2 task status progressed.
