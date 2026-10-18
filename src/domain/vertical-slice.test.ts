@@ -428,3 +428,54 @@ describe('Negative-path coverage', () => {
     expect(result.ok).toBe(false);
   });
 });
+
+describe('Corrective action workflow', () => {
+  it('records a corrective action and restores a recovery_review license to valid', () => {
+    let state = createInitialGameState();
+    state = {
+      ...state,
+      compliance: { ...state.compliance, licenseStatus: 'recovery_review', risk: 40 as never },
+    };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-1'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Dokumentierte Nachschulung und Prozessprüfung',
+      clearBlockedOperations: true,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.state.compliance.licenseStatus).toBe('valid');
+      expect(result.state.compliance.blockedOperationCodes).toEqual([]);
+      expect(result.state.logs.some((l) => l.code === 'COMPLIANCE_CORRECTIVE')).toBe(true);
+    }
+  });
+
+  it('rejects corrective action without a documented reason', () => {
+    let state = createInitialGameState();
+    state = { ...state, compliance: { ...state.compliance, licenseStatus: 'warning' } };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-2'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'ab',
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('INVALID_PAYLOAD');
+  });
+
+  it('rejects corrective action when license is already valid', () => {
+    const state = createInitialGameState();
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-3'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Keine Maßnahme nötig',
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('PRECONDITION_FAILED');
+  });
+});

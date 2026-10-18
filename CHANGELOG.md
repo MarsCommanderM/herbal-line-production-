@@ -1,4 +1,5 @@
 ## Unreleased
+- Implemented COMPLIANCE/RECORD_CORRECTIVE_ACTION command: restores recovery_review to valid, requires documented reason, reduces risk, clears blocked operations optionally. Tests cover success and rejection paths.
 - Improved empty/blocked-state messaging in management UI. Updated remaining P1 task statuses after accessibility and negative-path work.
 - Accessibility: added skip link to management panel, confirmed focus-visible styles and prefers-reduced-motion support.
 - Added explicit migration chain entry point (migrateEnvelope). Current version is identity; future versions are rejected cleanly. Strengthened quota and interrupted-write recovery coverage.
