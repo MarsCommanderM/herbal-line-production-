@@ -9,7 +9,7 @@
   </head>
   <body>
     <a class="skip-link" href="#game-panel">Zum Managementbereich springen</a>
-    <main id="app" aria-label="Herbal Line game">
+    <main id="app" role="main" aria-label="Herbal Line game">
       <div id="world-root" aria-label="Interaktive 3D-Ansicht der medizinischen Cannabis-Anlage"></div>
       <div id="ui-root" aria-label="Managementoberfläche"></div>
       <button id="reset-camera" type="button" aria-label="Kamera zurücksetzen">Kamera zurücksetzen</button>
@@ -28,7 +28,7 @@
           <button id="save-game" type="button">Spielstand speichern</button>
           <button id="load-game" type="button">Spielstand laden</button>
           <button id="export-game" type="button">Spielstand exportieren</button>
-          <button id="import-game" type="button">Spielstand importieren</button>
+          <button id="import-game" type="button" aria-label="Spielstand aus Datei importieren">Spielstand importieren</button>
           <input id="import-save-file" type="file" accept="application/json,.json" hidden />
         </div>
         <p id="save-status" role="status" aria-live="polite">Autosave wird vorbereitet.</p>

@@ -1,4 +1,5 @@
 ## Unreleased
+- WCAG deepening: secondary text contrast lifted, import button labeled, main landmark confirmed. Progress note added.
 - Added P3/P4 release readiness checklist with current gate evidence. Updated P3-002 and P4-001 status.
 - Added property-style command sequence test and unknown-upgrade rejection test. P2 task status progressed.
 - Implemented COMPLIANCE/RECORD_CORRECTIVE_ACTION command: restores recovery_review to valid, requires documented reason, reduces risk, clears blocked operations optionally. Tests cover success and rejection paths.
