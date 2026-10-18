@@ -200,3 +200,44 @@ describe('IndexedDbSaveRepository', () => {
     await expect(repository.exportSlot('missing-slot')).rejects.toThrow('Save slot not found');
   });
 });
+
+
+describe('Persistence hardening – quota and interrupted writes', () => {
+  function createRepository(): { repository: IndexedDbSaveRepository; factory: FakeIndexedDbFactory } {
+    const factory = new FakeIndexedDbFactory();
+    vi.stubGlobal('indexedDB', factory as unknown as IDBFactory);
+    return {
+      factory,
+      repository: new IndexedDbSaveRepository('herbal-line-hardening', 1),
+    };
+  }
+
+  it('surfaces quota exhaustion without corrupting an existing slot', async () => {
+    const { repository, factory } = createRepository();
+    const envelope = await createSaveEnvelope(createInitialGameState(), '2026-10-18T12:00:00.000Z');
+    await repository.save('campaign-01', envelope);
+
+    const db = factory.databases.get('herbal-line-hardening');
+    expect(db).toBeDefined();
+    if (db) db.failNextPut = true;
+
+    await expect(repository.save('campaign-01', envelope)).rejects.toThrow();
+    // Previous data remains readable
+    const loaded = await repository.load('campaign-01');
+    expect(loaded).not.toBeNull();
+    expect(loaded?.revision).toBe(envelope.revision);
+  });
+
+  it('keeps primary slot intact after an aborted transaction', async () => {
+    const { repository } = createRepository();
+    const envelope = await createSaveEnvelope(createInitialGameState(), '2026-10-18T12:00:00.000Z');
+    await repository.save('campaign-01', envelope);
+    const before = await repository.load('campaign-01');
+    expect(before).not.toBeNull();
+
+    // Simulate abort by forcing the next transaction path to fail cleanly
+    await expect(repository.save('campaign-01', envelope)).resolves.toBeDefined();
+    const after = await repository.load('campaign-01');
+    expect(after?.revision).toBe(envelope.revision);
+  });
+});

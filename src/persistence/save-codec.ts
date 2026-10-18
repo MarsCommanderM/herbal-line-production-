@@ -108,6 +108,24 @@ export async function createSaveEnvelope(
   return { ...body, checksum };
 }
 
+
+/** Explicit migration chain. Currently only v1 is supported; future versions are added here. */
+export async function migrateEnvelope(input: unknown): Promise<MigrationResult> {
+  if (!isRecord(input) || typeof input.schemaVersion !== 'number') {
+    return { ok: false, errorCode: 'INVALID_ENVELOPE' };
+  }
+  const version = input.schemaVersion;
+  if (version === SCHEMA_VERSION) {
+    // Identity migration for current version
+    return verifySaveEnvelope(input);
+  }
+  if (version > SCHEMA_VERSION) {
+    return { ok: false, errorCode: 'UNSUPPORTED_VERSION' };
+  }
+  // Future: add stepwise migrations e.g. if (version === 0) { ... upgrade to 1 }
+  return { ok: false, errorCode: 'UNSUPPORTED_VERSION' };
+}
+
 /** Parse, validate and checksum-check a save without changing the active game state. */
 export async function verifySaveEnvelope(input: string | unknown): Promise<MigrationResult> {
   let value: unknown = input;
@@ -120,7 +138,7 @@ export async function verifySaveEnvelope(input: string | unknown): Promise<Migra
   }
 
   if (isRecord(value) && typeof value.schemaVersion === 'number' && value.schemaVersion !== SCHEMA_VERSION) {
-    return { ok: false, errorCode: 'UNSUPPORTED_VERSION' };
+    return migrateEnvelope(value);
   }
   if (!validEnvelopeBody(value)) return { ok: false, errorCode: 'INVALID_ENVELOPE' };
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SaveEnvelopeV1 } from '../../contracts/persistence';
 import { createInitialGameState } from '../domain/initial-state';
-import { createSaveEnvelope, restoreGameState, stableStringify, verifySaveEnvelope } from './save-codec';
+import { createSaveEnvelope, migrateEnvelope, restoreGameState, stableStringify, verifySaveEnvelope } from './save-codec';
 
 describe('versioned save codec', () => {
   it('creates a checksummed envelope without transient UI state and restores a valid game state', async () => {
@@ -63,5 +63,21 @@ describe('versioned save codec', () => {
     const circular: { self?: unknown } = {};
     circular.self = circular;
     expect(() => stableStringify(circular)).toThrow(TypeError);
+  });
+});
+
+describe('Migration chain', () => {
+  it('rejects unsupported future schema versions', async () => {
+    const result = await migrateEnvelope({ format: 'herbal-line-save', schemaVersion: 99, checksum: 'abc' });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errorCode).toBe('UNSUPPORTED_VERSION');
+  });
+
+  it('accepts a valid current-version envelope via the migration entry point', async () => {
+    const state = createInitialGameState();
+    const envelope = await createSaveEnvelope(state, '2026-10-18T12:00:00.000Z');
+    const result = await migrateEnvelope(envelope);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.envelope.schemaVersion).toBe(1);
   });
 });
