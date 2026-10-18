@@ -1,4 +1,5 @@
 ## Unreleased
+- Improved third-person character proportions and camera. Enhanced cannabis plant visuals (layered fan leaves, buds, branches). Interaction now uses proximity + fixed keys 1-4 (no random). All actions remain fictional game mechanics.
 - Added third-person character controller (WASD + mouse) and interactive medical cannabis plants with actions: prune, take cuttings, plant, repot. Visuals enhanced; all values remain fictional.
 
 - Added an accessible, state-derived campaign guidance panel with next-step recommendations and explanations for quality, compliance, and availability blockers.

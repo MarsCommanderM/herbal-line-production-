@@ -287,42 +287,45 @@ async function boot(): Promise<() => void> {
   const character = createThirdPersonCharacter(scene, camera);
   let clock = new THREE.Clock();
 
-  // Interaction raycaster
-  const raycaster = new THREE.Raycaster();
-  const pointer = new THREE.Vector2();
-  let selectedPlant: THREE.Object3D | null = null;
+  // Interaction: proximity + fixed keys (1-4)
   const actionFeedback = document.getElementById('game-feedback');
+  const interactionRange = 2.8;
 
-  function onPointerMove(event: PointerEvent) {
-    pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-    pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  }
-  function onPointerClick(_event: PointerEvent) {
-    raycaster.setFromCamera(pointer, camera);
-    const intersects = raycaster.intersectObjects(scene.children, true);
-    for (const hit of intersects) {
-      let obj: THREE.Object3D | null = hit.object;
-      while (obj && !obj.userData.actionHandler) obj = obj.parent;
-      if (obj && obj.userData.actionHandler) {
-        selectedPlant = obj;
-        const actions: PlantAction[] = ['prune', 'cutting', 'plant', 'repot'];
-        const action = actions[Math.floor(Math.random() * actions.length)]; // demo cycle; real UI can map keys
-        const msg = obj.userData.actionHandler(action);
-        if (actionFeedback) actionFeedback.textContent = msg;
-        break;
+  function findNearestPlant(): THREE.Object3D | null {
+    const playerPos = character.getPosition();
+    let nearest: THREE.Object3D | null = null;
+    let bestDist = interactionRange;
+    scene.traverse((obj) => {
+      if (obj.userData.actionHandler && obj.parent) {
+        const dist = playerPos.distanceTo(obj.getWorldPosition(new THREE.Vector3()));
+        if (dist < bestDist) {
+          bestDist = dist;
+          nearest = obj;
+        }
       }
-    }
+    });
+    return nearest;
   }
-  window.addEventListener('pointermove', onPointerMove);
-  window.addEventListener('click', onPointerClick as EventListener);
 
-  // Keyboard plant actions when near plant
+  // Fixed action mapping – no random
+  const actionMap: Record<string, PlantAction> = {
+    Digit1: 'prune',
+    Digit2: 'cutting',
+    Digit3: 'plant',
+    Digit4: 'repot',
+  };
+
   window.addEventListener('keydown', (e) => {
-    if (!selectedPlant || !selectedPlant.userData.actionHandler) return;
-    const map: Record<string, PlantAction> = { Digit1: 'prune', Digit2: 'cutting', Digit3: 'plant', Digit4: 'repot' };
-    const action = map[e.code];
+    const nearest = findNearestPlant();
+    if (!nearest || !nearest.userData.actionHandler) {
+      if (actionFeedback && e.code.startsWith('Digit')) {
+        actionFeedback.textContent = 'Keine Pflanze in Reichweite.';
+      }
+      return;
+    }
+    const action = actionMap[e.code];
     if (action) {
-      const msg = selectedPlant.userData.actionHandler(action);
+      const msg = nearest.userData.actionHandler(action);
       if (actionFeedback) actionFeedback.textContent = msg;
     }
   });
