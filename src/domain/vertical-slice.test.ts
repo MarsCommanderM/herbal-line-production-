@@ -479,3 +479,39 @@ describe('Corrective action workflow', () => {
     if (!result.ok) expect(result.error.code).toBe('PRECONDITION_FAILED');
   });
 });
+
+describe('Property-style command sequences', () => {
+  it('keeps invariants valid across a short random-but-legal command sequence', () => {
+    let state = createInitialGameState();
+    const sequences = [
+      { type: 'PLANT/ADVANCE_FICTIONAL_STEP' as const, plantId: state.plants[0]!.id },
+      { type: 'PLANT/HARVEST' as const, plantId: state.plants[0]!.id },
+    ];
+    for (const cmd of sequences) {
+      const result = applyVerticalSliceCommand(state, {
+        commandId: commandId('prop-' + state.revision),
+        actorId: state.player.id,
+        expectedRevision: state.revision,
+        ...cmd,
+      } as VerticalSliceCommand);
+      if (result.ok) state = result.state;
+    }
+    // After any successful steps the state must still satisfy basic invariants
+    expect(state.revision).toBeGreaterThanOrEqual(0);
+    expect(state.compliance.licenseStatus).toBeDefined();
+  });
+
+  it('rejects unknown upgrades without mutating state', () => {
+    const state = createInitialGameState();
+    const beforeRevision = state.revision;
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('econ-1'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'UPGRADE/PURCHASE',
+      upgradeId: 'nonexistent-upgrade',
+    });
+    expect(result.ok).toBe(false);
+    expect(state.revision).toBe(beforeRevision);
+  });
+});

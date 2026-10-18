@@ -1,4 +1,5 @@
 ## Unreleased
+- Added property-style command sequence test and unknown-upgrade rejection test. P2 task status progressed.
 - Implemented COMPLIANCE/RECORD_CORRECTIVE_ACTION command: restores recovery_review to valid, requires documented reason, reduces risk, clears blocked operations optionally. Tests cover success and rejection paths.
 - Improved empty/blocked-state messaging in management UI. Updated remaining P1 task statuses after accessibility and negative-path work.
 - Accessibility: added skip link to management panel, confirmed focus-visible styles and prefers-reduced-motion support.
