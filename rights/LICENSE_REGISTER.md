@@ -12,3 +12,8 @@ This register is intentionally conservative. An asset is not cleared for release
 
 ## Gate
 No unverified, scraped, watermarked, unlicensed, or placeholder asset may be represented as final. Keep copies of license text or durable source references when permitted. Review trademarks and the working title before commercial release.
+
+## Current branch note (2026-10-18)
+
+Procedural plants and character in `src/world/` are project code, not external assets.  
+They are **not** release-cleared. See `docs/ASSET_GATE_CURRENT.md`.
