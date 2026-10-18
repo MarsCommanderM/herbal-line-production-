@@ -15,8 +15,8 @@
   "stateSchemaVersion": 1,
   "saveSchemaVersion": 1,
   "simulationModel": "fixed-step deterministic pure TypeScript domain simulation",
-  "productDescription": "Ein hochwertiges Web-Managementspiel über den Betrieb einer fiktiven, streng regulierten botanischen Anlage.",
-  "simulationBoundary": "Fictional botanical management simulation only; no real-world cultivation, preparation, extraction, or controlled-substance distribution instructions.",
+  "productDescription": "Ein hochwertiges Web-Managementspiel über den Betrieb einer fiktiven, streng regulierten medizinischen Cannabis-Produktionsanlage.",
+  "simulationBoundary": "Fictional medical cannabis management simulation only; no real-world cultivation, preparation, extraction, or controlled-substance distribution instructions.",
   "releaseStandard": "production-grade; no prototypes, blockouts, fake functionality or placeholder assets represented as final",
   "workingTitleTrademarkStatus": "not cleared; trademark clearance required before public commercial release"
 }

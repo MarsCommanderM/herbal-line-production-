@@ -4,19 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b1020" />
-    <meta name="description" content="Herbal Line — Managementspiel über eine fiktive botanische Betriebsanlage. Abstrakte Spielmechaniken, keine realen Produktionsanleitungen." />
-    <title>Herbal Line — Botanical Operations</title>
+    <meta name="description" content="Herbal Line — Managementspiel über eine streng regulierte medizinische Cannabis-Produktion. Abstrakte Spielmechaniken, keine realen Produktionsanleitungen." />
+    <title>Herbal Line — Medizinische Cannabis-Produktion</title>
   </head>
   <body>
-    <main id="app" aria-label="Herbal Line game">
-      <div id="world-root" aria-label="Interaktive 3D-Ansicht der botanischen Anlage"></div>
+    <a class="skip-link" href="#game-panel">Zum Managementbereich springen</a>
+    <main id="app" role="main" aria-label="Herbal Line game">
+      <div id="world-root" role="application" aria-label="Interaktive 3D-Ansicht der medizinischen Cannabis-Anlage. WASD bewegt den Charakter, Tasten 1–4 führen Pflanzenaktionen in Reichweite aus."></div>
       <div id="ui-root" aria-label="Managementoberfläche"></div>
       <button id="reset-camera" type="button" aria-label="Kamera zurücksetzen">Kamera zurücksetzen</button>
       <aside id="game-panel" aria-label="Managementsteuerung">
         <header class="panel-header">
           <p class="eyebrow">HERBAL LINE / KAMPAGNE 01</p>
-          <h1>Botanical Operations</h1>
-          <p class="panel-subtitle">Botanischer Betrieb · Fiktive Spielsimulation</p>
+          <h1>Medizinische Cannabis-Produktion</h1>
+          <p class="panel-subtitle">Streng regulierter Anbau · Fiktive Spielsimulation</p>
         </header>
         <section id="game-metrics" aria-label="Betriebskennzahlen"></section>
         <section class="panel-section" aria-labelledby="facility-overview-heading">
@@ -27,7 +28,7 @@
           <button id="save-game" type="button">Spielstand speichern</button>
           <button id="load-game" type="button">Spielstand laden</button>
           <button id="export-game" type="button">Spielstand exportieren</button>
-          <button id="import-game" type="button">Spielstand importieren</button>
+          <button id="import-game" type="button" aria-label="Spielstand aus Datei importieren">Spielstand importieren</button>
           <input id="import-save-file" type="file" accept="application/json,.json" hidden />
         </div>
         <p id="save-status" role="status" aria-live="polite">Autosave wird vorbereitet.</p>
@@ -40,15 +41,15 @@
           <h2 id="campaign-tutorial-heading">Einführung</h2>
           <div id="campaign-tutorial" role="region" aria-label="Schrittweise Einführung"></div>
         </section>
-        <section class="panel-section">
-          <h2>Nächster Schritt</h2>
-          <div id="game-actions"></div>
+        <section class="panel-section" aria-labelledby="next-step-heading">
+          <h2 id="next-step-heading">Nächster Schritt</h2>
+          <div id="game-actions" role="group" aria-label="Verfügbare Aktionen"></div>
         </section>
-        <section class="panel-section">
-          <h2>Betriebsprotokoll</h2>
-          <div id="game-log" aria-live="polite"></div>
+        <section class="panel-section" aria-labelledby="log-heading">
+          <h2 id="log-heading">Betriebsprotokoll</h2>
+          <div id="game-log" aria-live="polite" aria-relevant="additions"></div>
         </section>
-        <p class="disclaimer">Alle Werte, Prüfregeln und Prozesszeiten sind erfundene Spielmechaniken und keine realen Produktions- oder Arzneimittelanleitungen.</p>
+        <p class="disclaimer">WASD + Maus: Third-Person Charakter bewegen. In Pflanzennähe Tasten 1–4: Beschneiden / Steckling / Setzen / Umtopfen.<br/>Alle Werte, Prüfregeln und Prozesszeiten sind erfundene Spielmechaniken und keine realen Anbau-, Produktions- oder Arzneimittelanleitungen.</p>
       </aside>
       <div id="fatal-error" role="alert" hidden></div>
     </main>

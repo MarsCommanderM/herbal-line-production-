@@ -2,7 +2,7 @@
 
 ## Authority
 
-The supplied Herbal Line Master Pack is the reference for product requirements, domain concepts, schemas and production gates. The implementation branch currently keeps the playable simulation fictional and generic: abstract botanical units, QC/inventory/compliance states and generic customer orders. No real-world controlled-substance production or distribution instructions are implemented.
+The supplied Herbal Line Master Pack is the reference for product requirements, domain concepts, schemas and production gates. The implementation branch currently keeps the playable simulation fictional and generic: abstract medical cannabis units, QC/inventory/compliance states and generic customer orders. No real-world controlled-substance production or distribution instructions are implemented.
 
 ## Decisions recorded
 
@@ -57,6 +57,6 @@ Do not rewrite canonical documents to fit the current implementation silently. R
 
 ## Source archive provenance and scope decision
 
-The source archive is preserved as historical input, but the current app is intentionally a fictional generic botanical operations simulator. A measured per-path comparison is documented in `docs/audits/MASTERPACK_PARITY_REPORT.md`; expected source hashes remain in `docs/audits/MASTERPACK_EXPECTED_BLOBS.json`. Do not claim exact 1:1 ZIP parity and do not overwrite the working app with the historical pack as a bulk operation.
+The source archive is preserved as historical input, but the current app is intentionally a fictional strictly regulated medical cannabis operations simulator. A measured per-path comparison is documented in `docs/audits/MASTERPACK_PARITY_REPORT.md`; expected source hashes remain in `docs/audits/MASTERPACK_EXPECTED_BLOBS.json`. Do not claim exact 1:1 ZIP parity and do not overwrite the working app with the historical pack as a bulk operation.
 
 The implementation has also closed the QC review/failure dead end with a terminal `BATCH/REJECT` command. It requires a documented reason, releases room occupancy, clears any active machine assignment, removes the batch from the active queue, and prevents later release. The management UI exposes this action only when a stored QC decision is `fail` or `review`; domain guards remain authoritative.

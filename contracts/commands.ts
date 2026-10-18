@@ -32,6 +32,7 @@ export type DomainCommand =
   | (CommandBase & { type: 'UPGRADE/PURCHASE'; upgradeId: string })
   | (CommandBase & { type: 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT' })
   | (CommandBase & { type: 'COMPLIANCE/START_AUDIT'; auditId: EntityId })
+  | (CommandBase & { type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION'; reasonCode: string; clearBlockedOperations?: boolean })
 ;
 
 export type UICommand =

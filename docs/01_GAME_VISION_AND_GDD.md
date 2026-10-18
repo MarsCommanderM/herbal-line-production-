@@ -2,7 +2,7 @@
 
 ## High Concept
 
-Ein strategisches Management-/Tycoon-Spiel über den Betrieb einer streng regulierten botanischen Anlage. Der Spieler leitet einen kleinen Betrieb und entwickelt ihn zu einem zuverlässigen, dokumentationsstarken Anbieter für fiktive institutionelle Kunden.
+Ein strategisches Management-/Tycoon-Spiel über den Betrieb einer streng regulierten medizinischen Cannabis-Produktionsanlage. Der Spieler leitet einen kleinen Betrieb und entwickelt ihn zu einem zuverlässigen, dokumentationsstarken Anbieter für fiktive institutionelle Kunden.
 
 ## Genre, Plattform, Perspektive
 

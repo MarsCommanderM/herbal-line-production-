@@ -47,10 +47,10 @@ export function createInitialGameState(): GameState {
       { id: logisticsRoomId, definitionId: 'room-logistics', displayName: 'Versand', kind: 'logistics', capacity: 5, occupied: 0, condition: score(96), cleanliness: score(97), availability: score(98), powerUnitsPerHour: 1, unlocked: true, assignedStaffIds: [entityId('staff-logistics-001')], assignedMachineIds: [] },
     ],
     sourceLots: [
-      { id: sourceLotId, sourceRef: 'BOTANICAL-DEMO-001', receivedAt: minute(0), status: 'accepted', quantity: 12, qualityScore: score(92), roomId: productionRoomId, inspectionFindings: [], traceEventIds: [sourceAcceptedEventId] },
+      { id: sourceLotId, sourceRef: 'MEDICAL-CANNABIS-DEMO-001', receivedAt: minute(0), status: 'accepted', quantity: 12, qualityScore: score(92), roomId: productionRoomId, inspectionFindings: [], traceEventIds: [sourceAcceptedEventId] },
     ],
     plants: [
-      { id: plantId, profileId: 'botanical-campaign-profile', sourceLotId, roomId: productionRoomId, stage: 'active', progress: score(80), vitality: score(88), qualityPotential: score(92), stressIndex: score(8), contaminationIndex: score(3), createdAt: minute(0), lastUpdatedAt: minute(0), batchId: null, rejectedReason: null },
+      { id: plantId, profileId: 'medical-cannabis-campaign-profile', sourceLotId, roomId: productionRoomId, stage: 'active', progress: score(80), vitality: score(88), qualityPotential: score(92), stressIndex: score(8), contaminationIndex: score(3), createdAt: minute(0), lastUpdatedAt: minute(0), batchId: null, rejectedReason: null },
     ],
     batches: [],
     inventoryLots: [],
@@ -59,7 +59,7 @@ export function createInitialGameState(): GameState {
       { id: entityId('order-buyer-001'), customerId: buyerId, itemDefinitionId: 'BOT-01', requestedQuantity: 6, minQuality: score(75), dueAt: minute(1440), status: 'available', contractValueCents: cents(850000), latePenaltyCents: cents(50000), acceptedAt: null, allocatedLotIds: [], deliveryId: null },
     ],
     customers: [
-      { id: buyerId, name: 'Botanischer Abnehmer Nord', kind: 'licensed_buyer', reliabilityScore: score(92), minimumReputation: reputation(100), preferredQuality: score(80), paymentDelayDays: 0, unlocked: true },
+      { id: buyerId, name: 'Apotheken-Abnehmer Nord', kind: 'licensed_buyer', reliabilityScore: score(92), minimumReputation: reputation(100), preferredQuality: score(80), paymentDelayDays: 0, unlocked: true },
     ],
     deliveries: [],
     staff: [

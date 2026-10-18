@@ -1,8 +1,26 @@
 ## Unreleased
+- Plant action feedback refined. 3D foundation notes added. Final art pipeline remains open.
+- Owner sign-off template added. Release readiness notes updated. Actual owner decision still open.
+- Focus restoration: after successful save and backup recovery, focus moves to game-feedback. Real AT session remains open.
+- Canvas accessibility description improved. Focus and canvas notes added. Real AT session and focus restoration remain open.
+- Screenreader-oriented pass: actions group and log landmarks improved. Report in docs/SCREENREADER_PASS.md. Real AT session remains open.
+- Added contrast check script (key pairs meet AA). Viewport and contrast notes documented. P1-003 status updated.
+- Added release evidence capture script and snapshot. P4-001 status updated.
+- Asset gate current state documented. Procedural plants and character marked not release-cleared. P3-001 status updated.
+- Extended property-style tests (repeated end-day, incompatible staff assignment). Artifact identity note added.
+- WCAG deepening: secondary text contrast lifted, import button labeled, main landmark confirmed. Progress note added.
+- Added P3/P4 release readiness checklist with current gate evidence. Updated P3-002 and P4-001 status.
+- Added property-style command sequence test and unknown-upgrade rejection test. P2 task status progressed.
+- Implemented COMPLIANCE/RECORD_CORRECTIVE_ACTION command: restores recovery_review to valid, requires documented reason, reduces risk, clears blocked operations optionally. Tests cover success and rejection paths.
+- Improved empty/blocked-state messaging in management UI. Updated remaining P1 task statuses after accessibility and negative-path work.
+- Accessibility: added skip link to management panel, confirmed focus-visible styles and prefers-reduced-motion support.
+- Added explicit migration chain entry point (migrateEnvelope). Current version is identity; future versions are rejected cleanly. Strengthened quota and interrupted-write recovery coverage.
+- Improved third-person character proportions and camera. Enhanced cannabis plant visuals (layered fan leaves, buds, branches). Interaction now uses proximity + fixed keys 1-4 (no random). All actions remain fictional game mechanics.
+- Added third-person character controller (WASD + mouse) and interactive medical cannabis plants with actions: prune, take cuttings, plant, repot. Visuals enhanced; all values remain fictional.
 
 - Added an accessible, state-derived campaign guidance panel with next-step recommendations and explanations for quality, compliance, and availability blockers.
 - Added a terminal batch rejection path with documented reason codes, queue/room cleanup, and a UI recovery action for failed or unresolved quality checks.
-- Documented measured source-archive drift and the intentional generic-botanical scope fork; no exact 1:1 ZIP parity claim is made.
+- Documented measured source-archive drift and the intentional botanical scope fork (now reversed to medical cannabis by user decision); no exact 1:1 ZIP parity claim is made.
 - Added Chromium acceptance for keyboard tab order, visible focus, mobile viewport overflow, live status semantics, and reduced-motion support.
 - Added cross-entity state invariant checks before committing domain commands, with tests for room capacity, inventory reservation, batch/plant links, machine/job consistency, QC state, rejection terminality, ledger idempotency, and invalid-command atomicity.
 - Added a deterministic corruption matrix and 100 generated room-occupancy mutations to exercise the invariant validator.

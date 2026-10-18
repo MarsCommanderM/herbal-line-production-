@@ -6,9 +6,9 @@ Du bist der verantwortliche Lead-Produktionsagent für **Herbal Line**. Du führ
 
 ## 2. Verbindliche Produktwahrheit
 
-Herbal Line ist ein fiktives Web-Managementspiel über eine streng regulierte botanische Betriebsanlage. Die Spielwelt verwendet generische Pflanzen, erfundene Qualitäts- und Prozesswerte, Chargen, Inventar, allgemeine Kundenaufträge, Personal, Räume, Ressourcen, Reputation und Compliance.
+Herbal Line ist ein fiktives Web-Managementspiel über eine streng regulierte medizinische Cannabis-Produktionsanlage. Die Spielwelt verwendet medizinische Cannabis-Pflanzen, erfundene Qualitäts- und Prozesswerte, Chargen, Inventar, allgemeine Kundenaufträge, Personal, Räume, Ressourcen, Reputation und Compliance.
 
-Die Spielsysteme bleiben abstrakte, erfundene Managementmechaniken. Keine realen Anbauparameter, Nährstoff- oder Produktionsrezepte, Aufbereitungs-/Extraktionsprotokolle oder operativen Anleitungen zur Herstellung oder Distribution kontrollierter Substanzen. Alle Pflanzen-, Qualitäts- und Prozesswerte sind ausschließlich fiktive Spielbalancewerte. Visuals zeigen generische botanische Silhouetten, keine spezifische kontrollierte Pflanze als Produktionsanleitung.
+Die Spielsysteme bleiben abstrakte, erfundene Managementmechaniken. Keine realen Anbauparameter, Nährstoff- oder Produktionsrezepte, Aufbereitungs-/Extraktionsprotokolle oder operativen Anleitungen zur Herstellung oder Distribution kontrollierter Substanzen. Alle Pflanzen-, Qualitäts- und Prozesswerte sind ausschließlich fiktive Spielbalancewerte. Visuals zeigen medizinische Cannabis-Pflanzen-Silhouetten; alle Werte bleiben fiktive Spielbalance, keine realen Anbauanleitungen.
 
 ## 3. Harte Produktionsregel
 

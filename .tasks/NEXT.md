@@ -3,7 +3,7 @@
 ## Current verified state
 
 - P0-001 repository truth audit exists in `docs/audits/BASELINE.md`.
-- P0-002 contract decisions and the intentional generic-botanical scope fork are recorded in `docs/audits/CONTRACT_RECONCILIATION.md` and `docs/audits/MASTERPACK_PARITY_REPORT.md`; exact byte-for-byte ZIP parity is not claimed or targeted.
+- P0-002 contract decisions and the intentional medical-cannabis scope (botanical fork reversed) are recorded in `docs/audits/CONTRACT_RECONCILIATION.md` and `docs/audits/MASTERPACK_PARITY_REPORT.md`; exact byte-for-byte ZIP parity is not claimed or targeted.
 - P0-003 reproducible Vite/TypeScript baseline is verified on the current integration revision.
 - Latest verified invariant/fuzz feature revision: `64e29a6fe0165075b61914f296114294c2d3e981`.
 - Evidence: [GitHub Actions run 38208111520](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38208111520) — locked install, lint, format, strict typecheck, unit tests, production build, 7 Chromium E2E tests, preview smoke, master-pack validator and `git diff --check` passed.
@@ -12,7 +12,7 @@
 
 - **Complete:** canonical contract conflicts are logged; the archive SHA-256 and expected Git blob IDs are retained; a reproducible per-path comparison records the exact drift.
 - **Evidence:** `docs/audits/MASTERPACK_PARITY_REPORT.md`; archive contains 42 paths, 4/42 exact matches, 38 content mismatches and 33 extra implementation/tooling paths at the recorded comparison revision.
-- **Decision:** the current deliverable is a fictional, generic botanical operations game. Exact ZIP mirroring is not a release gate because blindly restoring the historical product pack would overwrite the verified app and undo the deliberately generic scope. Do not claim 1:1 parity.
+- **Decision:** the current deliverable is a fictional, strictly regulated medical cannabis operations game. Exact ZIP mirroring is not a release gate because blindly restoring the historical product pack would overwrite the verified app and undo the deliberately generic scope. Do not claim 1:1 parity.
 - **Status:** source-of-truth ambiguity closed with a documented scope fork; archive parity remains historically measurable but intentionally not targeted.
 
 ## P0-003 — Reproducible Engineering Baseline (VERIFIED)
@@ -23,7 +23,7 @@
 
 ## P1-001 — Vertical Slice Domain (IMPLEMENTED; ACCEPTANCE CONTINUES)
 
-- **Goal:** Intake → fictional botanical stages → QC hold/release → inventory → generic customer dispatch.
+- **Goal:** Intake → fictional medical cannabis stages → QC hold/release → inventory → generic customer dispatch.
 - **Evidence:** deterministic domain tests and Chromium E2E interaction coverage; the UI runs in the actual browser with a WebGL canvas.
 - **Remaining:** complete negative-path browser coverage, queue/empty/error UX, and accessibility review.
 
@@ -31,13 +31,13 @@
 
 - **Implemented:** canonical SHA-256 save envelope; deterministic serialization; IndexedDB persistence; manual save/load; autosave after successful actions; last-known-good backup; fallback recovery; JSON export/import; validation before import; transient UI excluded from persisted payload.
 - **Evidence:** unit tests plus Chromium E2E tests for save/load, autosave across reload, corrupted-primary fallback to backup, and export/import round-trip.
-- **Remaining:** explicit migration chain when a new schema version is introduced, quota/interrupted-write recovery tests, and cross-browser coverage.
+- **Remaining:** cross-browser coverage beyond Chromium. Migration chain and quota/interrupted-write recovery tests are now present.
 
 ## P1-003 — Operational Dashboard and Queue UX (FUNCTIONAL BASELINE; ACCESSIBILITY REVIEW OPEN)
 
 - **Implemented:** state-derived campaign guidance, recommended next step, quality/compliance blockers, station availability, and delivered-goal completion.
 - **Evidence:** Chromium E2E run 38207213170 passed 7 scenarios, including predictable keyboard tab order, focus-visible styling, 390×844 mobile layout without horizontal overflow, live-region semantics, and reduced-motion handling.
-- **Remaining:** full WCAG contrast/semantics review, broader assistive-technology testing, and more viewport coverage.
+- **Remaining:** broader assistive-technology testing and more viewport coverage. Skip link and focus-visible basics added; reduced-motion already present.
 - **Gate:** every primary action has a clear precondition, visible result, and tested error state.
 
 ## P2-001 — Facility, capacity, staffing and maintenance (IMPLEMENTATION INTEGRATED; CI PENDING)

@@ -43,6 +43,7 @@ export type VerticalSliceCommand = Extract<DomainCommand, {
     | 'TIME/END_DAY'
     | 'UPGRADE/PURCHASE'
     | 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT'
+    | 'COMPLIANCE/RECORD_CORRECTIVE_ACTION'
 }>;
 
 const entityId = (value: string): EntityId => value as EntityId;
@@ -158,6 +159,27 @@ export function applyVerticalSliceCommand(state: GameState, command: VerticalSli
   if (command.actorId !== state.player.id) return failure(state, 'COMPLIANCE_BLOCKED', 'Nur der aktuelle Kampagnenleiter darf diese Aktion ausführen.');
 
   switch (command.type) {
+
+    case 'COMPLIANCE/RECORD_CORRECTIVE_ACTION': {
+      if (!command.reasonCode || command.reasonCode.trim().length < 4) {
+        return failure(state, 'INVALID_PAYLOAD', 'Eine dokumentierte Begründung ist erforderlich.');
+      }
+      const status = state.compliance.licenseStatus;
+      if (status === 'valid') {
+        return failure(state, 'PRECONDITION_FAILED', 'Kein offener Compliance-Vorfall vorhanden.');
+      }
+      const nextStatus = status === 'suspended' ? 'recovery_review' : 'valid';
+      const nextBlocked = command.clearBlockedOperations ? [] : state.compliance.blockedOperationCodes;
+      return commit(state, command, {
+        compliance: {
+          ...state.compliance,
+          licenseStatus: nextStatus,
+          blockedOperationCodes: nextBlocked,
+          risk: clampScore(Math.max(0, state.compliance.risk - 10)) as unknown as typeof state.compliance.risk,
+        },
+      }, [], 'COMPLIANCE_CORRECTIVE', 'Korrekturmaßnahme dokumentiert: ' + command.reasonCode, []);
+    }
+
     case 'ECONOMY/ACTIVATE_DISTRESS_SUPPORT': {
       const idempotencyKey = 'distress-support:campaign-1';
       if (state.economy.ledger.some((entry) => entry.idempotencyKey === idempotencyKey)) {

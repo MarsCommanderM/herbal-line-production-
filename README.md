@@ -57,7 +57,7 @@ Der Master-Pack-Inhalt wurde in dieses Repository expandiert. Der Repository-Sta
 
 ## Current engineering status
 
-The current integration branch contains a pinned Vite/TypeScript toolchain and lockfile, a Three.js facility view, a PixiJS management interface, deterministic domain state, typed commands, a fictional botanical operations vertical slice, ledger-derived finance, QC/traceability gates, and a versioned IndexedDB save system.
+The current integration branch contains a pinned Vite/TypeScript toolchain and lockfile, a Three.js facility view, a PixiJS management interface, deterministic domain state, typed commands, a fictional medical cannabis operations vertical slice, ledger-derived finance, QC/traceability gates, and a versioned IndexedDB save system.
 
 The latest verified revision is `bce2a0bd0edda036032be03e8dfea3033057ea52`. [GitHub Actions run 38182289439](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38182289439) passed install, source lint, format, strict typecheck, 26 unit tests, production build, three Chromium E2E tests, production preview smoke, master-pack validation and whitespace checks.
 

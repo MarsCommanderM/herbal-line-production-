@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Herbal Line — a fictional botanical operations management game.",
+  "description": "Herbal Line — a fictional management game about strictly regulated medical cannabis production. All values are game balance only.",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",

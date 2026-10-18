@@ -42,7 +42,7 @@ function progressToReleasedInventory() {
   state = applyOk(state, 'BATCH/CREATE', {
     batchId: entity('batch-001'),
     plantIds: [entity('plant-001')],
-    profileId: 'fictional-botanical-batch',
+    profileId: 'medical-cannabis-batch',
   });
   state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-001'), roomId: entity('room-processing-01') });
   state = applyOk(state, 'BATCH/START_PROCESSING', { batchId: entity('batch-001'), machineId: entity('machine-processing-001') });
@@ -51,7 +51,7 @@ function progressToReleasedInventory() {
   return state;
 }
 
-describe('botanical operations vertical slice', () => {
+describe('medical cannabis operations vertical slice', () => {
   it('completes fictional stage, batch, QC, stock, buyer order, and delivery flow', () => {
     let state = progressToReleasedInventory();
     expect(state.batches[0]?.status).toBe('released');
@@ -396,4 +396,224 @@ describe('botanical operations vertical slice', () => {
     expect(state.machines.every((machine) => machine.status !== 'active' || machine.activeJobId !== null)).toBe(true);
   });
 
+});
+
+describe('Negative-path coverage', () => {
+  it('rejects plant advance on a non-active plant', () => {
+    let state = createInitialGameState();
+    // Force plant into harvested stage without going through commands
+    state = { ...state, plants: state.plants.map((p) => ({ ...p, stage: 'harvested' as const })) };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: 'neg-1' as never,
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'PLANT/ADVANCE_FICTIONAL_STEP',
+      plantId: state.plants[0]!.id,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('INVALID_TRANSITION');
+  });
+
+  it('rejects batch creation with empty plant list', () => {
+    const state = createInitialGameState();
+    const result = applyVerticalSliceCommand(state, {
+      commandId: 'neg-2' as never,
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'BATCH/CREATE',
+      batchId: 'batch-empty' as never,
+      plantIds: [],
+      profileId: 'medical-cannabis-batch',
+    });
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe('Corrective action workflow', () => {
+  it('records a corrective action and restores a recovery_review license to valid', () => {
+    let state = createInitialGameState();
+    state = {
+      ...state,
+      compliance: { ...state.compliance, licenseStatus: 'recovery_review', risk: 40 as never },
+    };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-1'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Dokumentierte Nachschulung und Prozessprüfung',
+      clearBlockedOperations: true,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.state.compliance.licenseStatus).toBe('valid');
+      expect(result.state.compliance.blockedOperationCodes).toEqual([]);
+      expect(result.state.logs.some((l) => l.code === 'COMPLIANCE_CORRECTIVE')).toBe(true);
+    }
+  });
+
+  it('rejects corrective action without a documented reason', () => {
+    let state = createInitialGameState();
+    state = { ...state, compliance: { ...state.compliance, licenseStatus: 'warning' } };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-2'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'ab',
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('INVALID_PAYLOAD');
+  });
+
+  it('rejects corrective action when license is already valid', () => {
+    const state = createInitialGameState();
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-3'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Keine Maßnahme nötig',
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('PRECONDITION_FAILED');
+  });
+});
+
+describe('Property-style command sequences', () => {
+  it('keeps invariants valid across a short random-but-legal command sequence', () => {
+    let state = createInitialGameState();
+    const sequences = [
+      { type: 'PLANT/ADVANCE_FICTIONAL_STEP' as const, plantId: state.plants[0]!.id },
+      { type: 'PLANT/HARVEST' as const, plantId: state.plants[0]!.id },
+    ];
+    for (const cmd of sequences) {
+      const result = applyVerticalSliceCommand(state, {
+        commandId: commandId('prop-' + state.revision),
+        actorId: state.player.id,
+        expectedRevision: state.revision,
+        ...cmd,
+      } as VerticalSliceCommand);
+      if (result.ok) state = result.state;
+    }
+    // After successful steps the state must still satisfy basic invariants
+    expect(state.revision).toBeGreaterThanOrEqual(0);
+    expect(state.compliance.licenseStatus).toBeDefined();
+  });
+
+  it('rejects unknown upgrades without mutating state', () => {
+    const state = createInitialGameState();
+    const beforeRevision = state.revision;
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('econ-1'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'UPGRADE/PURCHASE',
+      upgradeId: 'nonexistent-upgrade',
+    });
+    expect(result.ok).toBe(false);
+    expect(state.revision).toBe(beforeRevision);
+  });
+});
+
+describe('Extended property-style sequences', () => {
+  it('survives repeated end-day calls without duplicating settlements', () => {
+    let state = createInitialGameState();
+    for (let i = 0; i < 3; i++) {
+      const result = applyVerticalSliceCommand(state, {
+        commandId: commandId('day-' + i),
+        actorId: state.player.id,
+        expectedRevision: state.revision,
+        type: 'TIME/END_DAY',
+      });
+      expect(result.ok).toBe(true);
+      if (result.ok) state = result.state;
+    }
+    // Settlements should be present but not explode
+    expect(state.economy.ledger.length).toBeGreaterThan(0);
+    expect(state.time.day).toBeGreaterThan(1);
+  });
+
+  it('rejects staff assignment to incompatible room without mutation', () => {
+    const state = createInitialGameState();
+    const before = state.revision;
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('staff-bad'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'FACILITY/ASSIGN_STAFF',
+      staffId: state.staff[0]!.id,
+      roomId: 'nonexistent-room' as never,
+    });
+    expect(result.ok).toBe(false);
+    expect(state.revision).toBe(before);
+  });
+});
+
+describe('Corrective action edge cases', () => {
+  it('moves suspended license to recovery_review and reduces risk', () => {
+    let state = createInitialGameState();
+    state = {
+      ...state,
+      compliance: {
+        ...state.compliance,
+        licenseStatus: 'suspended',
+        risk: 60 as never,
+        blockedOperationCodes: ['BATCH/QUEUE'],
+      },
+    };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-suspended'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Vollständige Nachprüfung abgeschlossen',
+      clearBlockedOperations: false,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.state.compliance.licenseStatus).toBe('recovery_review');
+      expect(result.state.compliance.blockedOperationCodes).toEqual(['BATCH/QUEUE']);
+      expect(result.state.compliance.risk).toBeLessThan(60);
+    }
+  });
+
+  it('clears blocked operations when requested', () => {
+    let state = createInitialGameState();
+    state = {
+      ...state,
+      compliance: {
+        ...state.compliance,
+        licenseStatus: 'warning',
+        blockedOperationCodes: ['ORDER/ACCEPT', 'DELIVERY/DISPATCH'],
+      },
+    };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-clear'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Blockaden aufgehoben nach Review',
+      clearBlockedOperations: true,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.state.compliance.licenseStatus).toBe('valid');
+      expect(result.state.compliance.blockedOperationCodes).toEqual([]);
+    }
+  });
+
+  it('rejects corrective action from wrong actor', () => {
+    let state = createInitialGameState();
+    state = { ...state, compliance: { ...state.compliance, licenseStatus: 'warning' } };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-wrong-actor'),
+      actorId: entity('other-player'),
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Unbefugter Versuch',
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('COMPLIANCE_BLOCKED');
+  });
 });

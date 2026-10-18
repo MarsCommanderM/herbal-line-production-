@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { createThirdPersonCharacter } from './world/character';
+import { loadCannabisModel, createInteractivePlantFromModel, type PlantAction } from './world/plants';
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import './styles.css';
 import type { CommandId } from '../contracts/domain';
@@ -56,6 +58,15 @@ function runGameCommand(type: VerticalSliceCommand['type'], payload: Record<stri
   renderManagementUI(gameState, runGameCommand);
   onGameStateChanged();
   void autosaveCampaign();
+}
+
+
+function focusFeedback(): void {
+  const el = document.getElementById('game-feedback');
+  if (el) {
+    el.setAttribute('tabindex', '-1');
+    el.focus();
+  }
 }
 
 function setFeedback(level: 'success' | 'error', message: string): void {
@@ -129,6 +140,7 @@ async function saveCampaign(): Promise<void> {
       return { revision: saved.revision, byteLength: JSON.stringify(saved).length };
     });
     setFeedback('success', 'Spielstand gespeichert · Revision ' + metadata.revision + ' · ' + metadata.byteLength + ' Byte.');
+    focusFeedback();
     setSaveStatus('success', 'Manueller Spielstand gespeichert · Revision ' + metadata.revision + '.');
   } catch (error) {
     setFeedback('error', 'Speichern fehlgeschlagen: ' + (error instanceof Error ? error.message : String(error)));
@@ -152,6 +164,7 @@ async function applyLoadedSave(): Promise<void> {
   onGameStateChanged();
   if (result.recoveredFromBackup) {
     setFeedback('success', 'Wiederherstellung aus Backup · Revision ' + gameState.revision + '.');
+    focusFeedback();
     setSaveStatus('error', 'Primärer Spielstand ungültig; letztes gültiges Backup wurde geladen.');
   } else {
     setFeedback('success', 'Spielstand geladen · Revision ' + gameState.revision + '.');
@@ -231,35 +244,6 @@ function showFatalError(error: unknown): void {
 }
 
 
-function createBotanicalPlant(x: number, z: number, variant: number): THREE.Group {
-  const plant = new THREE.Group();
-  const stemMaterial = new THREE.MeshStandardMaterial({ color: '#527c63', roughness: 0.82 });
-  const leafMaterial = new THREE.MeshStandardMaterial({
-    color: variant % 2 === 0 ? '#4f9470' : '#6ca77b',
-    roughness: 0.78,
-    side: THREE.DoubleSide,
-  });
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.075, 1.45, 8), stemMaterial);
-  stem.position.y = 0.78;
-  stem.castShadow = true;
-  plant.add(stem);
-  for (let level = 0; level < 4; level += 1) {
-    for (const side of [-1, 1]) {
-      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), leafMaterial);
-      leaf.scale.set(0.72, 0.22, 0.42);
-      leaf.position.set(side * (0.16 + level * 0.035), 0.38 + level * 0.28, 0);
-      leaf.rotation.z = side * 0.38;
-      leaf.rotation.y = (variant % 3) * 0.22;
-      leaf.castShadow = true;
-      plant.add(leaf);
-    }
-  }
-  const crown = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), leafMaterial);
-  crown.position.y = 1.55;
-  plant.add(crown);
-  plant.position.set(x, 0, z);
-  return plant;
-}
 
 async function boot(): Promise<() => void> {
   if (!worldRoot || !uiRoot) throw new Error('Required application roots are missing.');
@@ -300,7 +284,7 @@ async function boot(): Promise<() => void> {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.domElement.setAttribute('aria-label', '3D botanical operations facility');
+  renderer.domElement.setAttribute('aria-label', '3D medical cannabis production facility');
   worldRoot.appendChild(renderer.domElement);
 
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -310,12 +294,65 @@ async function boot(): Promise<() => void> {
   controls.maxDistance = 38;
   controls.maxPolarAngle = Math.PI * 0.47;
 
+  // Third-person character
+  const character = createThirdPersonCharacter(scene, camera);
+  let clock = new THREE.Clock();
+
+  // Interaction: proximity + fixed keys (1-4)
+  const actionFeedback = document.getElementById('game-feedback');
+  const interactionRange = 2.8;
+
+  function findNearestPlant(): THREE.Object3D | null {
+    const playerPos = character.getPosition();
+    let nearest: THREE.Object3D | null = null;
+    let bestDist = interactionRange;
+    scene.traverse((obj) => {
+      if (obj.userData.actionHandler && obj.parent) {
+        const dist = playerPos.distanceTo(obj.getWorldPosition(new THREE.Vector3()));
+        if (dist < bestDist) {
+          bestDist = dist;
+          nearest = obj;
+        }
+      }
+    });
+    return nearest;
+  }
+
+  // Fixed action mapping – no random
+  const actionMap: Record<string, PlantAction> = {
+    Digit1: 'prune',
+    Digit2: 'cutting',
+    Digit3: 'plant',
+    Digit4: 'repot',
+  };
+
+  window.addEventListener('keydown', (e) => {
+    const nearest = findNearestPlant();
+    if (!nearest || !nearest.userData.actionHandler) {
+      if (actionFeedback && e.code.startsWith('Digit')) {
+        actionFeedback.textContent = 'Keine Pflanze in Reichweite.';
+      }
+      return;
+    }
+    const action = actionMap[e.code];
+    if (action) {
+      const msg = nearest.userData.actionHandler(action);
+      if (actionFeedback) actionFeedback.textContent = msg;
+    }
+  });
+
   scene.add(new THREE.HemisphereLight(0xc8ddff, 0x172235, 2.0));
-  const keyLight = new THREE.DirectionalLight(0xf4f7ff, 3.0);
+  const keyLight = new THREE.DirectionalLight(0xfff5e6, 4.2);
   keyLight.position.set(8, 16, 7);
   keyLight.castShadow = true;
   keyLight.shadow.mapSize.set(1024, 1024);
   scene.add(keyLight);
+  // Purple grow lights over the plant stations (fictional visual only)
+  for (let i = 0; i < 4; i += 1) {
+    const grow = new THREE.PointLight(0xb48cff, 1.8, 8);
+    grow.position.set(-4 + i * 2.5, 3.2, -2);
+    scene.add(grow);
+  }
 
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(24, 18),
@@ -355,12 +392,16 @@ async function boot(): Promise<() => void> {
       station.receiveShadow = true;
       scene.add(station);
 
-      // Fictional generic botanical silhouettes. They are decorative game assets, not real-world plant guidance.
-      for (let pod = 0; pod < 3; pod += 1) {
-        const plant = createBotanicalPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
-        plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
-        station.add(plant);
-      }
+      // Detailed cannabis plant model (fictional visuals only) — load asynchronously so UI is not blocked
+      void loadCannabisModel().then((baseModel) => {
+        for (let pod = 0; pod < 3; pod += 1) {
+          const interactive = createInteractivePlantFromModel(baseModel, row * 4 + column * 3 + pod);
+          interactive.group.position.set(-0.7 + pod * 0.7, 0.55, 0);
+          interactive.group.scale.setScalar(0.55);
+          interactive.group.userData.actionHandler = interactive.applyAction;
+          station.add(interactive.group);
+        }
+      }).catch(() => { /* model load failed; stations remain usable */ });
     }
   }
 
@@ -384,7 +425,7 @@ async function boot(): Promise<() => void> {
     style: { fontFamily: 'Arial, sans-serif', fontSize: 20, fontWeight: 'bold', fill: '#f0f5ff', letterSpacing: 2 },
   });
   const subtitle = new Text({
-    text: 'BOTANICAL OPERATIONS  /  FACILITY VIEW',
+    text: 'MEDICAL CANNABIS  /  FACILITY VIEW',
     style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#8fa8c6', letterSpacing: 1.4 },
   });
   const stateLine = new Text({
@@ -428,6 +469,8 @@ async function boot(): Promise<() => void> {
   window.addEventListener('resize', resize);
   resize();
   renderer.setAnimationLoop(() => {
+    const delta = clock.getDelta();
+    character.update(delta);
     controls.update();
     renderer.render(scene, camera);
   });

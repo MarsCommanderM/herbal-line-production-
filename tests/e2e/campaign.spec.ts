@@ -26,7 +26,7 @@ function applyOk(
 
 test('campaign controls run a step and restore a saved state', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Medizinische Cannabis-Produktion' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Simulationsschritt ausführen' })).toBeVisible();
   const graphicsCanvas = page.locator('#world-root canvas');
   const graphicsWarning = page.locator('#fatal-error');
@@ -194,7 +194,7 @@ test('keyboard navigation reaches primary controls in a predictable order', asyn
 test('mobile viewport keeps the management panel inside the screen without horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Botanical Operations' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Medizinische Cannabis-Produktion' })).toBeVisible();
   await expect(page.locator('#campaign-guidance')).toContainText('Produktionseinheit aktiv');
 
   const geometry = await page.evaluate(() => {
