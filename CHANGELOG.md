@@ -1,4 +1,5 @@
 ## Unreleased
+- Canvas accessibility description improved. Focus and canvas notes added. Real AT session and focus restoration remain open.
 - Screenreader-oriented pass: actions group and log landmarks improved. Report in docs/SCREENREADER_PASS.md. Real AT session remains open.
 - Added contrast check script (key pairs meet AA). Viewport and contrast notes documented. P1-003 status updated.
 - Added release evidence capture script and snapshot. P4-001 status updated.
