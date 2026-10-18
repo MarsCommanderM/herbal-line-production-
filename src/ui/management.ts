@@ -250,11 +250,13 @@ export function renderManagementUI(
     const message = document.createElement('p');
     const assessment = batch ? [...state.qualityAssessments].reverse().find((item) => item.batchId === batch.id) : undefined;
     if (batch && batch.status === 'awaiting_qc' && assessment && assessment.decision !== 'pass') {
-      message.textContent = 'Batch bleibt gesperrt: Die Spiel-QA verlangt eine Prüfung. Eine Freigabe ist nicht verfügbar.';
+      message.textContent = 'Batch gesperrt: Qualitätsprüfung nicht bestanden oder ungeklärt. Ablehnung mit Grund möglich.';
     } else if (order && order.status === 'delivered') {
       message.textContent = 'Kampagnenziel erreicht: Auftrag ausgeliefert und Umsatz verbucht.';
+    } else if (state.compliance.licenseStatus !== 'valid') {
+      message.textContent = 'Betrieb eingeschränkt: Compliance-Status prüfen. Gesperrte Aktionen bleiben blockiert.';
     } else {
-      message.textContent = 'Aktuell ist keine zulässige Aktion verfügbar.';
+      message.textContent = 'Keine zulässige Aktion verfügbar. Prüfe Status, Kapazität und Voraussetzungen.';
     }
     message.className = 'empty-state';
     actionsRoot.append(message);
