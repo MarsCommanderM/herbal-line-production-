@@ -42,7 +42,7 @@ function progressToReleasedInventory() {
   state = applyOk(state, 'BATCH/CREATE', {
     batchId: entity('batch-001'),
     plantIds: [entity('plant-001')],
-    profileId: 'fictional-botanical-batch',
+    profileId: 'medical-cannabis-batch',
   });
   state = applyOk(state, 'BATCH/QUEUE', { batchId: entity('batch-001'), roomId: entity('room-processing-01') });
   state = applyOk(state, 'BATCH/START_PROCESSING', { batchId: entity('batch-001'), machineId: entity('machine-processing-001') });
@@ -51,7 +51,7 @@ function progressToReleasedInventory() {
   return state;
 }
 
-describe('botanical operations vertical slice', () => {
+describe('medical cannabis operations vertical slice', () => {
   it('completes fictional stage, batch, QC, stock, buyer order, and delivery flow', () => {
     let state = progressToReleasedInventory();
     expect(state.batches[0]?.status).toBe('released');

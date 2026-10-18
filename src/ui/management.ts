@@ -27,7 +27,7 @@ function availableActions(state: GameState): Action[] {
   } else if (plant && plant.stage === 'ready_for_harvest' && plant.batchId === null) {
     actions.push({ label: 'Einheit in Batch überführen', detail: 'Den freigegebenen Spielzustand für den nächsten Prozessschritt protokollieren.', type: 'PLANT/HARVEST', payload: { plantId: plant.id } });
   } else if (plant && plant.stage === 'harvested' && plant.batchId === null) {
-    actions.push({ label: 'Batch erstellen', detail: 'Herkunft und Einheiten unter einer eindeutigen Batch-ID verbinden.', type: 'BATCH/CREATE', payload: { batchId: entityId('batch-001'), plantIds: [plant.id], profileId: 'fictional-botanical-batch' } });
+    actions.push({ label: 'Batch erstellen', detail: 'Herkunft und Einheiten unter einer eindeutigen Batch-ID verbinden.', type: 'BATCH/CREATE', payload: { batchId: entityId('batch-001'), plantIds: [plant.id], profileId: 'medical-cannabis-batch' } });
   }
 
   if (batch && batch.status === 'created') {

@@ -34,7 +34,7 @@ Vor jeder Release-Freigabe genaue Lockfile-Versionen und Paketlizenzen prüfen. 
 
 ## 6. Fiktive Produkt- und Compliance-Regeln
 
-Das Spiel stellt eine fiktive, regulierte botanische Betriebsanlage dar. Alle Compliance-Werte sind reine Spielabstraktionen und ersetzen keine reale Rechts-, Produktions- oder Arzneimittelberatung. Der Quellumfang enthält keine realen Herstellungs- oder Distributionsanleitungen.ette dar. Es ist keine reale Betriebssoftware, keine arzneimittelrechtliche Standard Operating Procedure und keine pharmazeutische Herstellungsanweisung. QC-/Lizenzschwellen sind Spielwerte und dürfen nicht als reale GMP-, Arzneibuch-, Labor- oder Apothekenstandards dargestellt werden. Reale Behauptungen über medizinische Wirkung, konkrete Produktionsverfahren oder aktuelle Zulassungsvorgaben gehören nicht in die Spielregeln ohne fachlich geprüfte Quellen und Rechtsreview.
+Das Spiel stellt eine fiktive, regulierte medizinische Cannabis-Produktionsanlage dar. Alle Compliance-Werte sind reine Spielabstraktionen und ersetzen keine reale Rechts-, Produktions- oder Arzneimittelberatung. Der Quellumfang enthält keine realen Herstellungs- oder Distributionsanleitungen.ette dar. Es ist keine reale Betriebssoftware, keine arzneimittelrechtliche Standard Operating Procedure und keine pharmazeutische Herstellungsanweisung. QC-/Lizenzschwellen sind Spielwerte und dürfen nicht als reale GMP-, Arzneibuch-, Labor- oder Apothekenstandards dargestellt werden. Reale Behauptungen über medizinische Wirkung, konkrete Produktionsverfahren oder aktuelle Zulassungsvorgaben gehören nicht in die Spielregeln ohne fachlich geprüfte Quellen und Rechtsreview.
 
 ## 7. Release-Gate und Entscheidung
 

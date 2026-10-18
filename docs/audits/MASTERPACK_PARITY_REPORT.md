@@ -18,7 +18,7 @@ The comparison uses Git's blob SHA-1 identity: SHA-1 over `blob ${byteLength}\0`
 
 ## Why exact mirroring is not the current product goal
 
-The supplied pack describes a more specific regulated botanical business concept. The live implementation has been deliberately scoped to a fictional, generic botanical operations management game. It uses abstract simulation values, generic customer orders, fictional quality gates, and no real-world controlled-substance cultivation, processing, manufacturing, or distribution instructions.
+The supplied pack describes a more specific regulated medical cannabis business concept. The live implementation has been deliberately scoped to a fictional, strictly regulated medical cannabis operations management game. It uses abstract simulation values, generic customer orders, fictional quality gates, and no real-world controlled-substance cultivation, processing, manufacturing, or distribution instructions.
 
 Blindly restoring every source document over the implementation would:
 1. overwrite the working application and its verified build/test setup;

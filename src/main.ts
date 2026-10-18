@@ -231,7 +231,7 @@ function showFatalError(error: unknown): void {
 }
 
 
-function createBotanicalPlant(x: number, z: number, variant: number): THREE.Group {
+function createCannabisPlant(x: number, z: number, variant: number): THREE.Group {
   const plant = new THREE.Group();
   const stemMaterial = new THREE.MeshStandardMaterial({ color: '#527c63', roughness: 0.82 });
   const leafMaterial = new THREE.MeshStandardMaterial({
@@ -300,7 +300,7 @@ async function boot(): Promise<() => void> {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.domElement.setAttribute('aria-label', '3D botanical operations facility');
+  renderer.domElement.setAttribute('aria-label', '3D medical cannabis production facility');
   worldRoot.appendChild(renderer.domElement);
 
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -355,9 +355,9 @@ async function boot(): Promise<() => void> {
       station.receiveShadow = true;
       scene.add(station);
 
-      // Fictional generic botanical silhouettes. They are decorative game assets, not real-world plant guidance.
+      // Fictional medical cannabis plant silhouettes. Decorative game assets only; not real-world cultivation guidance.
       for (let pod = 0; pod < 3; pod += 1) {
-        const plant = createBotanicalPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
+        const plant = createCannabisPlant(-0.7 + pod * 0.7, 0, row * 4 + column * 3 + pod);
         plant.scale.setScalar(0.62 + ((row + column + pod) % 3) * 0.05);
         station.add(plant);
       }
@@ -384,7 +384,7 @@ async function boot(): Promise<() => void> {
     style: { fontFamily: 'Arial, sans-serif', fontSize: 20, fontWeight: 'bold', fill: '#f0f5ff', letterSpacing: 2 },
   });
   const subtitle = new Text({
-    text: 'BOTANICAL OPERATIONS  /  FACILITY VIEW',
+    text: 'MEDICAL CANNABIS  /  FACILITY VIEW',
     style: { fontFamily: 'Arial, sans-serif', fontSize: 10, fill: '#8fa8c6', letterSpacing: 1.4 },
   });
   const stateLine = new Text({

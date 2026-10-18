@@ -70,7 +70,7 @@ The first verified application baseline was merged to `main` via PR [#4](https:/
 - Application CI: **PASS** — [run 38181538851](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181538851)
 - Master Pack validation workflow: **PASS** — [run 38181538905](https://github.com/MarsCommanderM/herbal-line-production-/actions/runs/38181538905)
 - Verified gates: `npm ci`, source lint, format check, strict TypeScript typecheck, unit tests, production build, master-pack validation, and `git diff --check`.
-- The merged implementation contains the first deterministic generic botanical operations loop, typed commands/events, abstract QC and traceability gates, inventory reservation, generic buyer order, delivery confirmation, ledger-derived revenue, and accessible management controls.
+- The merged implementation contains the first deterministic medical cannabis operations loop, typed commands/events, abstract QC and traceability gates, inventory reservation, generic buyer order, delivery confirmation, ledger-derived revenue, and accessible management controls.
 
 ### Remaining blockers
 
