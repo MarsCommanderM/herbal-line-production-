@@ -549,3 +549,71 @@ describe('Extended property-style sequences', () => {
     expect(state.revision).toBe(before);
   });
 });
+
+describe('Corrective action edge cases', () => {
+  it('moves suspended license to recovery_review and reduces risk', () => {
+    let state = createInitialGameState();
+    state = {
+      ...state,
+      compliance: {
+        ...state.compliance,
+        licenseStatus: 'suspended',
+        risk: 60 as never,
+        blockedOperationCodes: ['BATCH/QUEUE'],
+      },
+    };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-suspended'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Vollständige Nachprüfung abgeschlossen',
+      clearBlockedOperations: false,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.state.compliance.licenseStatus).toBe('recovery_review');
+      expect(result.state.compliance.blockedOperationCodes).toEqual(['BATCH/QUEUE']);
+      expect(result.state.compliance.risk).toBeLessThan(60);
+    }
+  });
+
+  it('clears blocked operations when requested', () => {
+    let state = createInitialGameState();
+    state = {
+      ...state,
+      compliance: {
+        ...state.compliance,
+        licenseStatus: 'warning',
+        blockedOperationCodes: ['ORDER/ACCEPT', 'DELIVERY/DISPATCH'],
+      },
+    };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-clear'),
+      actorId: state.player.id,
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Blockaden aufgehoben nach Review',
+      clearBlockedOperations: true,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.state.compliance.licenseStatus).toBe('valid');
+      expect(result.state.compliance.blockedOperationCodes).toEqual([]);
+    }
+  });
+
+  it('rejects corrective action from wrong actor', () => {
+    let state = createInitialGameState();
+    state = { ...state, compliance: { ...state.compliance, licenseStatus: 'warning' } };
+    const result = applyVerticalSliceCommand(state, {
+      commandId: commandId('corrective-wrong-actor'),
+      actorId: entity('other-player'),
+      expectedRevision: state.revision,
+      type: 'COMPLIANCE/RECORD_CORRECTIVE_ACTION',
+      reasonCode: 'Unbefugter Versuch',
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe('COMPLIANCE_BLOCKED');
+  });
+});
